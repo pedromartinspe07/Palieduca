@@ -54,7 +54,7 @@ const HeroSection: React.FC = () => {
                             <img
                                 src="https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&q=80&w=1000"
                                 alt="Enfermeira segurando as mãos de um paciente"
-                                className="w-full h-[550px] object-cover hover:scale-105 transition-transform duration-700"
+                                className="max-w-full w-full h-auto max-h-[400px] object-cover hover:scale-105 transition-transform duration-700"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-warm-900/80 via-transparent to-transparent pointer-events-none" />
                             <div className="absolute bottom-8 left-8 right-8">
