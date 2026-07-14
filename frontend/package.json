@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://pedromartinspe07.github.io/Palieduca",
+  "homepage": "https://palieduca.com.br",
   "scripts": {
     "dev": "vite",
     "predeploy": "npm run build",
