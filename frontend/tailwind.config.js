@@ -7,33 +7,34 @@ export default {
   theme: {
     extend: {
       colors: {
-        nature: {
-          50: '#f0f9f8',
-          100: '#d7f0ed',
-          200: '#b1dfdb',
-          300: '#7ec6c0',
-          400: '#54a6a1',
-          500: '#388b87',
-          600: '#2b6f6d',
-          700: '#265958',
-          800: '#224a49',
-          900: '#1f3e3d',
+        warm: {
+          50: '#faf8f5',
+          100: '#f2eae1',
+          200: '#e5d5c5',
+          300: '#d5bba3',
+          400: '#c29d7d',
+          500: '#b28660',
+          600: '#a3714f',
+          700: '#875a40',
+          800: '#6f4a36',
+          900: '#5a3d2e',
         },
-        serene: {
-          50: '#f2f8fc',
-          100: '#e1f0f7',
-          200: '#cae2f0',
-          300: '#a3cfe3',
-          400: '#75b3d3',
-          500: '#5296c0',
-          600: '#3e7ba4',
-          700: '#336386',
-          800: '#2d5470',
-          900: '#28465e',
+        sage: {
+          50: '#f4f7f4',
+          100: '#e5eee6',
+          200: '#cdddd1',
+          300: '#a8c5b1',
+          400: '#7fa88d',
+          500: '#5f8d70',
+          600: '#487157',
+          700: '#3a5a46',
+          800: '#30493a',
+          900: '#283c31',
         },
-        primary: '#388b87',
-        secondary: '#5296c0',
-        background: '#f8fafc',
+        primary: '#487157',   // sage-600 (natureza/tech)
+        secondary: '#a3714f', // warm-600 (acolhimento terracota suave)
+        background: '#faf8f5', // crem bege bem suave
+        card: '#ffffff',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -41,6 +42,7 @@ export default {
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out',
         'slide-up': 'slideUp 0.6s ease-out forwards',
+        'subtle-float': 'subtleFloat 6s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -50,6 +52,10 @@ export default {
         slideUp: {
           '0%': { opacity: '0', transform: 'translateY(20px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        subtleFloat: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
         }
       }
     },

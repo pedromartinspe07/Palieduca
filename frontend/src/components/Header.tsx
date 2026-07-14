@@ -27,7 +27,7 @@ const Header: React.FC = () => {
                             <Link
                                 key={item.label}
                                 to={item.to}
-                                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-nature-50 transition-colors"
+                                className="flex items-center gap-2 px-3 py-2 rounded-lg text-warm-700 hover:text-primary hover:bg-warm-50 transition-colors"
                             >
                                 {item.icon}
                                 <span className="font-medium text-sm">{item.label}</span>
@@ -40,9 +40,9 @@ const Header: React.FC = () => {
                             <input
                                 type="text"
                                 placeholder="Pesquisar conteúdos..."
-                                className="pl-10 pr-4 py-2 bg-white/50 border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all shadow-sm focus:bg-white w-64"
+                                className="pl-10 pr-4 py-2 bg-white/50 border border-warm-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all shadow-sm focus:bg-white w-64"
                             />
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-warm-400" size={18} />
                         </div>
                         <button className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-medium shadow-md hover:shadow-lg interactive-btn">
                             <User size={18} />
