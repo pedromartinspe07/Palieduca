@@ -9,9 +9,16 @@ load_dotenv()
 
 app = FastAPI()
 
+# Permitir requisições tanto locais quanto do seu site oficial
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://palieduca.com.br",
+        "https://www.palieduca.com.br",
+        "https://pedromartinspe07.github.io"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -44,7 +51,8 @@ async def chat(request: ChatRequest):
     ai_messages = [SYSTEM_PROMPT] + [msg.model_dump() for msg in request.messages]
 
     payload = {
-        "model": "llama-3.1-8b-instant",
+        # Atualizado para o modelo atual e ativo da Groq
+        "model": "llama-3.3-70b-versatile",
         "messages": ai_messages,
         "temperature": 0.7,
         "max_tokens": 1024
