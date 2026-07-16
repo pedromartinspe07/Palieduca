@@ -61,7 +61,7 @@ const homeModules = [
         icon: <Scale size={24} />,
         progress: 0,
         resources: ["Casos Éticos", "Reflexões"],
-        image: "https://images.unsplash.com/photo-1527613426406-03513364f783?auto=format&fit=crop&q=80&w=800",
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRXmWsGLHaXXxYQgQXaulSNtaERdmtgutFXh1OWKk1QpCP91bMMpT_T7O4&s=10",
         delay: 0.6
     }
 ];

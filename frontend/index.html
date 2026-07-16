@@ -5,12 +5,55 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO Primário -->
   <title>Palieduca - Cuidados Paliativos em Enfermagem</title>
+  <meta name="description"
+    content="Plataforma educacional interativa para o ensino de Cuidados Paliativos em Enfermagem. Recursos digitais baseados na Teoria Histórico-Cultural de Vygotsky, desenvolvida para o Doutorado em Enfermagem da UFPB." />
+  <meta name="keywords"
+    content="cuidados paliativos, enfermagem, educação em saúde, UFPB, aprendizagem, Vygotsky, Falkembach" />
+  <meta name="author" content="Patricia Maria de Oliveira Andrade" />
+  <meta name="robots" content="index, follow" />
+
+  <!-- Open Graph / WhatsApp / Telegram / LinkedIn -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pedromartinspe07.github.io/Palieduca/" />
+  <meta property="og:title" content="Palieduca — Aprendendo Cuidados Paliativos em Enfermagem" />
+  <meta property="og:description"
+    content="Plataforma EdTech acadêmica com módulos interativos, assistente virtual de IA e biblioteca digital para o ensino de Cuidados Paliativos. Projeto de Doutorado em Enfermagem – UFPB." />
+  <meta property="og:image"
+    content="https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&q=80&w=1200" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:site_name" content="Palieduca" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Palieduca — Aprendendo Cuidados Paliativos em Enfermagem" />
+  <meta name="twitter:description"
+    content="Plataforma educacional com módulos interativos, IA assistente e biblioteca digital. Projeto de Doutorado – UFPB." />
+  <meta name="twitter:image"
+    content="https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&q=80&w=1200" />
+
+  <!-- VLibras: Widget de Acessibilidade para LIBRAS (Língua Brasileira de Sinais) -->
+  <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+  <script>
+    new window.VLibras.Widget('https://vlibras.gov.br/app');
+  </script>
 </head>
 
 <body>
+  <!-- VLibras DOM Target -->
+  <div vw class="enabled">
+    <div vw-access-button class="active"></div>
+    <div vw-plugin-wrapper>
+      <div class="vw-plugin-top-wrapper"></div>
+    </div>
+  </div>
+
   <div id="root"></div>
-  <script type="module" src="src/main.tsx"></script>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 
 </html>

@@ -36,6 +36,10 @@ SYSTEM_PROMPT = {
     "content": "Você é um assistente virtual especialista em Enfermagem e Cuidados Paliativos. Seu tom deve ser sempre acolhedor, empático, profissional e pautado na ética de enfermagem. Suas respostas devem focar no alívio do sofrimento, controle de sintomas (dor, dispneia, etc.) e apoio psicológico ao paciente e à família. Se o usuário perguntar sobre tópicos fora da área da saúde ou cuidados paliativos, redirecione educadamente a conversa de volta para o seu propósito principal. Não prescreva medicamentos, apenas discuta manejos baseados em evidências."
 }
 
+@app.get("/api/health")
+async def health_check():
+    return {"status": "ok"}
+
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
     groq_api_key = os.getenv("GROQ_API_KEY")
