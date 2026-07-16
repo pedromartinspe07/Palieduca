@@ -17,7 +17,7 @@ const Apresentacao: React.FC = () => {
             </section>
 
             {/* Target Audience */}
-            <section className="py-16 px-4 max-w-7xl mx-auto">
+            <section id="publico-alvo" className="py-16 px-4 max-w-7xl mx-auto scroll-mt-24">
                 <h2 className="text-2xl font-bold text-warm-900 mb-8 text-center">Público-alvo</h2>
                 <div className="grid md:grid-cols-3 gap-8">
                     {[
@@ -35,7 +35,7 @@ const Apresentacao: React.FC = () => {
             </section>
 
             {/* Theoretical Foundation */}
-            <section className="py-16 px-4 bg-warm-50">
+            <section id="fundamentacao" className="py-16 px-4 bg-warm-50 scroll-mt-24">
                 <div className="max-w-5xl mx-auto">
                     <h2 className="text-3xl font-bold text-warm-900 mb-10 text-center">Fundamentação Teórica</h2>
                     <div className="grid lg:grid-cols-2 gap-12">
@@ -60,7 +60,7 @@ const Apresentacao: React.FC = () => {
             </section>
 
             {/* Team */}
-            <section className="py-16 px-4 max-w-7xl mx-auto">
+            <section id="equipe" className="py-16 px-4 max-w-7xl mx-auto scroll-mt-24">
                 <h2 className="text-3xl font-bold text-slate-800 mb-10 text-center">Equipe Responsável</h2>
                 <div className="grid md:grid-cols-3 gap-8">
                     {[
