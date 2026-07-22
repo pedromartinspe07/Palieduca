@@ -42,10 +42,10 @@ const HeroSection: React.FC = () => {
                                 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                             </Link>
 
-                            <button className="flex justify-center items-center gap-2 px-8 py-4 bg-white text-warm-800 rounded-full font-medium text-lg shadow-md hover:shadow-lg border border-warm-100 transition-all interactive-btn group">
+                            <Link to="/apresentacao" className="flex justify-center items-center gap-2 px-8 py-4 bg-white text-warm-800 rounded-full font-medium text-lg shadow-md hover:shadow-lg border border-warm-100 transition-all interactive-btn group">
                                 <Play size={20} className="text-secondary group-hover:scale-110 transition-transform" />
                                 <span>Ver apresentação</span>
-                            </button>
+                            </Link>
                         </div>
                     </div>
 
