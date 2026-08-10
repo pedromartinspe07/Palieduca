@@ -89,13 +89,50 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 @app.post("/api/auth/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
-    if not user or not auth.verify_password(form_data.password, user.senha_hash):
+    if not user or not user.senha_hash or not auth.verify_password(form_data.password, user.senha_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email ou senha incorretos",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    access_token = auth.create_access_token(data={"sub": user.email, "role": user.cargo})
+    
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "nome": user.nome,
+            "cargo": user.cargo
+        }
+    }
+
+@app.post("/api/auth/google")
+def google_auth(token_data: schemas.GoogleToken, db: Session = Depends(get_db)):
+    idinfo = auth.verify_google_token(token_data.token)
+    if not idinfo:
+        raise HTTPException(status_code=401, detail="Token do Google inválido ou expirado.")
+    
+    email = idinfo.get("email")
+    nome = idinfo.get("name", "Usuário do Google")
+    
+    # Verifica se o usuário já existe
+    user = db.query(models.User).filter(models.User.email == email).first()
+    
+    # Se não existir, cria o usuário automaticamente
+    if not user:
+        user = models.User(
+            email=email,
+            nome=nome,
+            senha_hash=None, # Não tem senha local
+            cargo="aluno"
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        
     access_token = auth.create_access_token(data={"sub": user.email, "role": user.cargo})
     
     return {

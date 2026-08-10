@@ -48,11 +48,11 @@
     color: #5a3d2e;
   }
 
-  /* Garante espaçamento real de parágrafos e quebras de linha */
+  /* Garante espaçamento real de parágrafos e quebras de linha sem parecer duplo */
   .custom-quill .ql-editor p,
   .rich-text-content p {
-    margin-bottom: 1.25rem !important;
-    line-height: 1.8;
+    margin-bottom: 0.75rem !important;
+    line-height: 1.6;
     display: block;
   }
 

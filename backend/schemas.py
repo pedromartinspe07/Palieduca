@@ -24,6 +24,9 @@ class Token(BaseModel):
     token_type: str
     user: UserResponse
 
+class GoogleToken(BaseModel):
+    token: str
+
 class ModuleBase(BaseModel):
     slug_id: str
     title: str

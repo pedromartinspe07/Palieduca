@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, HeartPulse, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, HeartPulse, Loader2 } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://127.0.0.1:8000'
   : 'https://palieduca.onrender.com';
 
-const Login: React.FC = () => {
+const Register: React.FC = () => {
+    const [nome, setNome] = useState('');
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [error, setError] = useState('');
@@ -49,11 +50,31 @@ const Login: React.FC = () => {
         setLoading(true);
 
         try {
+            // Cadastro
+            const regResponse = await fetch(`${API_URL}/api/auth/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email,
+                    senha,
+                    nome,
+                    cargo: 'aluno'
+                })
+            });
+
+            if (!regResponse.ok) {
+                const errorData = await regResponse.json();
+                throw new Error(errorData.detail || 'Erro ao realizar o cadastro');
+            }
+
+            // Login logo em seguida
             const formData = new URLSearchParams();
             formData.append('username', email);
             formData.append('password', senha);
 
-            const response = await fetch(`${API_URL}/api/auth/login`, {
+            const logResponse = await fetch(`${API_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -61,11 +82,11 @@ const Login: React.FC = () => {
                 body: formData.toString()
             });
 
-            if (!response.ok) {
-                throw new Error('Email ou senha incorretos');
+            if (!logResponse.ok) {
+                throw new Error('Cadastro realizado, mas ocorreu um erro no login.');
             }
 
-            const data = await response.json();
+            const data = await logResponse.json();
             login(data.access_token, data.user);
             navigate('/perfil');
         } catch (err: any) {
@@ -82,17 +103,34 @@ const Login: React.FC = () => {
                     <div className="bg-primary/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-primary">
                         <HeartPulse size={32} />
                     </div>
-                    <h2 className="text-2xl font-bold text-warm-900">Acesso ao Palieduca</h2>
-                    <p className="text-warm-500 mt-2">Faça login para continuar seus estudos</p>
+                    <h2 className="text-2xl font-bold text-warm-900">Cadastro Palieduca</h2>
+                    <p className="text-warm-500 mt-2">Crie sua conta para começar</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
                     {error && (
                         <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm text-center border border-red-100">
                             {error}
                         </div>
                     )}
                     
+                    <div>
+                        <label className="block text-sm font-medium text-warm-700 mb-2">Nome Completo</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-warm-400">
+                                <User size={20} />
+                            </div>
+                            <input 
+                                type="text" 
+                                required
+                                value={nome}
+                                onChange={(e) => setNome(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 bg-white/50 border border-warm-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-warm-900"
+                                placeholder="João da Silva"
+                            />
+                        </div>
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-warm-700 mb-2">E-mail Institucional</label>
                         <div className="relative">
@@ -123,6 +161,7 @@ const Login: React.FC = () => {
                                 onChange={(e) => setSenha(e.target.value)}
                                 className="w-full pl-10 pr-4 py-3 bg-white/50 border border-warm-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-warm-900"
                                 placeholder="••••••••"
+                                minLength={6}
                             />
                         </div>
                     </div>
@@ -130,16 +169,16 @@ const Login: React.FC = () => {
                     <button 
                         type="submit" 
                         disabled={loading}
-                        className="w-full bg-primary hover:bg-primary-dark text-white font-medium py-3 rounded-xl transition-all shadow-md flex justify-center items-center gap-2 disabled:opacity-70"
+                        className="w-full bg-primary hover:bg-primary-dark text-white font-medium py-3 rounded-xl transition-all shadow-md flex justify-center items-center gap-2 disabled:opacity-70 mt-2"
                     >
-                        {loading ? <Loader2 className="animate-spin" size={20} /> : 'Entrar na Plataforma'}
+                        {loading ? <Loader2 className="animate-spin" size={20} /> : 'Criar Minha Conta'}
                     </button>
                     
                     <div className="mt-4 flex justify-center">
                         <GoogleLogin 
                             onSuccess={handleGoogleSuccess} 
-                            onError={() => setError('Falha no login com o Google')} 
-                            text="continue_with"
+                            onError={() => setError('Falha no cadastro com o Google')} 
+                            text="signup_with"
                             theme="outline"
                             size="large"
                             width="100%"
@@ -148,9 +187,9 @@ const Login: React.FC = () => {
                 </form>
                 
                 <div className="mt-6 text-center text-sm text-warm-600">
-                    Ainda não tem uma conta?{' '}
-                    <Link to="/register" className="text-primary font-semibold hover:underline">
-                        Cadastre-se aqui
+                    Já possui uma conta?{' '}
+                    <Link to="/login" className="text-primary font-semibold hover:underline">
+                        Faça login aqui
                     </Link>
                 </div>
             </div>
@@ -158,4 +197,4 @@ const Login: React.FC = () => {
     );
 };
 
-export default Login;
+export default Register;
