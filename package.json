@@ -3,7 +3,8 @@
     "dev": "npm --prefix frontend run dev",
     "start": "npm --prefix frontend run dev",
     "build": "npm --prefix frontend run build",
-    "deploy": "npm --prefix frontend run deploy"
+    "deploy": "npm --prefix frontend run deploy",
+    "backend": "bash -c 'cd backend && source venv/bin/activate && uvicorn main:app --reload'"
   },
   "devDependencies": {
     "gh-pages": "^6.3.0"

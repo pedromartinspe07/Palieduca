@@ -3,3 +3,10 @@ uvicorn
 pydantic
 httpx
 python-dotenv
+sqlalchemy
+bcrypt
+passlib
+pyjwt
+email-validator
+python-multipart
+psycopg2-binary

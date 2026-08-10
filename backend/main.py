@@ -1,11 +1,26 @@
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 import httpx
 from dotenv import load_dotenv
+from sqlalchemy.orm import Session
+
+from database import engine, get_db
+import models
+import schemas
+import auth
+
+import seed
 
 load_dotenv()
+
+models.Base.metadata.create_all(bind=engine)
+# Auto-seed inicial para garantir dados no Render mesmo em ambientes voláteis
+seed.seed_users()
+seed.seed_modules()
+seed.seed_pages()
 
 app = FastAPI()
 
@@ -24,6 +39,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    payload = auth.decode_access_token(token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido ou expirado")
+    
+    email = payload.get("sub")
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuário não encontrado")
+    return user
+
 class ChatMessage(BaseModel):
     role: str
     content: str
@@ -39,6 +67,107 @@ SYSTEM_PROMPT = {
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok"}
+
+@app.post("/api/auth/register", response_model=schemas.UserResponse)
+def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email já cadastrado")
+    
+    hashed_password = auth.get_password_hash(user.senha)
+    new_user = models.User(
+        email=user.email,
+        nome=user.nome,
+        senha_hash=hashed_password,
+        cargo=user.cargo or "aluno"
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+@app.post("/api/auth/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == form_data.username).first()
+    if not user or not auth.verify_password(form_data.password, user.senha_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email ou senha incorretos",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token = auth.create_access_token(data={"sub": user.email, "role": user.cargo})
+    
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "nome": user.nome,
+            "cargo": user.cargo
+        }
+    }
+
+@app.get("/api/auth/me", response_model=schemas.UserResponse)
+def read_users_me(current_user: models.User = Depends(get_current_user)):
+    return current_user
+
+@app.get("/api/modules", response_model=list[schemas.ModuleResponse])
+def get_modules(db: Session = Depends(get_db)):
+    return db.query(models.Module).all()
+
+@app.put("/api/modules/{module_id}", response_model=schemas.ModuleResponse)
+def update_module(
+    module_id: int, 
+    module_update: schemas.ModuleUpdate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão para editar conteúdo")
+        
+    db_module = db.query(models.Module).filter(models.Module.id == module_id).first()
+    if not db_module:
+        raise HTTPException(status_code=404, detail="Módulo não encontrado")
+        
+    db_module.title = module_update.title
+    db_module.description = module_update.description
+    db_module.image_url = module_update.image_url
+    
+    db.commit()
+    db.refresh(db_module)
+    return db_module
+
+@app.get("/api/pages/{page_name}", response_model=schemas.PageContentResponse)
+def get_page_content(page_name: str, db: Session = Depends(get_db)):
+    page = db.query(models.PageContent).filter(models.PageContent.page_name == page_name).first()
+    if not page:
+        # Se não existir, retorna vazio em vez de erro para não quebrar o frontend
+        return schemas.PageContentResponse(id=0, page_name=page_name, content="")
+    return page
+
+@app.put("/api/pages/{page_name}", response_model=schemas.PageContentResponse)
+def update_page_content(
+    page_name: str, 
+    page_update: schemas.PageContentUpdate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão para editar conteúdo")
+        
+    page = db.query(models.PageContent).filter(models.PageContent.page_name == page_name).first()
+    if not page:
+        # Cria se não existir
+        page = models.PageContent(page_name=page_name, content=page_update.content)
+        db.add(page)
+    else:
+        page.content = page_update.content
+        
+    db.commit()
+    db.refresh(page)
+    return page
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):

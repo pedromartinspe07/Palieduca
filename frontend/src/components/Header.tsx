@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { User, HeartPulse, BookOpen, LayoutDashboard, Type, MessageSquare, Info, Menu, X } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import SearchBar from './SearchBar';
+import { useAuth } from '../context/AuthContext';
 
 const NAV_ITEMS = [
     { to: "/", icon: <LayoutDashboard size={18} />, label: "Início" },
@@ -15,6 +16,8 @@ const Header: React.FC = () => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
+    const { user } = useAuth();
 
     useEffect(() => {
         setMenuOpen(false);
@@ -59,10 +62,17 @@ const Header: React.FC = () => {
 
                     <div className="hidden md:flex items-center gap-4">
                         <SearchBar />
-                        <button className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-medium shadow-md hover:shadow-lg interactive-btn">
-                            <User size={18} />
-                            <span>Entrar</span>
-                        </button>
+                        {user ? (
+                            <button onClick={() => navigate('/perfil')} className="flex items-center gap-2 px-5 py-2.5 bg-sage-100 text-sage-700 rounded-full font-medium shadow-sm hover:bg-sage-200 transition-all border border-sage-200">
+                                <User size={18} />
+                                <span>{user.nome.split(' ')[0]}</span>
+                            </button>
+                        ) : (
+                            <button onClick={() => navigate('/login')} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-medium shadow-md hover:shadow-lg interactive-btn">
+                                <User size={18} />
+                                <span>Entrar</span>
+                            </button>
+                        )}
                     </div>
 
                     <button
@@ -98,10 +108,17 @@ const Header: React.FC = () => {
                     })}
 
                     <div className="pt-3 border-t border-warm-100 flex gap-2">
-                        <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-medium shadow-md text-sm">
-                            <User size={16} />
-                            <span>Entrar</span>
-                        </button>
+                        {user ? (
+                            <button onClick={() => navigate('/perfil')} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-sage-100 text-sage-700 rounded-full font-medium shadow-sm text-sm">
+                                <User size={16} />
+                                <span>{user.nome.split(' ')[0]}</span>
+                            </button>
+                        ) : (
+                            <button onClick={() => navigate('/login')} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-medium shadow-md text-sm">
+                                <User size={16} />
+                                <span>Entrar</span>
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

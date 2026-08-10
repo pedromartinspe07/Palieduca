@@ -2,15 +2,43 @@ import React, { useState, useEffect } from 'react';
 import HeroSection from '../components/HeroSection';
 import ModuleCard from '../components/ModuleCard';
 import ModuleCardSkeleton from '../components/ModuleCardSkeleton';
-import { MODULES_DATA } from '../data/siteContent';
+import { Stethoscope, Users, HeartPulse, Brain, HeartHandshake, Scale } from 'lucide-react';
+
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://127.0.0.1:8000'
+  : 'https://palieduca.onrender.com';
+
+const iconMap: Record<string, React.ReactNode> = {
+    'Stethoscope': <Stethoscope size={24} />,
+    'Users': <Users size={24} />,
+    'HeartPulse': <HeartPulse size={24} />,
+    'Brain': <Brain size={24} />,
+    'HeartHandshake': <HeartHandshake size={24} />,
+    'Scale': <Scale size={24} />
+};
+
+interface ModuleData {
+    id: number;
+    slug_id: string;
+    title: string;
+    description: string;
+    icon_name: string;
+    progress: number;
+    resources: string;
+    image_url: string;
+    delay: number;
+}
 
 const Home: React.FC = () => {
     const [loading, setLoading] = useState(true);
+    const [modules, setModules] = useState<ModuleData[]>([]);
 
-    // Simulates content loading — replace with real data-fetch when modules are available
     useEffect(() => {
-        const timer = setTimeout(() => setLoading(false), 800);
-        return () => clearTimeout(timer);
+        fetch(`${API_URL}/api/modules`)
+            .then(res => res.json())
+            .then(data => setModules(data))
+            .catch(err => console.error("Erro ao carregar módulos:", err))
+            .finally(() => setLoading(false));
     }, []);
 
     return (
@@ -41,9 +69,18 @@ const Home: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                         {loading
                             ? Array.from({ length: 6 }).map((_, i) => <ModuleCardSkeleton key={i} />)
-                            : MODULES_DATA.map(module => (
-                                <div id={module.id} key={module.id} className="scroll-mt-24">
-                                    <ModuleCard {...module} />
+                            : modules.map(module => (
+                                <div id={module.slug_id} key={module.id} className="scroll-mt-24">
+                                    <ModuleCard 
+                                        id={module.slug_id}
+                                        title={module.title}
+                                        description={module.description}
+                                        icon={iconMap[module.icon_name] || <Stethoscope size={24} />}
+                                        progress={module.progress}
+                                        resources={module.resources.split(',').map(s => s.trim())}
+                                        image={module.image_url}
+                                        delay={module.delay / 10}
+                                    />
                                 </div>
                             ))
                         }
