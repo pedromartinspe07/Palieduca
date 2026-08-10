@@ -10,6 +10,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Perfil from './pages/Perfil';
 import Modulos from './pages/Modulos';
+import ModuleViewer from './pages/ModuleViewer';
 import Biblioteca from './pages/Biblioteca';
 import Glossario from './pages/Glossario';
 import Editor from './pages/Editor';
@@ -36,6 +37,7 @@ const AnimatedRoutes: React.FC = () => {
         <Route path="/register" element={token ? <Navigate to="/perfil" /> : <Register />} />
         <Route path="/perfil" element={<ProtectedRoute allowedRoles={['aluno', 'dona', 'desenvolvedor']}><Perfil /></ProtectedRoute>} />
         <Route path="/modulos" element={<ProtectedRoute><Modulos /></ProtectedRoute>} />
+        <Route path="/modulo/:slug_id" element={<ProtectedRoute><ModuleViewer /></ProtectedRoute>} />
         <Route path="/biblioteca" element={<ProtectedRoute><Biblioteca /></ProtectedRoute>} />
         <Route path="/glossario" element={<ProtectedRoute><Glossario /></ProtectedRoute>} />
         <Route path="/editor" element={<ProtectedRoute allowedRoles={['dona', 'desenvolvedor']}><Editor /></ProtectedRoute>} />

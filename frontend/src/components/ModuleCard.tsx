@@ -73,7 +73,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
                 </div>
 
                 <Link
-                    to={`/modulos/${id}`}
+                    to={`/modulo/${id}`}
                     className="mt-auto w-full flex items-center justify-center gap-2 py-3.5 bg-warm-50 border border-warm-200 text-warm-800 rounded-xl font-semibold hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 interactive-btn"
                 >
                     <span>{progress > 0 && progress < 100 ? 'Continuar aprendizagem' : progress === 100 ? 'Revisar módulo' : 'Iniciar módulo'}</span>
