@@ -17,6 +17,18 @@ const Home: React.FC = () => {
         <main>
             <HeroSection />
 
+            <section className="py-20 bg-warm-50 relative z-10 border-y border-warm-100">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-primary text-sm font-medium mb-6 shadow-sm border border-warm-100">
+                        <span>Produto de Tese de Doutorado</span>
+                    </div>
+                    <h2 className="text-3xl font-bold text-warm-900 mb-6">Sobre o Projeto Palieduca</h2>
+                    <p className="text-lg text-warm-700 leading-relaxed font-light mb-8">
+                        O Palieduca é um Ambiente Virtual de Aprendizagem desenvolvido no âmbito do <strong>Programa de Pós-Graduação em Enfermagem da UFPB</strong>. O objetivo científico desta plataforma é para capacitar profissionais e estudantes nas melhores práticas e humanização dos Cuidados Paliativos.
+                    </p>
+                </div>
+            </section>
+
             <section className="py-24 bg-background relative z-10" id="trilha">
                 <div className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">

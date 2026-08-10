@@ -6,6 +6,8 @@ import FontSizeControl from './components/FontSizeControl';
 import Home from './pages/Home';
 import Apresentacao from './pages/Apresentacao';
 import NotFound from './pages/NotFound';
+import Footer from './components/Footer';
+import EmConstrucao from './components/EmConstrucao';
 import useAnchorScroll from './hooks/useAnchorScroll';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -24,24 +26,9 @@ const AnimatedRoutes: React.FC = () => {
       <Routes location={location}>
         <Route path="/" element={<Home />} />
         <Route path="/apresentacao" element={<Apresentacao />} />
-        <Route path="/modulos" element={
-          <div className="pt-40 text-center">
-            <p className="text-2xl font-semibold text-warm-700 mb-2">Módulos em breve 🌱</p>
-            <p className="text-warm-500">O conteúdo completo está sendo preparado.</p>
-          </div>
-        } />
-        <Route path="/biblioteca" element={
-          <div className="pt-40 text-center">
-            <p className="text-2xl font-semibold text-warm-700 mb-2">Biblioteca em breve 📚</p>
-            <p className="text-warm-500">O acervo digital está sendo organizado.</p>
-          </div>
-        } />
-        <Route path="/glossario" element={
-          <div className="pt-40 text-center">
-            <p className="text-2xl font-semibold text-warm-700 mb-2">Glossário em breve 📖</p>
-            <p className="text-warm-500">Os termos estão sendo curados.</p>
-          </div>
-        } />
+        <Route path="/modulos" element={<EmConstrucao tipo="modulos" />} />
+        <Route path="/biblioteca" element={<EmConstrucao tipo="biblioteca" />} />
+        <Route path="/glossario" element={<EmConstrucao tipo="glossario" />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
@@ -61,9 +48,12 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="min-h-screen bg-background relative selection:bg-primary/30">
+      <div className="min-h-screen flex flex-col bg-background relative selection:bg-primary/30">
         <Header />
-        <AnimatedRoutes />
+        <main className="flex-grow">
+          <AnimatedRoutes />
+        </main>
+        <Footer />
         <FontSizeControl />
         <ChatBox />
       </div>

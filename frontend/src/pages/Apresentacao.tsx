@@ -11,6 +11,9 @@ import {
     Sparkles,
     Quote
 } from 'lucide-react';
+import patriciaImg from '../assets/team/patricia.png';
+import pedroImg from '../assets/team/pedro.png';
+import carlosImg from '../assets/team/carlos.png';
 
 interface ModuleItem {
     id: string;
@@ -92,8 +95,8 @@ const Apresentacao: React.FC = () => {
                         Apresentação
                     </h1>
 
-                    <p className="text-lg sm:text-xl text-warm-800 leading-relaxed font-light glassmorphism p-6 sm:p-8 rounded-3xl border border-white/80 shadow-lg">
-                        Bem-vindo(a) ao <strong className="font-semibold text-primary">Palieduca</strong>! Este website foi desenvolvido para apoiar o processo de ensino e aprendizagem em cuidados paliativos, proporcionando um ambiente virtual interativo, fundamentado na Teoria da Interação Social de Vygotsky e no modelo metodológico proposto por Falkembach.
+                    <p className="text-lg sm:text-xl text-warm-800 leading-relaxed font-light max-w-3xl mx-auto">
+                        Bem-vindo(a) ao <strong className="font-semibold text-primary">Palieduca</strong>! Este website foi desenvolvido para apoiar o processo de ensino e aprendizagem em cuidados paliativos, proporcionando um ambiente virtual interativo, dinâmico e humanizado.
                     </p>
                 </div>
             </section>
@@ -157,31 +160,6 @@ const Apresentacao: React.FC = () => {
                 </div>
             </section>
 
-            {/* Fundamentação Teórica */}
-            <section id="fundamentacao" className="py-16 px-4 bg-warm-50/70 border-y border-warm-100 scroll-mt-24">
-                <div className="max-w-5xl mx-auto">
-                    <h2 className="text-3xl font-bold text-warm-900 mb-10 text-center">Fundamentação Teórica</h2>
-                    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
-                        <div className="glassmorphism p-8 rounded-2xl border border-warm-100 bg-white/80">
-                            <h3 className="text-xl font-bold text-primary mb-4 border-b border-primary/20 pb-3">L. S. Vygotsky (1896–1934)</h3>
-                            <p className="text-warm-700 leading-relaxed">
-                                A Teoria Histórico-Cultural postula que a aprendizagem ocorre através da interação social e da mediação.
-                                A Zona de Desenvolvimento Proximal (ZDP) é central no nosso modelo, permitindo que o aluno alcance seu
-                                potencial através da interação com casos clínicos e a tutoria (feedback direcionado).
-                            </p>
-                        </div>
-                        <div className="glassmorphism p-8 rounded-2xl border border-warm-100 bg-white/80">
-                            <h3 className="text-xl font-bold text-secondary mb-4 border-b border-secondary/20 pb-3">E. M. Falkembach (2005)</h3>
-                            <p className="text-warm-700 leading-relaxed">
-                                O modelo metodológico de Falkembach nos direciona na construção de ambientes virtuais de aprendizagem
-                                como forma de apoiar a construção autônoma de trajetos e a reflexão crítica. Os recursos digitais
-                                são desenhados para não apenas informar, mas transformar.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             {/* Equipe Responsável */}
             <section id="equipe" className="py-16 px-4 max-w-7xl mx-auto scroll-mt-24">
                 <h2 className="text-3xl font-bold text-warm-900 mb-10 text-center">Equipe Responsável</h2>
@@ -190,26 +168,33 @@ const Apresentacao: React.FC = () => {
                         {
                             name: "Patricia Maria de Oliveira Andrade",
                             role: "Doutoranda em Enfermagem (UFPB)",
-                            desc: "Idealizadora do projeto e pesquisadora em cuidados paliativos."
+                            desc: "Idealizadora do projeto e pesquisadora em cuidados paliativos.",
+                            image: patriciaImg
                         },
                         {
                             name: "Pedro Martins de Araújo Neto",
                             role: "Acadêmico de Eng. da Computação",
-                            desc: "Desenvolvedor frontend e analista de UI/UX."
+                            desc: "Desenvolvedor frontend e analista de UI/UX.",
+                            image: pedroImg
                         },
                         {
                             name: "Carlos Eduardo Rodrigues dos Santos",
                             role: "Analista de Sistemas",
-                            desc: "Arquiteto de software e desenvolvedor de infraestrutura (Backend/DevOps)."
+                            desc: "Arquiteto de software e desenvolvedor de infraestrutura (Backend/DevOps).",
+                            image: carlosImg
                         }
                     ].map(member => (
-                        <div key={member.name} className="relative p-6 bg-white border border-warm-100 shadow-sm rounded-2xl text-center group interactive-btn hover:shadow-md">
-                            <div className="w-16 h-16 mx-auto bg-gradient-to-tr from-primary to-secondary rounded-full mb-4 flex items-center justify-center text-white text-xl font-bold shadow-md">
-                                {member.name.charAt(0)}
+                        <div key={member.name} className="relative p-6 bg-white border border-warm-100 shadow-sm rounded-2xl text-center group interactive-btn hover:shadow-md transition-all duration-300">
+                            <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-4 relative rounded-full p-1 bg-gradient-to-tr from-primary to-secondary shadow-md overflow-hidden">
+                                <img
+                                    src={member.image}
+                                    alt={member.name}
+                                    className="w-full h-full object-cover rounded-full group-hover:scale-105 transition-transform duration-300"
+                                />
                             </div>
-                            <h3 className="font-bold text-warm-900">{member.name}</h3>
+                            <h3 className="font-bold text-warm-900 text-lg">{member.name}</h3>
                             <p className="text-sm font-medium text-primary mt-1 mb-3">{member.role}</p>
-                            <p className="text-xs text-warm-600 leading-relaxed">{member.desc}</p>
+                            <p className="text-xs sm:text-sm text-warm-600 leading-relaxed">{member.desc}</p>
                         </div>
                     ))}
                 </div>
