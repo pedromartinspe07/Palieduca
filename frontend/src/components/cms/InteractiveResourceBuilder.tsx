@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Trash2, Edit2, CheckCircle2, Play, LayoutList, Layers, Save, X, Loader2 } from 'lucide-react';
 
@@ -36,11 +36,7 @@ export const InteractiveResourceBuilder: React.FC<{ moduleSlug: string }> = ({ m
 
     const [saving, setSaving] = useState(false);
 
-    useEffect(() => {
-        if (moduleSlug) fetchResources();
-    }, [moduleSlug]);
-
-    const fetchResources = async () => {
+    const fetchResources = useCallback(async () => {
         setLoading(true);
         try {
             const res = await fetch(`${API_URL}/api/modules/${moduleSlug}/resources`);
@@ -52,7 +48,11 @@ export const InteractiveResourceBuilder: React.FC<{ moduleSlug: string }> = ({ m
         } finally {
             setLoading(false);
         }
-    };
+    }, [moduleSlug]);
+
+    useEffect(() => {
+        if (moduleSlug) fetchResources();
+    }, [moduleSlug, fetchResources]);
 
     const resetForm = () => {
         setIsEditing(false);
@@ -78,7 +78,7 @@ export const InteractiveResourceBuilder: React.FC<{ moduleSlug: string }> = ({ m
             } else if (r.type === 'flashcard') {
                 setCards(parsed.cards || []);
             }
-        } catch (e) {
+        } catch {
             console.error("Erro ao fazer parse do JSON do recurso");
         }
     };

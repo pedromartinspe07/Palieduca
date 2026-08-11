@@ -13,7 +13,7 @@ export const InteractiveResourceRenderer: React.FC<{ resource: Resource }> = ({ 
     let content: any = {};
     try {
         content = JSON.parse(resource.content_json);
-    } catch (e) {
+    } catch {
         return <div className="p-4 bg-red-50 text-red-500 rounded-xl">Erro ao carregar recurso interativo.</div>;
     }
 

@@ -171,3 +171,20 @@
     transform: rotateY(180deg);
   }
 }
+/* -- Custom Quill Paper Styling -- */
+.custom-quill-paper .ql-container.ql-snow {
+    border: none !important;
+}
+.custom-quill-paper .ql-editor {
+    padding: 0 !important;
+    min-height: 100% !important;
+}
+
+.image-resizer-handle {
+    box-shadow: 0 0 2px rgba(0,0,0,0.3);
+}
+
+.image-resizer-handle:hover {
+    transform: scale(1.2);
+    transition: transform 0.1s ease;
+}

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2, ArrowLeft, BookOpen, Sparkles } from 'lucide-react';
 import { InteractiveResourceRenderer } from '../components/InteractiveResourceRenderer';
+import { CanvasRenderer } from '../components/cms/canvas/CanvasRenderer';
 import '../index.css';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -11,20 +12,14 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
 const ModuleViewer: React.FC = () => {
     const { slug_id } = useParams<{ slug_id: string }>();
     const navigate = useNavigate();
-    const [content, setContent] = useState<string>('');
+    const [elements, setElements] = useState<any[]>([]);
     const [resources, setResources] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [moduleInfo, setModuleInfo] = useState<any>(null);
 
-    useEffect(() => {
-        window.scrollTo(0, 0);
-        fetchModuleData();
-    }, [slug_id]);
-
-    const fetchModuleData = async () => {
+    const fetchModuleData = useCallback(async () => {
         setLoading(true);
         try {
-            // Buscar informações do módulo para pegar o título
             const modsRes = await fetch(`${API_URL}/api/modules`);
             if (modsRes.ok) {
                 const modules = await modsRes.json();
@@ -34,14 +29,16 @@ const ModuleViewer: React.FC = () => {
                 }
             }
 
-            // Buscar conteúdo rico do banco de dados (Teoria)
-            const pageRes = await fetch(`${API_URL}/api/pages/modulo_${slug_id}`);
+            const pageRes = await fetch(`${API_URL}/api/v1/cms/pages/modulo_${slug_id}`);
             if (pageRes.ok) {
                 const data = await pageRes.json();
-                setContent(data.content || '');
+                try {
+                    setElements(JSON.parse(data.content || '[]'));
+                } catch (e) {
+                    setElements([]);
+                }
             }
 
-            // Buscar recursos interativos associados ao módulo (Quizzes, Flashcards)
             const recRes = await fetch(`${API_URL}/api/modules/${slug_id}/resources`);
             if (recRes.ok) {
                 setResources(await recRes.json());
@@ -51,8 +48,12 @@ const ModuleViewer: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [slug_id]);
 
+    useEffect(() => {
+        window.scrollTo(0, 0);
+        fetchModuleData();
+    }, [slug_id, fetchModuleData]);
     if (loading) {
         return (
             <div className="min-h-screen pt-24 pb-12 flex items-center justify-center bg-warm-50">
@@ -87,11 +88,10 @@ const ModuleViewer: React.FC = () => {
                         </div>
                     </div>
                     
-                    {content ? (
-                        <div 
-                            className="rich-text-content ql-editor"
-                            dangerouslySetInnerHTML={{ __html: content }} 
-                        />
+                    {elements && elements.length > 0 ? (
+                        <div className="w-full">
+                            <CanvasRenderer elements={elements} />
+                        </div>
                     ) : (
                         <div className="text-center py-16 bg-warm-50 rounded-2xl border border-dashed border-warm-300">
                             <p className="text-warm-600 text-lg">

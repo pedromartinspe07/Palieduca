@@ -51,12 +51,40 @@ class ModuleResponse(ModuleBase):
 class PageContentBase(BaseModel):
     page_name: str
     content: str
+    draft_content: Optional[str] = None
+    meta_title: Optional[str] = None
+    meta_description: Optional[str] = None
+    slug: Optional[str] = None
 
 class PageContentUpdate(BaseModel):
-    content: str
+    content: Optional[str] = None
+    draft_content: Optional[str] = None
+    meta_title: Optional[str] = None
+    meta_description: Optional[str] = None
+    slug: Optional[str] = None
 
 class PageContentResponse(PageContentBase):
     id: int
+
+    class Config:
+        from_attributes = True
+
+class PageRevisionResponse(BaseModel):
+    id: int
+    page_name: str
+    content: str
+    author_name: str
+    created_at: str
+    description: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class MediaFileResponse(BaseModel):
+    id: int
+    filename: str
+    file_url: str
+    uploaded_at: str
 
     class Config:
         from_attributes = True

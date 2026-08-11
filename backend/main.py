@@ -1,11 +1,15 @@
 import os
-from fastapi import FastAPI, HTTPException, Depends, status
+import shutil
+from datetime import datetime
+from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 import httpx
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 
 from database import engine, get_db
 import models
@@ -17,12 +21,28 @@ import seed
 load_dotenv()
 
 models.Base.metadata.create_all(bind=engine)
+
+# Migração simples para SQLite (se as colunas não existirem, adiciona)
+with engine.connect() as conn:
+    try:
+        conn.execute(text("ALTER TABLE page_content ADD COLUMN draft_content VARCHAR"))
+        conn.execute(text("ALTER TABLE page_content ADD COLUMN meta_title VARCHAR"))
+        conn.execute(text("ALTER TABLE page_content ADD COLUMN meta_description VARCHAR"))
+        conn.execute(text("ALTER TABLE page_content ADD COLUMN slug VARCHAR"))
+        conn.commit()
+    except Exception:
+        pass # Ignora se já existirem
+
 # Auto-seed inicial para garantir dados no Render mesmo em ambientes voláteis
 seed.seed_users()
 seed.seed_modules()
 seed.seed_pages()
 
 app = FastAPI()
+
+# Configura pasta para upload de mídias
+os.makedirs("static/uploads", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Permitir requisições tanto locais quanto do seu site oficial
 app.add_middleware(
@@ -180,12 +200,21 @@ def update_module(
 def get_page_content(page_name: str, db: Session = Depends(get_db)):
     page = db.query(models.PageContent).filter(models.PageContent.page_name == page_name).first()
     if not page:
-        # Se não existir, retorna vazio em vez de erro para não quebrar o frontend
         return schemas.PageContentResponse(id=0, page_name=page_name, content="")
     return page
 
-@app.put("/api/pages/{page_name}", response_model=schemas.PageContentResponse)
-def update_page_content(
+@app.get("/api/pages/{page_name}/edit", response_model=schemas.PageContentResponse)
+def get_page_content_edit(page_name: str, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão para editar conteúdo")
+    
+    page = db.query(models.PageContent).filter(models.PageContent.page_name == page_name).first()
+    if not page:
+        return schemas.PageContentResponse(id=0, page_name=page_name, content="")
+    return page
+
+@app.put("/api/pages/{page_name}/draft", response_model=schemas.PageContentResponse)
+def update_page_draft(
     page_name: str, 
     page_update: schemas.PageContentUpdate, 
     db: Session = Depends(get_db),
@@ -196,15 +225,79 @@ def update_page_content(
         
     page = db.query(models.PageContent).filter(models.PageContent.page_name == page_name).first()
     if not page:
-        # Cria se não existir
-        page = models.PageContent(page_name=page_name, content=page_update.content)
+        page = models.PageContent(page_name=page_name, content="", draft_content=page_update.draft_content)
+        if page_update.meta_title is not None: page.meta_title = page_update.meta_title
+        if page_update.meta_description is not None: page.meta_description = page_update.meta_description
+        if page_update.slug is not None: page.slug = page_update.slug
         db.add(page)
     else:
-        page.content = page_update.content
+        if page_update.draft_content is not None: page.draft_content = page_update.draft_content
+        if page_update.meta_title is not None: page.meta_title = page_update.meta_title
+        if page_update.meta_description is not None: page.meta_description = page_update.meta_description
+        if page_update.slug is not None: page.slug = page_update.slug
         
     db.commit()
     db.refresh(page)
     return page
+
+@app.post("/api/pages/{page_name}/publish", response_model=schemas.PageContentResponse)
+def publish_page_content(
+    page_name: str, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão para editar conteúdo")
+        
+    page = db.query(models.PageContent).filter(models.PageContent.page_name == page_name).first()
+    if not page or not page.draft_content:
+        raise HTTPException(status_code=400, detail="Não há rascunho para publicar")
+        
+    # Salva no histórico de versões
+    revision = models.PageRevision(
+        page_name=page_name,
+        content=page.content,
+        author_name=current_user.nome,
+        created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        description="Publicação via Editor Visual"
+    )
+    db.add(revision)
+    
+    # Atualiza conteúdo ao vivo e limpa rascunho
+    page.content = page.draft_content
+    page.draft_content = None
+    
+    db.commit()
+    db.refresh(page)
+    return page
+
+@app.get("/api/pages/{page_name}/revisions", response_model=list[schemas.PageRevisionResponse])
+def get_page_revisions(page_name: str, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    return db.query(models.PageRevision).filter(models.PageRevision.page_name == page_name).order_by(models.PageRevision.id.desc()).all()
+
+@app.post("/api/pages/{page_name}/revisions/{revision_id}/restore", response_model=schemas.PageContentResponse)
+def restore_page_revision(
+    page_name: str, 
+    revision_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+        
+    revision = db.query(models.PageRevision).filter(models.PageRevision.id == revision_id, models.PageRevision.page_name == page_name).first()
+    if not revision:
+        raise HTTPException(status_code=404, detail="Revisão não encontrada")
+        
+    page = db.query(models.PageContent).filter(models.PageContent.page_name == page_name).first()
+    if page:
+        page.draft_content = revision.content
+        db.commit()
+        db.refresh(page)
+        return page
+    raise HTTPException(status_code=404, detail="Página não encontrada")
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
@@ -307,6 +400,69 @@ def delete_interactive_resource(
     db.delete(db_resource)
     db.commit()
     return {"message": "Recurso deletado com sucesso"}
+
+# ================================
+# Biblioteca de Mídia
+# ================================
+
+@app.post("/api/media/upload", response_model=schemas.MediaFileResponse)
+async def upload_media_file(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+        
+    # Salvar arquivo no disco
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    safe_filename = f"{timestamp}_{file.filename}"
+    file_path = f"static/uploads/{safe_filename}"
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    # A URL que será devolvida pro frontend (caminho relativo)
+    file_url = f"/static/uploads/{safe_filename}"
+    
+    # Salvar no banco
+    media = models.MediaFile(
+        filename=file.filename,
+        file_url=file_url,
+        uploaded_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    )
+    db.add(media)
+    db.commit()
+    db.refresh(media)
+    return media
+
+@app.get("/api/media", response_model=list[schemas.MediaFileResponse])
+def get_media_files(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    return db.query(models.MediaFile).order_by(models.MediaFile.id.desc()).all()
+
+@app.delete("/api/media/{media_id}")
+def delete_media_file(
+    media_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+        
+    media = db.query(models.MediaFile).filter(models.MediaFile.id == media_id).first()
+    if not media:
+        raise HTTPException(status_code=404, detail="Arquivo não encontrado")
+        
+    # Remover arquivo físico
+    file_path = media.file_url.lstrip("/") # de /static/uploads/x.jpg para static/uploads/x.jpg
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        
+    db.delete(media)
+    db.commit()
+    return {"message": "Arquivo deletado"}
 
 if __name__ == "__main__":
     import uvicorn

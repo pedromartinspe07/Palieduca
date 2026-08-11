@@ -28,7 +28,29 @@ class PageContent(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     page_name = Column(String, unique=True, index=True) # ex: "modulos", "biblioteca", "glossario"
-    content = Column(String) # Texto rico / HTML longo
+    content = Column(String) # Texto rico / HTML longo (versão publicada)
+    draft_content = Column(String, nullable=True) # Texto em rascunho
+    meta_title = Column(String, nullable=True)
+    meta_description = Column(String, nullable=True)
+    slug = Column(String, nullable=True)
+
+class PageRevision(Base):
+    __tablename__ = "page_revisions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    page_name = Column(String, index=True)
+    content = Column(String)
+    author_name = Column(String)
+    created_at = Column(String)
+    description = Column(String, nullable=True)
+
+class MediaFile(Base):
+    __tablename__ = "media_files"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    filename = Column(String, index=True)
+    file_url = Column(String)
+    uploaded_at = Column(String)
 
 class InteractiveResource(Base):
     __tablename__ = "interactive_resources"

@@ -30,24 +30,47 @@ interface ModuleData {
 }
 
 interface ModulosProps {
-    previewContent?: string;
+    isEditing?: boolean;
+    initialContent?: any;
+    onContentChange?: (content: any) => void;
 }
 
-const Modulos: React.FC<ModulosProps> = ({ previewContent }) => {
-    const [content, setContent] = useState(previewContent || '');
+const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentChange }) => {
+    const [content, setContent] = useState<any>(initialContent || { 
+        title: 'Módulos de Aprendizagem',
+        intro: 'Bem-vindo à área de módulos. Escolha um módulo abaixo para começar a aprender.'
+    });
     const [modules, setModules] = useState<ModuleData[]>([]);
-    const [loadingContent, setLoadingContent] = useState(!previewContent);
+    const [loadingContent, setLoadingContent] = useState(!initialContent);
     const [loadingModules, setLoadingModules] = useState(true);
 
+    // Sync from parent if it changes
     useEffect(() => {
-        if (previewContent !== undefined) {
-            setContent(previewContent);
+        if (initialContent) setContent(initialContent);
+    }, [initialContent]);
+
+    useEffect(() => {
+        if (isEditing) {
             setLoadingContent(false);
-        } else {
+        } else if (!initialContent) {
             // Fetch Page CMS Content
-            fetch(`${API_URL}/api/pages/modulos`)
+            fetch(`${API_URL}/api/v1/cms/pages/modulos`)
                 .then(res => res.json())
-                .then(data => setContent(data.content || ''))
+                .then(data => {
+                    try {
+                        const parsed = JSON.parse(data.content || '{}');
+                        // Se era o formato antigo (array), fallback para default
+                        if (Array.isArray(parsed)) {
+                            throw new Error('Old format');
+                        }
+                        setContent(parsed);
+                    } catch (e) {
+                        setContent({
+                            title: 'Módulos de Aprendizagem',
+                            intro: 'Bem-vindo à área de módulos. Escolha um módulo abaixo para começar a aprender.'
+                        });
+                    }
+                })
                 .catch(err => console.error(err))
                 .finally(() => setLoadingContent(false));
         }
@@ -58,34 +81,51 @@ const Modulos: React.FC<ModulosProps> = ({ previewContent }) => {
             .then(data => setModules(data))
             .catch(err => console.error(err))
             .finally(() => setLoadingModules(false));
-    }, [previewContent]);
+    }, [isEditing, initialContent]);
+
+    const handleTextChange = (field: string, text: string) => {
+        const newContent = { ...content, [field]: text };
+        setContent(newContent);
+        if (onContentChange) onContentChange(newContent);
+    };
+
+    const editableClass = isEditing ? 'outline-dashed outline-2 outline-primary/50 outline-offset-4 cursor-text hover:bg-warm-100/50 transition-colors rounded' : '';
 
     return (
-        <main className="min-h-screen pt-32 pb-20 px-4 bg-background">
+        <main className={`min-h-screen pt-32 pb-20 px-4 bg-background ${isEditing ? 'pointer-events-auto' : ''}`}>
             <div className="max-w-[85rem] mx-auto">
                 <div className="flex items-center gap-3 mb-8">
                     <div className="bg-gradient-to-r from-primary to-secondary text-white p-3 rounded-xl shadow-md">
                         <LayoutDashboard size={28} />
                     </div>
-                    <h1 className="text-3xl font-bold text-warm-900">Módulos de Aprendizagem</h1>
+                    <h1 
+                        contentEditable={isEditing}
+                        suppressContentEditableWarning={true}
+                        onBlur={(e) => handleTextChange('title', e.currentTarget.innerText)}
+                        className={`text-3xl font-bold text-warm-900 ${editableClass}`}
+                    >
+                        {content.title || 'Módulos de Aprendizagem'}
+                    </h1>
                 </div>
 
                 {/* Área de Texto Editável pelo CMS */}
                 <div className="mb-12">
                     {loadingContent ? (
-                        <div className="animate-pulse h-20 bg-warm-200 rounded-xl w-full"></div>
+                        <div className="animate-pulse h-6 bg-warm-200 rounded-xl w-3/4 max-w-2xl"></div>
                     ) : (
-                        content && (
-                            <div 
-                                className="rich-text-content prose prose-warm max-w-none prose-headings:text-warm-900 prose-p:text-warm-700"
-                                dangerouslySetInnerHTML={{ __html: content }} 
-                            />
-                        )
+                        <p 
+                            contentEditable={isEditing}
+                            suppressContentEditableWarning={true}
+                            onBlur={(e) => handleTextChange('intro', e.currentTarget.innerText)}
+                            className={`text-lg text-warm-600 max-w-3xl ${editableClass}`}
+                        >
+                            {content.intro || 'Bem-vindo à área de módulos. Escolha um módulo abaixo para começar a aprender.'}
+                        </p>
                     )}
                 </div>
 
                 {/* Lista de Módulos (Cards) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 ${isEditing ? 'pointer-events-none opacity-80' : ''}`}>
                     {loadingModules
                         ? Array.from({ length: 6 }).map((_, i) => <ModuleCardSkeleton key={i} />)
                         : modules.map(module => (
