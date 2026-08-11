@@ -246,6 +246,68 @@ async def chat(request: ChatRequest):
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/modules/{module_slug}/resources", response_model=list[schemas.InteractiveResourceResponse])
+def get_interactive_resources(module_slug: str, db: Session = Depends(get_db)):
+    return db.query(models.InteractiveResource).filter(models.InteractiveResource.module_slug == module_slug).all()
+
+@app.post("/api/modules/{module_slug}/resources", response_model=schemas.InteractiveResourceResponse)
+def create_interactive_resource(
+    module_slug: str,
+    resource: schemas.InteractiveResourceCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    new_resource = models.InteractiveResource(
+        module_slug=module_slug,
+        type=resource.type,
+        title=resource.title,
+        content_json=resource.content_json
+    )
+    db.add(new_resource)
+    db.commit()
+    db.refresh(new_resource)
+    return new_resource
+
+@app.put("/api/resources/{resource_id}", response_model=schemas.InteractiveResourceResponse)
+def update_interactive_resource(
+    resource_id: int,
+    resource_update: schemas.InteractiveResourceUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+        
+    db_resource = db.query(models.InteractiveResource).filter(models.InteractiveResource.id == resource_id).first()
+    if not db_resource:
+        raise HTTPException(status_code=404, detail="Recurso não encontrado")
+        
+    db_resource.title = resource_update.title
+    db_resource.content_json = resource_update.content_json
+    db.commit()
+    db.refresh(db_resource)
+    return db_resource
+
+@app.delete("/api/resources/{resource_id}")
+def delete_interactive_resource(
+    resource_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+        
+    db_resource = db.query(models.InteractiveResource).filter(models.InteractiveResource.id == resource_id).first()
+    if not db_resource:
+        raise HTTPException(status_code=404, detail="Recurso não encontrado")
+        
+    db.delete(db_resource)
+    db.commit()
+    return {"message": "Recurso deletado com sucesso"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)

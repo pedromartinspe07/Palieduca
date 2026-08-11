@@ -60,3 +60,22 @@ class PageContentResponse(PageContentBase):
 
     class Config:
         from_attributes = True
+
+class InteractiveResourceBase(BaseModel):
+    module_slug: str
+    type: str
+    title: str
+    content_json: str
+
+class InteractiveResourceCreate(InteractiveResourceBase):
+    pass
+
+class InteractiveResourceUpdate(BaseModel):
+    title: str
+    content_json: str
+
+class InteractiveResourceResponse(InteractiveResourceBase):
+    id: int
+
+    class Config:
+        from_attributes = True

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { FileText, Loader2, Save, Sparkles, Send, MonitorPlay, BookOpen } from 'lucide-react';
+import { FileText, Loader2, Save, Sparkles, Send, MonitorPlay, BookOpen, Layers } from 'lucide-react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
+import { InteractiveResourceBuilder } from './InteractiveResourceBuilder';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://127.0.0.1:8000'
@@ -32,6 +33,9 @@ const ModuleContentEditor: React.FC = () => {
     // IA States
     const [aiPrompt, setAiPrompt] = useState('');
     const [generatingAI, setGeneratingAI] = useState(false);
+
+    // Tab de Edição (Teoria vs Recursos)
+    const [activeEditorTab, setActiveEditorTab] = useState<'teoria' | 'recursos'>('teoria');
 
     useEffect(() => {
         fetchModulesList();
@@ -149,71 +153,95 @@ const ModuleContentEditor: React.FC = () => {
                     ))}
                 </div>
 
-                {/* Copiloto IA */}
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-2xl border border-purple-100">
-                    <div className="flex items-center gap-2 mb-3 text-purple-700 font-bold">
-                        <Sparkles size={18} />
-                        Copiloto IA (Llama 3.3)
-                    </div>
-                    <div className="flex gap-2">
-                        <input
-                            type="text"
-                            value={aiPrompt}
-                            onChange={(e) => setAiPrompt(e.target.value)}
-                            placeholder="Ex: Crie 2 parágrafos sobre bioética..."
-                            className="flex-1 px-3 py-2 rounded-xl border border-purple-200 text-sm focus:ring-2 focus:ring-purple-300 outline-none"
-                            onKeyDown={(e) => e.key === 'Enter' && handleAIGenerate()}
-                        />
-                        <button
-                            onClick={handleAIGenerate}
-                            disabled={generatingAI || !aiPrompt.trim()}
-                            className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white p-2 px-4 rounded-xl flex items-center justify-center transition-all shadow-sm"
-                        >
-                            {generatingAI ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Editor Quill */}
-                <div className="flex flex-col flex-1 bg-white rounded-2xl border border-warm-200 shadow-sm overflow-hidden min-h-[400px]">
-                    <div className="p-3 border-b border-warm-200 bg-warm-50 text-sm font-bold text-warm-700 flex items-center gap-2">
-                        <FileText size={16} />
-                        Editor do Módulo
-                    </div>
-                    {loading ? (
-                        <div className="flex-1 flex items-center justify-center p-8">
-                            <Loader2 className="animate-spin text-primary w-8 h-8" />
-                        </div>
-                    ) : (
-                        <div className="flex-1 flex flex-col custom-quill h-full">
-                            <ReactQuill 
-                                theme="snow"
-                                value={content}
-                                onChange={setContent}
-                                modules={modulesConfig}
-                                className="flex-1 h-full flex flex-col"
-                                placeholder="Comece a escrever o conteúdo do módulo aqui..."
-                            />
-                        </div>
-                    )}
-                </div>
-
-                <div className="mt-auto pt-4">
-                    <button
-                        onClick={handleSave}
-                        disabled={saving || loading}
-                        className="w-full bg-[#8c6b5d] hover:bg-[#7a5c50] text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                {/* Abas Teoria vs Recursos */}
+                <div className="flex bg-warm-100 p-1 rounded-xl">
+                    <button 
+                        onClick={() => setActiveEditorTab('teoria')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg flex justify-center items-center gap-2 transition-all ${activeEditorTab === 'teoria' ? 'bg-white shadow text-primary' : 'text-warm-600 hover:text-warm-900'}`}
                     >
-                        {saving ? <Loader2 size={24} className="animate-spin" /> : <Save size={24} />}
-                        Salvar Alterações do Módulo
+                        <FileText size={16}/> Conteúdo Teórico
                     </button>
-                    
-                    {successMessage && (
-                        <div className="mt-3 text-center text-sage-600 font-bold bg-sage-50 p-2 rounded-lg border border-sage-200 animate-fade-in">
-                            {successMessage}
-                        </div>
-                    )}
+                    <button 
+                        onClick={() => setActiveEditorTab('recursos')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg flex justify-center items-center gap-2 transition-all ${activeEditorTab === 'recursos' ? 'bg-white shadow text-purple-600' : 'text-warm-600 hover:text-warm-900'}`}
+                    >
+                        <Layers size={16}/> Recursos Interativos
+                    </button>
                 </div>
+
+                {activeEditorTab === 'teoria' ? (
+                    <>
+                        {/* Copiloto IA */}
+                        <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-2xl border border-purple-100">
+                            <div className="flex items-center gap-2 mb-3 text-purple-700 font-bold">
+                                <Sparkles size={18} />
+                                Copiloto IA (Llama 3.3)
+                            </div>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={aiPrompt}
+                                    onChange={(e) => setAiPrompt(e.target.value)}
+                                    placeholder="Ex: Crie 2 parágrafos sobre bioética..."
+                                    className="flex-1 px-3 py-2 rounded-xl border border-purple-200 text-sm focus:ring-2 focus:ring-purple-300 outline-none"
+                                    onKeyDown={(e) => e.key === 'Enter' && handleAIGenerate()}
+                                />
+                                <button
+                                    onClick={handleAIGenerate}
+                                    disabled={generatingAI || !aiPrompt.trim()}
+                                    className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white p-2 px-4 rounded-xl flex items-center justify-center transition-all shadow-sm"
+                                >
+                                    {generatingAI ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Editor Quill */}
+                        <div className="flex flex-col flex-1 bg-white rounded-2xl border border-warm-200 shadow-sm overflow-hidden min-h-[400px]">
+                            <div className="p-3 border-b border-warm-200 bg-warm-50 text-sm font-bold text-warm-700 flex items-center gap-2">
+                                <FileText size={16} />
+                                Editor do Módulo
+                            </div>
+                            {loading ? (
+                                <div className="flex-1 flex items-center justify-center p-8">
+                                    <Loader2 className="animate-spin text-primary w-8 h-8" />
+                                </div>
+                            ) : (
+                                <div className="flex-1 flex flex-col custom-quill h-full">
+                                    <ReactQuill 
+                                        theme="snow"
+                                        value={content}
+                                        onChange={setContent}
+                                        modules={modulesConfig}
+                                        className="flex-1 h-full flex flex-col"
+                                        placeholder="Comece a escrever o conteúdo do módulo aqui..."
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-auto pt-4">
+                            <button
+                                onClick={handleSave}
+                                disabled={saving || loading}
+                                className="w-full bg-[#8c6b5d] hover:bg-[#7a5c50] text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                            >
+                                {saving ? <Loader2 size={24} className="animate-spin" /> : <Save size={24} />}
+                                Salvar Alterações Teóricas
+                            </button>
+                            
+                            {successMessage && (
+                                <div className="mt-3 text-center text-sage-600 font-bold bg-sage-50 p-2 rounded-lg border border-sage-200 animate-fade-in">
+                                    {successMessage}
+                                </div>
+                            )}
+                        </div>
+                    </>
+                ) : (
+                    <div className="flex-1 min-h-[500px]">
+                        <InteractiveResourceBuilder moduleSlug={selectedModuleSlug} />
+                    </div>
+                )}
             </div>
 
             {/* Direita: Live Preview (60%) */}

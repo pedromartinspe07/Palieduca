@@ -29,3 +29,12 @@ class PageContent(Base):
     id = Column(Integer, primary_key=True, index=True)
     page_name = Column(String, unique=True, index=True) # ex: "modulos", "biblioteca", "glossario"
     content = Column(String) # Texto rico / HTML longo
+
+class InteractiveResource(Base):
+    __tablename__ = "interactive_resources"
+
+    id = Column(Integer, primary_key=True, index=True)
+    module_slug = Column(String, index=True) # Ligado ao slug_id do Module
+    type = Column(String) # 'quiz', 'flashcard', 'video', 'podcast'
+    title = Column(String)
+    content_json = Column(String) # Dados estruturados em JSON
