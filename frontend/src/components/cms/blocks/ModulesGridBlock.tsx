@@ -19,6 +19,7 @@ const iconMap: Record<string, React.ReactNode> = {
 
 const ModulesGridBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdate, onSelect }) => {
     const { title, intro } = block.data;
+    const { bgColor = 'transparent' } = block.styles || {};
     const [modules, setModules] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -34,7 +35,7 @@ const ModulesGridBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, 
     }, [isEditing]);
 
     const handleTextChange = (field: string, text: string) => {
-        onUpdate(block.id, { ...block.data, [field]: text });
+        onUpdate(block.id, { data: { ...block.data, [field]: text } });
     };
 
     return (
@@ -46,8 +47,9 @@ const ModulesGridBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, 
             className={`relative w-full py-12 px-6 transition-all duration-200 ${
                 isEditing ? 'cursor-pointer' : ''
             } ${
-                isSelected ? 'ring-4 ring-primary ring-inset z-10 rounded-xl bg-white' : 'hover:ring-2 hover:ring-blue-400/50 hover:ring-inset rounded-xl bg-transparent'
+                isSelected ? 'ring-4 ring-primary ring-inset z-10 rounded-xl' : 'hover:ring-2 hover:ring-blue-400/50 hover:ring-inset rounded-xl'
             }`}
+            style={{ backgroundColor: bgColor }}
         >
             <div className="max-w-[85rem] mx-auto">
                 <div className="mb-10 text-center sm:text-left">
@@ -74,7 +76,7 @@ const ModulesGridBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pointer-events-none opacity-90">
                     {loading
                         ? Array.from({ length: 3 }).map((_, i) => <ModuleCardSkeleton key={i} />)
-                        : modules.slice(0, 3).map(module => (
+                        : modules.map(module => (
                             <div key={module.id} className="scale-95 origin-top">
                                 <ModuleCard 
                                     id={module.slug_id}

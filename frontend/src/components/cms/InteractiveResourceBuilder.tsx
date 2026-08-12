@@ -41,7 +41,8 @@ export const InteractiveResourceBuilder: React.FC<{ moduleSlug: string }> = ({ m
         try {
             const res = await fetch(`${API_URL}/api/modules/${moduleSlug}/resources`);
             if (res.ok) {
-                setResources(await res.json());
+                const data = await res.json();
+                setResources(Array.isArray(data) ? data : []);
             }
         } catch (error) {
             console.error(error);
@@ -74,9 +75,9 @@ export const InteractiveResourceBuilder: React.FC<{ moduleSlug: string }> = ({ m
             if (r.type === 'video' || r.type === 'podcast') {
                 setVideoUrl(parsed.url || '');
             } else if (r.type === 'quiz') {
-                setQuestions(parsed.questions || []);
+                setQuestions(Array.isArray(parsed.questions) ? parsed.questions : [{ text: '', options: ['', '', '', ''], correct_index: 0 }]);
             } else if (r.type === 'flashcard') {
-                setCards(parsed.cards || []);
+                setCards(Array.isArray(parsed.cards) ? parsed.cards : [{ front: '', back: '' }]);
             }
         } catch {
             console.error("Erro ao fazer parse do JSON do recurso");
@@ -169,13 +170,13 @@ export const InteractiveResourceBuilder: React.FC<{ moduleSlug: string }> = ({ m
 
                     {loading ? (
                         <div className="flex justify-center p-8"><Loader2 className="animate-spin text-primary" /></div>
-                    ) : resources.length === 0 ? (
+                    ) : !resources || resources.length === 0 ? (
                         <div className="text-center py-12 bg-warm-50 rounded-xl border border-dashed border-warm-300 text-warm-500">
                             Nenhum recurso interativo cadastrado neste módulo ainda.
                         </div>
                     ) : (
                         <div className="flex flex-col gap-3">
-                            {resources.map(r => (
+                            {resources?.map(r => (
                                 <div key={r.id} className="flex justify-between items-center p-4 border border-warm-100 rounded-xl bg-warm-50 hover:bg-warm-100/50 transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div className="bg-white p-2 rounded-lg shadow-sm">{getIcon(r.type)}</div>

@@ -3,43 +3,22 @@ import { useAuth } from '../../context/AuthContext';
 import {
     FileText, CheckCircle2, Loader2, Save, Sparkles, Send,
     BookOpen, Layers, AlertTriangle,
-    Eye, Bot, ChevronDown, ChevronUp, History, Image as ImageIcon, RotateCcw
+    Bot, ChevronDown, ChevronUp, History, Image as ImageIcon, RotateCcw, X
 } from 'lucide-react';
 import DOMPurify from 'dompurify';
 
 import { InteractiveResourceBuilder } from './InteractiveResourceBuilder';
 import MediaLibrary from './MediaLibrary';
-import { CanvasWorkspace } from './canvas/CanvasWorkspace';
-import type { CanvasElement } from './canvas/types';
+import { WixFloatingToolbar } from './WixFloatingToolbar';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://127.0.0.1:8000'
     : 'https://palieduca.onrender.com';
 
-const cleanEditorHtml = (rawHtml: string): string => {
-    if (!rawHtml) return '';
-    const safeHtml = DOMPurify.sanitize(rawHtml);
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(safeHtml, 'text/html');
-
-    const isNodeEmpty = (node: Element) => {
-        const text = node.innerHTML.replace(/&nbsp;/g, '').trim();
-        return text === '' || text === '<br>';
-    };
-
-    while (doc.body.firstElementChild && doc.body.firstElementChild.tagName === 'P' && isNodeEmpty(doc.body.firstElementChild)) {
-        doc.body.removeChild(doc.body.firstElementChild);
-    }
-    while (doc.body.lastElementChild && doc.body.lastElementChild.tagName === 'P' && isNodeEmpty(doc.body.lastElementChild)) {
-        doc.body.removeChild(doc.body.lastElementChild);
-    }
-    return doc.body.innerHTML;
-};
-
 const cleanAIResponse = (response: string): string => {
     if (!response) return '';
     let html = response.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
-    if (!/<[a-z][\s\S]*>/i.test(html)) {
+    if (!/\<[a-z][\s\S]*\>/i.test(html)) {
         html = html
             .split(/\n\s*\n+/)
             .map(paragraph => paragraph.trim())
@@ -47,25 +26,28 @@ const cleanAIResponse = (response: string): string => {
             .map(p => `<p>${p.replace(/\r?\n/g, ' ').replace(/\s{2,}/g, ' ').trim()}</p>`)
             .join('');
     }
-    return cleanEditorHtml(html);
+    return DOMPurify.sanitize(html);
 };
 
 const ModuleContentEditor: React.FC = () => {
     const { token } = useAuth();
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const editorRef = useRef<HTMLDivElement>(null);
 
     const [modules, setModules] = useState<any[]>([]);
     const [selectedModuleSlug, setSelectedModuleSlug] = useState<string>('');
-    const [elements, setElements] = useState<CanvasElement[]>([]);
-    const [originalElements, setOriginalElements] = useState<CanvasElement[]>([]);
+
+    // Rich Text HTML content (replaces CanvasElement[])
+    const [htmlContent, setHtmlContent] = useState<string>('');
+    const [originalContent, setOriginalContent] = useState<string>('');
 
     const [isDirty, setIsDirty] = useState(false);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
 
-    // Tabs e Layouts
-    const [activeEditorTab, setActiveEditorTab] = useState<'teoria' | 'recursos'>('teoria');    const [mobileTab, setMobileTab] = useState<'teoria' | 'recursos' | 'preview' | 'ai'>('teoria');
+    // Tabs
+    const [activeTab, setActiveTab] = useState<'teoria' | 'recursos'>('teoria');
 
     // Modals & Panels
     const [showPublishModal, setShowPublishModal] = useState(false);
@@ -73,27 +55,23 @@ const ModuleContentEditor: React.FC = () => {
     const [showHistory, setShowHistory] = useState(false);
     const [revisions, setRevisions] = useState<any[]>([]);
 
+    // AI
     const [aiPrompt, setAiPrompt] = useState('');
     const [generatingAI, setGeneratingAI] = useState(false);
     const [aiExpanded, setAiExpanded] = useState(true);
+
     useEffect(() => {
         fetchModulesList();
-        return () => {
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        };
+        return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
     }, []);
 
     const fetchModulesList = async () => {
         try {
             const res = await fetch(`${API_URL}/api/modules`);
             const data = await res.json();
-            setModules(data);
-            if (data.length > 0) {
-                setSelectedModuleSlug(data[0].slug_id);
-            }
-        } catch (error) {
-            console.error("Erro ao buscar módulos:", error);
-        }
+            setModules(Array.isArray(data) ? data : []);
+            if (data.length > 0) setSelectedModuleSlug(data[0].slug_id);
+        } catch (error) { console.error("Erro ao buscar módulos:", error); }
     };
 
     const fetchRevisions = useCallback(async (slug: string) => {
@@ -104,64 +82,74 @@ const ModuleContentEditor: React.FC = () => {
             });
             if (res.ok) {
                 const data = await res.json();
-                setRevisions(data);
+                setRevisions(Array.isArray(data) ? data : []);
             }
-        } catch (error) {
-            console.error('Erro ao buscar revisões', error);
-        }
+        } catch (error) { console.error('Erro ao buscar revisões', error); }
     }, [token]);
 
     const fetchModuleContent = useCallback(async (slug: string) => {
         setLoading(true);
         setSuccessMessage('');
         setIsDirty(false);
+        setHtmlContent('');
+        setOriginalContent('');
+
         try {
             const pageName = `modulo_${slug}`;
             const res = await fetch(`${API_URL}/api/v1/cms/pages/${pageName}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            
+
             if (res.ok) {
                 const data = await res.json();
+                const raw = data.content || '';
+
+                // Backwards compatibility: if the content is a JSON array (old CanvasElement format),
+                // convert it to plain HTML. Otherwise, use it as-is.
+                let content = raw;
                 try {
-                    const parsed = JSON.parse(data.content || '[]');
-                    setElements(parsed);
-                    setOriginalElements(parsed);
-                } catch(e) {
-                    setElements([]);
-                    setOriginalElements([]);
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) {
+                        // Convert old CanvasElement[] to HTML
+                        content = parsed
+                            .filter((el: any) => el.type === 'text' && el.content)
+                            .map((el: any) => el.content)
+                            .join('') || '';
+                    }
+                } catch {
+                    // It's already HTML or plain text, use as-is
                 }
+
+                setHtmlContent(content);
+                setOriginalContent(content);
                 fetchRevisions(slug);
             }
         } catch (error) {
             console.error("Erro ao buscar conteúdo do módulo:", error);
-            setElements([]);
-            setOriginalElements([]);
+            setHtmlContent('');
+            setOriginalContent('');
         } finally {
             setLoading(false);
         }
     }, [token, fetchRevisions]);
 
     useEffect(() => {
-        if (selectedModuleSlug) {
-            fetchModuleContent(selectedModuleSlug);
-        }
+        if (selectedModuleSlug) fetchModuleContent(selectedModuleSlug);
     }, [selectedModuleSlug, fetchModuleContent]);
 
-    useEffect(() => {
-        if (JSON.stringify(elements) !== JSON.stringify(originalElements)) {
-            setIsDirty(true);
-        } else {
-            setIsDirty(false);
+    // Track dirty state via editor content
+    const handleEditorInput = () => {
+        if (editorRef.current) {
+            const currentHtml = editorRef.current.innerHTML;
+            setHtmlContent(currentHtml);
+            setIsDirty(currentHtml !== originalContent);
         }
-    }, [elements, originalElements]);
+    };
 
     const showToast = (message: string) => {
         setSuccessMessage(message);
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        timeoutRef.current = setTimeout(() => {
-            setSuccessMessage('');
-        }, 4000);
+        timeoutRef.current = setTimeout(() => setSuccessMessage(''), 4000);
     };
 
     const handleConfirmPublish = async () => {
@@ -169,23 +157,24 @@ const ModuleContentEditor: React.FC = () => {
         setSaving(true);
         setSuccessMessage('');
 
+        // Get latest content from editor
+        const contentToSave = editorRef.current?.innerHTML || htmlContent;
+
         try {
             const pageName = `modulo_${selectedModuleSlug}`;
             const res = await fetch(`${API_URL}/api/v1/cms/pages/${pageName}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ 
-                    content: JSON.stringify(elements),
-                    description: `Atualização via Canvas - ${new Date().toLocaleString()}`
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({
+                    content: contentToSave,
+                    description: `Atualização via Editor de Texto - ${new Date().toLocaleString()}`
                 })
             });
 
             if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
 
-            setOriginalElements([...elements]);
+            setOriginalContent(contentToSave);
+            setHtmlContent(contentToSave);
             setIsDirty(false);
             setShowPublishModal(false);
             showToast('Módulo atualizado com sucesso!');
@@ -200,7 +189,7 @@ const ModuleContentEditor: React.FC = () => {
 
     const handleRestoreRevision = async (revisionId: number) => {
         if (!window.confirm('Isto irá sobrescrever seu rascunho atual. Continuar?')) return;
-        
+
         try {
             const res = await fetch(`${API_URL}/api/v1/cms/revisions/${revisionId}/restore`, {
                 method: 'POST',
@@ -208,19 +197,15 @@ const ModuleContentEditor: React.FC = () => {
             });
             if (res.ok) {
                 const data = await res.json();
-                try {
-                    const parsed = JSON.parse(data.content || '[]');
-                    setElements(parsed);
-                    setOriginalElements(parsed);
-                } catch (e) {
-                    setElements([]);
-                    setOriginalElements([]);
-                }
-                setIsDirty(true);
+                const content = data.content || '';
+                setHtmlContent(content);
+                setOriginalContent(content);
+                if (editorRef.current) editorRef.current.innerHTML = content;
+                setIsDirty(false);
                 setShowHistory(false);
-                alert('Versão restaurada com sucesso!');
+                showToast('Versão restaurada com sucesso!');
             }
-        } catch (e) {
+        } catch {
             alert('Erro ao restaurar versão.');
         }
     };
@@ -233,36 +218,25 @@ const ModuleContentEditor: React.FC = () => {
         try {
             const res = await fetch(`${API_URL}/api/chat`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify({
                     messages: [
-                        { role: 'system', content: 'Você é um assistente acadêmico. Escreva em formato HTML amigável para React Quill (use <h2>, <h3>, <p>, <ul>, <li>, <strong>). Não use inline styles nem markdown.' },
+                        { role: 'system', content: 'Você é um assistente acadêmico. Escreva em formato HTML (use <h2>, <h3>, <p>, <ul>, <li>, <strong>). Não use inline styles nem markdown.' },
                         { role: 'user', content: promptToUse }
                     ]
                 })
             });
 
             if (!res.ok) throw new Error('Falha na IA');
-
             const data = await res.json();
             const generatedHtml = cleanAIResponse(data.reply || '');
 
-            if (generatedHtml) {
-                const newText: CanvasElement = {
-                    id: crypto.randomUUID(),
-                    type: 'text',
-                    x: 100, y: 100, width: 400, height: 'auto', zIndex: elements.length + 1, rotation: 0,
-                    content: generatedHtml,
-                    fontFamily: 'Inter, sans-serif', fontSize: 16, color: '#000000',
-                    textAlign: 'left', fontWeight: 'normal', fontStyle: 'normal', textDecoration: 'none'
-                };
-                setElements(prev => [...prev, newText]);
+            if (generatedHtml && editorRef.current) {
+                // Append to end of editor
+                editorRef.current.innerHTML += generatedHtml;
+                handleEditorInput();
                 setAiPrompt('');
-                showToast('Conteúdo inserido com sucesso!');
-                if (mobileTab === 'ai') setMobileTab('teoria');
+                showToast('Conteúdo IA inserido!');
             }
         } catch (error) {
             console.error('Erro IA:', error);
@@ -273,17 +247,14 @@ const ModuleContentEditor: React.FC = () => {
     };
 
     const handleInsertImage = (url: string) => {
-        const newImg: CanvasElement = {
-            id: crypto.randomUUID(),
-            type: 'image',
-            x: 100, y: 100, width: 300, height: 200, zIndex: elements.length + 1, rotation: 0,
-            src: url,
-            borderRadius: 0
-        };
-        setElements(prev => [...prev, newImg]);
+        if (editorRef.current) {
+            const imgHtml = `<p><img src="${url}" style="max-width:100%; border-radius:8px; margin:8px 0;" /></p>`;
+            editorRef.current.innerHTML += imgHtml;
+            handleEditorInput();
+            setShowMediaLibrary(false);
+            showToast('Imagem inserida!');
+        }
     };
-
-    // removed getPreviewWidthClasses
 
     const selectedModuleData = modules.find(m => m.slug_id === selectedModuleSlug);
 
@@ -295,10 +266,11 @@ const ModuleContentEditor: React.FC = () => {
 
     return (
         <div className="bg-white/80 border border-warm-200 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-inner w-full h-full flex flex-col min-h-0 relative">
-            
+
+            {/* ═══ PUBLISH MODAL ═══ */}
             {showPublishModal && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-warm-900/50 backdrop-blur-sm p-4 animate-fade-in">
-                    <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-2xl w-full max-w-md border border-warm-200 animate-scale-in">
+                    <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-2xl w-full max-w-md border border-warm-200">
                         <div className="flex items-center gap-3 mb-3 text-warm-900">
                             <div className="p-2.5 bg-amber-100 text-amber-700 rounded-xl">
                                 <AlertTriangle size={24} />
@@ -309,7 +281,7 @@ const ModuleContentEditor: React.FC = () => {
                             </div>
                         </div>
                         <p className="text-sm text-warm-600 mb-6 leading-relaxed">
-                            O novo conteúdo e formatações deste módulo ficarão visíveis imediatamente para todos os usuários.
+                            O novo conteúdo ficará visível imediatamente para todos os usuários.
                         </p>
                         <div className="flex gap-2 justify-end">
                             <button onClick={() => setShowPublishModal(false)} className="px-4 py-2.5 bg-warm-100 hover:bg-warm-200 text-warm-700 font-medium rounded-xl text-sm transition-colors">
@@ -324,11 +296,12 @@ const ModuleContentEditor: React.FC = () => {
                 </div>
             )}
 
+            {/* ═══ MEDIA LIBRARY MODAL ═══ */}
             {showMediaLibrary && (
                 <MediaLibrary onClose={() => setShowMediaLibrary(false)} onSelect={handleInsertImage} />
             )}
 
-            {/* CABEÇALHO */}
+            {/* ═══ HEADER ═══ */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 flex-shrink-0 gap-2 sm:gap-4">
                 <div className="flex items-center gap-3">
                     <div className="p-2 sm:p-2.5 bg-primary/10 text-primary rounded-xl">
@@ -346,7 +319,7 @@ const ModuleContentEditor: React.FC = () => {
                     {isDirty ? (
                         <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 border border-amber-200 rounded-lg text-xs sm:text-sm text-amber-700 font-medium animate-pulse">
                             <div className="w-2 h-2 rounded-full bg-amber-500" />
-                            Salvando rascunho...
+                            Não salvo
                         </div>
                     ) : (
                         <div className="flex items-center gap-1.5 px-3 py-1 bg-sage-50 border border-sage-200 rounded-lg text-xs sm:text-sm text-sage-700 font-medium">
@@ -356,7 +329,7 @@ const ModuleContentEditor: React.FC = () => {
 
                     {successMessage && (
                         <div className="px-3 py-1 bg-sage-50 text-sage-700 rounded-lg flex items-center gap-1.5 border border-sage-200 text-xs sm:text-sm font-semibold">
-                            <CheckCircle2 size={14}/>
+                            <CheckCircle2 size={14} />
                             {successMessage}
                         </div>
                     )}
@@ -373,9 +346,9 @@ const ModuleContentEditor: React.FC = () => {
                 </div>
             </div>
 
-            {/* SELETOR DE MÓDULOS */}
+            {/* ═══ MODULE SELECTOR ═══ */}
             <div className="mb-3 flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1 shrink-0">
-                {modules.map((m) => (
+                {modules?.map((m) => (
                     <button
                         key={m.slug_id}
                         onClick={() => setSelectedModuleSlug(m.slug_id)}
@@ -391,131 +364,142 @@ const ModuleContentEditor: React.FC = () => {
                 ))}
             </div>
 
-            {/* ABAS MOBILE */}
-            <div className="flex xl:hidden mb-3 bg-warm-100 p-1 rounded-xl shrink-0">
-                <button onClick={() => setMobileTab('teoria')} className={`flex-1 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 ${mobileTab === 'teoria' ? 'bg-white text-primary shadow-sm' : 'text-warm-600'}`}>
-                    <FileText size={15} /> Teoria
+            {/* ═══ TABS ═══ */}
+            <div className="flex bg-warm-100 p-1 rounded-xl mb-3 shrink-0 w-fit">
+                <button onClick={() => setActiveTab('teoria')} className={`px-5 py-2 text-sm font-bold rounded-lg flex items-center gap-2 transition-all ${activeTab === 'teoria' ? 'bg-white shadow-sm text-primary' : 'text-warm-600 hover:text-warm-900'}`}>
+                    <FileText size={16} /> Conteúdo Teórico
                 </button>
-                <button onClick={() => setMobileTab('recursos')} className={`flex-1 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 ${mobileTab === 'recursos' ? 'bg-white text-purple-600 shadow-sm' : 'text-warm-600'}`}>
-                    <Layers size={15} /> Recursos
-                </button>
-                <button onClick={() => setMobileTab('preview')} className={`flex-1 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 ${mobileTab === 'preview' ? 'bg-white text-warm-900 shadow-sm' : 'text-warm-600'}`}>
-                    <Eye size={15} /> Preview
-                </button>
-                <button onClick={() => setMobileTab('ai')} className={`flex-1 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 ${mobileTab === 'ai' ? 'bg-purple-600 text-white shadow-sm' : 'text-warm-600'}`}>
-                    <Bot size={15} /> Copiloto
+                <button onClick={() => setActiveTab('recursos')} className={`px-5 py-2 text-sm font-bold rounded-lg flex items-center gap-2 transition-all ${activeTab === 'recursos' ? 'bg-white shadow-sm text-purple-600' : 'text-warm-600 hover:text-warm-900'}`}>
+                    <Layers size={16} /> Recursos Interativos
                 </button>
             </div>
 
-            {/* ABAS DESKTOP */}
-            <div className="hidden xl:flex bg-warm-100 p-1 rounded-xl mb-3 shrink-0 w-fit">
-                <button onClick={() => setActiveEditorTab('teoria')} className={`px-6 py-2 text-sm font-bold rounded-lg flex items-center gap-2 transition-all ${activeEditorTab === 'teoria' ? 'bg-white shadow-sm text-primary' : 'text-warm-600 hover:text-warm-900'}`}>
-                    <FileText size={16}/> Conteúdo Teórico
-                </button>
-                <button onClick={() => setActiveEditorTab('recursos')} className={`px-6 py-2 text-sm font-bold rounded-lg flex items-center gap-2 transition-all ${activeEditorTab === 'recursos' ? 'bg-white shadow-sm text-purple-600' : 'text-warm-600 hover:text-warm-900'}`}>
-                    <Layers size={16}/> Recursos Interativos
-                </button>
-            </div>
-
+            {/* ═══ MAIN CONTENT AREA ═══ */}
             <div className="flex flex-col flex-1 min-h-0 overflow-hidden relative">
-                
-                {/* ÁREA CENTRAL: EDITOR, RECURSOS OU HISTÓRICO */}
-                <div className={`flex flex-col h-full min-h-0 space-y-3 sm:space-y-4 w-full`}>
-                    
-                    {/* IA (Só aparece na aba Teoria ou Copiloto) */}
-                    <div className={`bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-100 shadow-sm flex-shrink-0 transition-all ${mobileTab === 'recursos' || (window.innerWidth < 1280 && mobileTab !== 'ai') ? 'hidden' : 'p-3 sm:p-4'} ${activeEditorTab === 'recursos' && window.innerWidth >= 1280 ? 'hidden' : ''}`}>
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                                <Sparkles className="text-purple-600" size={18}/>
-                                <h4 className="font-bold text-purple-900 text-xs sm:text-sm">Copiloto IA</h4>
-                            </div>
-                            <button onClick={() => setAiExpanded(!aiExpanded)} className="text-xs text-purple-700 font-semibold hover:underline flex items-center gap-1">
-                                {aiExpanded ? <>Menos <ChevronUp size={14}/></> : <>Mais <ChevronDown size={14}/></>}
-                            </button>
-                        </div>
-                        {aiExpanded && (
-                            <div className="flex flex-wrap gap-1.5 mb-2.5">
-                                {quickAIPrompts.map((item, idx) => (
-                                    <button key={idx} onClick={() => { setAiPrompt(item.prompt); handleAIGenerate(item.prompt); }} disabled={generatingAI} className="text-[11px] sm:text-xs bg-white text-purple-800 border border-purple-200 px-2 py-1 rounded-lg shadow-2xs hover:shadow-xs active:scale-95">
-                                        {item.label}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                        <div className="flex gap-2">
-                            <input type="text" value={aiPrompt} onChange={e => setAiPrompt(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAIGenerate()} placeholder="Descreva o que a IA deve gerar..." disabled={generatingAI} className="flex-1 p-2 sm:p-2.5 text-xs sm:text-sm bg-white border border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-400 outline-none disabled:opacity-60"/>
-                            <button onClick={() => handleAIGenerate()} disabled={generatingAI || !aiPrompt.trim()} className="px-3 sm:px-4 py-2 sm:py-2.5 bg-purple-600 text-white font-medium text-xs sm:text-sm rounded-xl flex gap-1.5 shadow-sm">
-                                {generatingAI ? <Loader2 className="animate-spin" size={15}/> : <Send size={15}/>}
-                                <span className="hidden sm:inline">Gerar</span>
-                            </button>
-                        </div>
-                    </div>
 
-                    {/* EDITOR VISUAL */}
-                    <div className={`bg-white rounded-2xl border border-warm-200 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden relative ${(mobileTab === 'ai' || mobileTab === 'recursos' || (window.innerWidth >= 1280 && activeEditorTab === 'recursos')) ? 'hidden' : 'flex'}`}>
-                        {loading && (
-                            <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex items-center justify-center">
-                                <Loader2 className="animate-spin text-primary" size={32}/>
+                {/* ─── THEORY TAB ─── */}
+                {activeTab === 'teoria' && (
+                    <div className="flex flex-col h-full min-h-0 space-y-3">
+
+                        {/* AI Copilot */}
+                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-100 shadow-sm flex-shrink-0 p-3 sm:p-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                    <Sparkles className="text-purple-600" size={18} />
+                                    <h4 className="font-bold text-purple-900 text-xs sm:text-sm">Copiloto IA</h4>
+                                </div>
+                                <button onClick={() => setAiExpanded(!aiExpanded)} className="text-xs text-purple-700 font-semibold hover:underline flex items-center gap-1">
+                                    {aiExpanded ? <>Menos <ChevronUp size={14} /></> : <>Mais <ChevronDown size={14} /></>}
+                                </button>
                             </div>
-                        )}
-                        <div className="p-3 border-b border-warm-100 flex items-center justify-between shrink-0 bg-warm-50">
-                            <label className="text-xs sm:text-sm font-bold text-warm-800 flex items-center gap-2">
-                                <FileText size={16}/> Teoria do Módulo
-                            </label>
+                            {aiExpanded && (
+                                <div className="flex flex-wrap gap-1.5 mb-2.5">
+                                    {quickAIPrompts.map((item, idx) => (
+                                        <button key={idx} onClick={() => { setAiPrompt(item.prompt); handleAIGenerate(item.prompt); }} disabled={generatingAI} className="text-[11px] sm:text-xs bg-white text-purple-800 border border-purple-200 px-2 py-1 rounded-lg shadow-2xs hover:shadow-xs active:scale-95 transition-all">
+                                            {item.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                             <div className="flex gap-2">
-                                <button onClick={() => setShowMediaLibrary(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-warm-200 text-warm-700 text-xs font-bold rounded-lg hover:bg-warm-100 shadow-sm">
-                                    <ImageIcon size={14}/> Mídia
-                                </button>
-                                <button onClick={() => setShowHistory(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-warm-200 text-warm-700 text-xs font-bold rounded-lg hover:bg-warm-100 shadow-sm">
-                                    <History size={14}/> Histórico
+                                <input
+                                    type="text" value={aiPrompt}
+                                    onChange={e => setAiPrompt(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && handleAIGenerate()}
+                                    placeholder="Descreva o que a IA deve gerar..."
+                                    disabled={generatingAI}
+                                    className="flex-1 p-2 sm:p-2.5 text-xs sm:text-sm bg-white border border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-400 outline-none disabled:opacity-60"
+                                />
+                                <button onClick={() => handleAIGenerate()} disabled={generatingAI || !aiPrompt.trim()} className="px-3 sm:px-4 py-2 sm:py-2.5 bg-purple-600 text-white font-medium text-xs sm:text-sm rounded-xl flex gap-1.5 shadow-sm hover:bg-purple-700 transition-colors disabled:opacity-50">
+                                    {generatingAI ? <Loader2 className="animate-spin" size={15} /> : <Send size={15} />}
+                                    <span className="hidden sm:inline">Gerar</span>
                                 </button>
                             </div>
                         </div>
-                        <div className="flex-1 min-h-0 relative flex flex-col">
-                            <CanvasWorkspace elements={elements} setElements={setElements} />
+
+                        {/* Rich Text Editor */}
+                        <div className="bg-white rounded-2xl border border-warm-200 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden relative">
+                            {loading && (
+                                <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+                                    <Loader2 className="animate-spin text-primary" size={32} />
+                                </div>
+                            )}
+
+                            {/* Editor Toolbar */}
+                            <div className="p-3 border-b border-warm-100 flex items-center justify-between shrink-0 bg-warm-50">
+                                <label className="text-xs sm:text-sm font-bold text-warm-800 flex items-center gap-2">
+                                    <FileText size={16} /> Teoria do Módulo
+                                </label>
+                                <div className="flex gap-2">
+                                    <button onClick={() => setShowMediaLibrary(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-warm-200 text-warm-700 text-xs font-bold rounded-lg hover:bg-warm-100 shadow-sm transition-colors">
+                                        <ImageIcon size={14} /> Mídia
+                                    </button>
+                                    <button onClick={() => setShowHistory(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-warm-200 text-warm-700 text-xs font-bold rounded-lg hover:bg-warm-100 shadow-sm transition-colors">
+                                        <History size={14} /> Histórico
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* ContentEditable Rich Text Area */}
+                            <div className="flex-1 min-h-0 overflow-y-auto relative">
+                                <WixFloatingToolbar />
+                                <div
+                                    ref={editorRef}
+                                    contentEditable={true}
+                                    suppressContentEditableWarning={true}
+                                    onInput={handleEditorInput}
+                                    dangerouslySetInnerHTML={{ __html: htmlContent }}
+                                    className="p-6 sm:p-8 min-h-full prose prose-warm max-w-none outline-none focus:outline-none text-warm-800 leading-relaxed"
+                                    style={{ minHeight: '300px' }}
+                                    data-placeholder="Comece a escrever o conteúdo teórico do módulo aqui..."
+                                />
+                            </div>
                         </div>
                     </div>
+                )}
 
-                    {/* CONSTRUTOR DE RECURSOS */}
-                    <div className={`bg-white rounded-2xl border border-warm-200 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden relative ${mobileTab === 'recursos' || (window.innerWidth >= 1280 && activeEditorTab === 'recursos') ? 'flex' : 'hidden'}`}>
+                {/* ─── RESOURCES TAB ─── */}
+                {activeTab === 'recursos' && (
+                    <div className="bg-white rounded-2xl border border-warm-200 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden relative">
                         <InteractiveResourceBuilder moduleSlug={selectedModuleSlug} />
                     </div>
-                </div>
+                )}
 
-                    {showHistory && (
-                        <div className="absolute inset-0 z-50 flex-1 bg-white border border-warm-200 rounded-2xl flex flex-col overflow-hidden animate-fade-in shadow-inner">
-                            <div className="p-4 bg-warm-800 text-white flex justify-between items-center shrink-0">
-                                <div className="flex items-center gap-2">
-                                    <History size={18} />
-                                    <h3 className="font-bold">Histórico do Módulo</h3>
-                                </div>
-                                <button onClick={() => setShowHistory(false)} className="p-1 hover:bg-warm-700 rounded-md">
-                                    <AlertTriangle size={18} className="hidden"/> Voltar
-                                </button>
+                {/* ─── HISTORY OVERLAY ─── */}
+                {showHistory && (
+                    <div className="absolute inset-0 z-50 bg-white border border-warm-200 rounded-2xl flex flex-col overflow-hidden animate-fade-in shadow-inner">
+                        <div className="p-4 bg-warm-800 text-white flex justify-between items-center shrink-0">
+                            <div className="flex items-center gap-2">
+                                <History size={18} />
+                                <h3 className="font-bold">Histórico do Módulo</h3>
                             </div>
-                            <div className="flex-1 overflow-y-auto p-4 bg-warm-50">
-                                {revisions.length === 0 ? (
-                                    <p className="text-center text-warm-500 mt-10">Nenhuma versão salva ainda.</p>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {revisions.map((rev) => (
-                                            <div key={rev.id} className="bg-white p-4 border border-warm-200 rounded-xl shadow-sm">
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <div>
-                                                        <span className="font-bold text-warm-900 block text-sm">Publicado por {rev.author_name}</span>
-                                                        <span className="text-xs text-warm-500">{rev.created_at}</span>
-                                                    </div>
-                                                    <button onClick={() => handleRestoreRevision(rev.id)} className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary text-xs font-bold rounded-lg hover:bg-primary/20">
-                                                        <RotateCcw size={14} /> Restaurar
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                            <button onClick={() => setShowHistory(false)} className="p-1.5 hover:bg-warm-700 rounded-md transition-colors flex items-center gap-1 text-sm">
+                                <X size={16} /> Fechar
+                            </button>
                         </div>
-                    )}
+                        <div className="flex-1 overflow-y-auto p-4 bg-warm-50">
+                            {revisions.length === 0 ? (
+                                <p className="text-center text-warm-500 mt-10">Nenhuma versão salva ainda.</p>
+                            ) : (
+                                <div className="space-y-4">
+                                    {revisions?.map((rev) => (
+                                        <div key={rev.id} className="bg-white p-4 border border-warm-200 rounded-xl shadow-sm">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <span className="font-bold text-warm-900 block text-sm">Publicado por {rev.author_name}</span>
+                                                    <span className="text-xs text-warm-500">{rev.created_at}</span>
+                                                </div>
+                                                <button onClick={() => handleRestoreRevision(rev.id)} className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary text-xs font-bold rounded-lg hover:bg-primary/20 transition-colors">
+                                                    <RotateCcw size={14} /> Restaurar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

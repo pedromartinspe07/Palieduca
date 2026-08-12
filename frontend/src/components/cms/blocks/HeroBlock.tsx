@@ -3,9 +3,10 @@ import type { BlockProps } from './types';
 
 const HeroBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdate, onSelect }) => {
     const { title, subtitle, bgImage } = block.data;
+    const { bgOverlayOpacity = 40, titleAlign = 'center' } = block.styles || {};
 
     const handleTextChange = (field: string, text: string) => {
-        onUpdate(block.id, { ...block.data, [field]: text });
+        onUpdate(block.id, { data: { ...block.data, [field]: text } });
     };
 
     return (
@@ -26,9 +27,12 @@ const HeroBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
                 backgroundPosition: 'center',
             }}
         >
-            <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
+            <div 
+                className="absolute inset-0 backdrop-blur-[2px]" 
+                style={{ backgroundColor: `rgba(255, 255, 255, ${bgOverlayOpacity / 100})` }}
+            ></div>
             
-            <div className="relative z-10 h-full flex flex-col items-center justify-center text-center p-8 sm:p-12">
+            <div className={`relative z-10 h-full flex flex-col items-${titleAlign === 'left' ? 'start' : titleAlign === 'right' ? 'end' : 'center'} text-${titleAlign} p-8 sm:p-12`}>
                 <h1 
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}

@@ -299,6 +299,110 @@ def restore_page_revision(
         return page
     raise HTTPException(status_code=404, detail="Página não encontrada")
 
+# ================================
+# CMS v1 Routes (used by ModuleContentEditor)
+# ================================
+
+@app.get("/api/v1/cms/pages/{page_name}")
+def get_cms_page(page_name: str, db: Session = Depends(get_db)):
+    page = db.query(models.PageContent).filter(models.PageContent.page_name == page_name).first()
+    if not page:
+        return {"id": 0, "page_name": page_name, "content": "[]", "draft_content": None}
+    return page
+
+@app.put("/api/v1/cms/pages/{page_name}")
+def update_cms_page(
+    page_name: str,
+    page_update: schemas.PageContentUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+
+    page = db.query(models.PageContent).filter(models.PageContent.page_name == page_name).first()
+    if not page:
+        page = models.PageContent(
+            page_name=page_name,
+            content=page_update.content or "[]",
+            draft_content=page_update.draft_content
+        )
+        db.add(page)
+    else:
+        if page_update.content is not None:
+            page.content = page_update.content
+        if page_update.draft_content is not None:
+            page.draft_content = page_update.draft_content
+
+    # Save a revision for history
+    revision = models.PageRevision(
+        page_name=page_name,
+        content=page.content,
+        author_name=current_user.nome,
+        created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        description=page_update.slug or "Atualização via CMS"
+    )
+    db.add(revision)
+
+    db.commit()
+    db.refresh(page)
+    return page
+
+@app.post("/api/v1/cms/revisions/{revision_id}/restore")
+def restore_cms_revision(
+    revision_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+
+    revision = db.query(models.PageRevision).filter(models.PageRevision.id == revision_id).first()
+    if not revision:
+        raise HTTPException(status_code=404, detail="Revisão não encontrada")
+
+    page = db.query(models.PageContent).filter(models.PageContent.page_name == revision.page_name).first()
+    if not page:
+        raise HTTPException(status_code=404, detail="Página não encontrada")
+
+    page.content = revision.content
+    page.draft_content = revision.content
+    db.commit()
+    db.refresh(page)
+    return page
+
+# ================================
+# PageEditor: PUT /api/pages/{page_name} for saving content directly
+# ================================
+
+@app.put("/api/pages/{page_name}", response_model=schemas.PageContentResponse)
+def update_page_content_direct(
+    page_name: str,
+    page_update: schemas.PageContentUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão para editar conteúdo")
+
+    page = db.query(models.PageContent).filter(models.PageContent.page_name == page_name).first()
+    if not page:
+        page = models.PageContent(
+            page_name=page_name,
+            content=page_update.content or "[]",
+            draft_content=page_update.draft_content
+        )
+        db.add(page)
+    else:
+        if page_update.content is not None:
+            page.content = page_update.content
+        if page_update.draft_content is not None:
+            page.draft_content = page_update.draft_content
+
+    db.commit()
+    db.refresh(page)
+    return page
+
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
     groq_api_key = os.getenv("GROQ_API_KEY")
