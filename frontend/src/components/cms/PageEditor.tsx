@@ -31,40 +31,69 @@ const PageEditor: React.FC = () => {
     const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
 
     const [isDirty, setIsDirty] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
 
     const [showPublishModal, setShowPublishModal] = useState(false);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Mock initial data if empty
-    useEffect(() => {
-        // Here you would normally fetch from API and setBlocks(parsed_JSON_array)
-        // For now, if empty, we provide a default state
-        if (blocks.length === 0) {
-            const initial: BlockData[] = [
-                {
-                    id: 'block-1',
-                    type: 'HeroBlock',
-                    data: {
-                        title: 'Transforme o Conhecimento em Prática',
-                        subtitle: 'Uma plataforma dedicada ao aprimoramento contínuo em cuidados paliativos, com módulos interativos e biblioteca curada.',
-                        bgImage: ''
-                    }
-                },
-                {
-                    id: 'block-2',
-                    type: 'ModulesGridBlock',
-                    data: {
-                        title: 'Explore Nossos Módulos',
-                        intro: 'Acesse o conteúdo selecionado por especialistas para o seu desenvolvimento.'
-                    }
+    const fetchPageContent = async (pageName: string) => {
+        setLoading(true);
+        try {
+            const res = await fetch(`${API_URL}/api/pages/${pageName}/edit`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+
+            const data = await res.json();
+            const contentToParse = data.draft_content || data.content || '';
+            
+            let parsed = [];
+            try {
+                parsed = JSON.parse(contentToParse);
+                if (!Array.isArray(parsed)) {
+                    parsed = [];
                 }
-            ];
-            setBlocks(initial);
-            setOriginalBlocks(initial);
+            } catch (e) {
+                parsed = [];
+            }
+            
+            if (parsed.length === 0) {
+                parsed = [
+                    {
+                        id: 'block-1',
+                        type: 'HeroBlock',
+                        data: {
+                            title: 'Transforme o Conhecimento em Prática',
+                            subtitle: 'Uma plataforma dedicada ao aprimoramento contínuo em cuidados paliativos, com módulos interativos e biblioteca curada.',
+                            bgImage: ''
+                        }
+                    },
+                    {
+                        id: 'block-2',
+                        type: 'ModulesGridBlock',
+                        data: {
+                            title: 'Explore Nossos Módulos',
+                            intro: 'Acesse o conteúdo selecionado por especialistas para o seu desenvolvimento.'
+                        }
+                    }
+                ];
+            }
+            
+            setBlocks(parsed);
+            setOriginalBlocks(parsed);
+        } catch (error) {
+            console.error('Erro ao buscar conteúdo:', error);
+        } finally {
+            setLoading(false);
         }
-    }, []);
+    };
+
+    useEffect(() => {
+        fetchPageContent(selectedPage);
+    }, [selectedPage, token]);
 
     useEffect(() => {
         setIsDirty(JSON.stringify(blocks) !== JSON.stringify(originalBlocks));
@@ -81,8 +110,24 @@ const PageEditor: React.FC = () => {
     const handleSave = async (publish: boolean = false) => {
         setSaving(true);
         try {
-            // Mocking API call for saving the blocks array
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const endpoint = publish 
+                ? `${API_URL}/api/pages/${selectedPage}/publish`
+                : `${API_URL}/api/pages/${selectedPage}`;
+
+            const res = await fetch(endpoint, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    content: JSON.stringify(blocks),
+                    draft_content: JSON.stringify(blocks),
+                    description: publish ? "Publicado via Block-Based CMS" : "Rascunho",
+                })
+            });
+
+            if (!res.ok) throw new Error('Falha ao salvar');
             
             setOriginalBlocks(blocks);
             setIsDirty(false);
@@ -223,18 +268,24 @@ const PageEditor: React.FC = () => {
                     <WixFloatingToolbar />
                     
                     <div className="max-w-7xl mx-auto flex flex-col gap-4 pb-32">
-                        {blocks.map((block) => (
-                            <BlockRenderer 
-                                key={block.id}
-                                block={block}
-                                isEditing={true}
-                                isSelected={selectedBlockId === block.id}
-                                onUpdate={updateBlock}
-                                onSelect={setSelectedBlockId}
-                            />
-                        ))}
+                        {loading ? (
+                            <div className="flex justify-center items-center h-64">
+                                <Loader2 className="animate-spin text-primary" size={32} />
+                            </div>
+                        ) : (
+                            blocks.map((block) => (
+                                <BlockRenderer 
+                                    key={block.id}
+                                    block={block}
+                                    isEditing={true}
+                                    isSelected={selectedBlockId === block.id}
+                                    onUpdate={updateBlock}
+                                    onSelect={setSelectedBlockId}
+                                />
+                            ))
+                        )}
                         
-                        {blocks.length === 0 && (
+                        {!loading && blocks.length === 0 && (
                             <div className="flex flex-col items-center justify-center p-20 border-2 border-dashed border-warm-300 rounded-3xl bg-white/50 text-warm-500">
                                 <Layers size={48} className="mb-4 opacity-50" />
                                 <p className="text-lg font-medium">Sua página está vazia.</p>
