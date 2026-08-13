@@ -24,15 +24,13 @@ const ModulesGridBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, 
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (isEditing) {
-            // Fetch modules inside editor to show real preview
-            fetch(`${API_URL}/api/modules`)
-                .then(res => res.json())
-                .then(data => setModules(data))
-                .catch(err => console.error(err))
-                .finally(() => setLoading(false));
-        }
-    }, [isEditing]);
+        // Fetch modules inside editor and live site to show real preview
+        fetch(`${API_URL}/api/modules`)
+            .then(res => res.json())
+            .then(data => setModules(data))
+            .catch(err => console.error(err))
+            .finally(() => setLoading(false));
+    }, []);
 
     const handleTextChange = (field: string, text: string) => {
         onUpdate(block.id, { data: { ...block.data, [field]: text } });
@@ -73,7 +71,7 @@ const ModulesGridBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, 
                 </div>
 
                 {/* Grid is uneditable directly, sealed by magic */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pointer-events-none opacity-90">
+                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ${isEditing ? 'pointer-events-none opacity-90' : ''}`}>
                     {loading
                         ? Array.from({ length: 3 }).map((_, i) => <ModuleCardSkeleton key={i} />)
                         : modules.map(module => (

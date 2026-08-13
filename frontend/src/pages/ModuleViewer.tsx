@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, ArrowLeft, BookOpen, Sparkles } from 'lucide-react';
-import { InteractiveResourceRenderer } from '../components/InteractiveResourceRenderer';
-import { CanvasRenderer } from '../components/cms/canvas/CanvasRenderer';
+import { Loader2, ArrowLeft, BookOpen } from 'lucide-react';
+import BlockRenderer from '../components/cms/blocks/BlockRenderer';
 import '../index.css';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -13,7 +12,7 @@ const ModuleViewer: React.FC = () => {
     const { slug_id } = useParams<{ slug_id: string }>();
     const navigate = useNavigate();
     const [elements, setElements] = useState<any[]>([]);
-    const [resources, setResources] = useState<any[]>([]);
+
     const [loading, setLoading] = useState(true);
     const [moduleInfo, setModuleInfo] = useState<any>(null);
 
@@ -39,10 +38,7 @@ const ModuleViewer: React.FC = () => {
                 }
             }
 
-            const recRes = await fetch(`${API_URL}/api/modules/${slug_id}/resources`);
-            if (recRes.ok) {
-                setResources(await recRes.json());
-            }
+
         } catch (error) {
             console.error("Erro ao buscar dados do módulo:", error);
         } finally {
@@ -89,32 +85,26 @@ const ModuleViewer: React.FC = () => {
                     </div>
                     
                     {elements && elements.length > 0 ? (
-                        <div className="w-full">
-                            <CanvasRenderer elements={elements} />
+                        <div className="w-full space-y-4">
+                            {elements.map((block: any) => (
+                                <BlockRenderer 
+                                    key={block.id} 
+                                    block={block} 
+                                    isEditing={false} 
+                                    isSelected={false}
+                                    onUpdate={() => {}}
+                                    onSelect={() => {}} 
+                                />
+                            ))}
                         </div>
                     ) : (
                         <div className="text-center py-16 bg-warm-50 rounded-2xl border border-dashed border-warm-300">
                             <p className="text-warm-600 text-lg">
-                                O conteúdo teórico deste módulo ainda está em construção.
+                                O conteúdo deste módulo ainda está em construção.
                             </p>
                         </div>
                     )}
                 </div>
-
-                {/* Renderizador de Recursos Interativos */}
-                {resources.length > 0 && (
-                    <div className="mt-16 animate-slide-up">
-                        <div className="flex items-center gap-3 mb-6">
-                            <Sparkles className="text-purple-500" size={28} />
-                            <h2 className="text-2xl font-bold text-warm-900">Atividades e Materiais Complementares</h2>
-                        </div>
-                        <div className="flex flex-col gap-8">
-                            {resources.map(resource => (
-                                <InteractiveResourceRenderer key={resource.id} resource={resource} />
-                            ))}
-                        </div>
-                    </div>
-                )}
             </div>
         </main>
     );

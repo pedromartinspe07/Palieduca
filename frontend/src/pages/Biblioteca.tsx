@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, BookOpen } from 'lucide-react';
+import BlockRenderer from '../components/cms/blocks/BlockRenderer';
+import type { BlockData } from '../components/cms/blocks/types';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://127.0.0.1:8000'
@@ -16,6 +18,7 @@ const Biblioteca: React.FC<BibliotecaProps> = ({ isEditing, initialContent, onCo
         title: 'Biblioteca',
         intro: 'Bem-vindo à Biblioteca. Aqui você encontra materiais complementares.'
     });
+    const [blocks, setBlocks] = useState<BlockData[] | null>(null);
     const [loading, setLoading] = useState(!initialContent);
 
     useEffect(() => {
@@ -31,8 +34,11 @@ const Biblioteca: React.FC<BibliotecaProps> = ({ isEditing, initialContent, onCo
                 .then(data => {
                     try {
                         const parsed = JSON.parse(data.content || '{}');
-                        if (Array.isArray(parsed)) throw new Error('Old format');
-                        setContent(parsed);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            setBlocks(parsed);
+                        } else {
+                            setContent(parsed);
+                        }
                     } catch (e) {
                         setContent({
                             title: 'Biblioteca',
@@ -54,6 +60,16 @@ const Biblioteca: React.FC<BibliotecaProps> = ({ isEditing, initialContent, onCo
     };
 
     const editableClass = isEditing ? 'outline-dashed outline-2 outline-primary/50 outline-offset-4 cursor-text hover:bg-warm-100/50 transition-colors rounded' : '';
+
+    if (blocks && blocks.length > 0) {
+        return (
+            <main className="min-h-screen pb-20 bg-background overflow-x-hidden pt-20">
+                {blocks.map(block => (
+                    <BlockRenderer key={block.id} block={block} isEditing={false} onUpdate={() => {}} onSelect={() => {}} isSelected={false} />
+                ))}
+            </main>
+        );
+    }
 
     return (
         <main className={`min-h-screen pt-32 pb-20 px-4 ${isEditing ? 'pointer-events-auto' : ''}`}>

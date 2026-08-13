@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import HeroSection from '../components/HeroSection';
 import ModuleCard from '../components/ModuleCard';
 import ModuleCardSkeleton from '../components/ModuleCardSkeleton';
-import { Stethoscope, Users, HeartPulse, Brain, HeartHandshake, Scale } from 'lucide-react';
+import { Stethoscope, Users, HeartPulse, Brain, HeartHandshake, Scale, Loader2 } from 'lucide-react';
+import BlockRenderer from '../components/cms/blocks/BlockRenderer';
+import type { BlockData } from '../components/cms/blocks/types';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://127.0.0.1:8000'
@@ -30,16 +32,55 @@ interface ModuleData {
 }
 
 const Home: React.FC = () => {
+    const [loadingCMS, setLoadingCMS] = useState(true);
+    const [blocks, setBlocks] = useState<BlockData[] | null>(null);
     const [loading, setLoading] = useState(true);
     const [modules, setModules] = useState<ModuleData[]>([]);
 
     useEffect(() => {
+        // Fetch CMS Content
+        fetch(`${API_URL}/api/pages/home`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.content) {
+                    try {
+                        const parsed = JSON.parse(data.content);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            setBlocks(parsed);
+                        }
+                    } catch (e) {
+                        console.error("Erro ao parsear blocks", e);
+                    }
+                }
+            })
+            .catch(err => console.error("Erro ao carregar CMS:", err))
+            .finally(() => setLoadingCMS(false));
+
+        // Fetch Modules (for fallback)
         fetch(`${API_URL}/api/modules`)
             .then(res => res.json())
             .then(data => setModules(data))
             .catch(err => console.error("Erro ao carregar módulos:", err))
             .finally(() => setLoading(false));
     }, []);
+
+    if (loadingCMS) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <Loader2 className="animate-spin text-primary" size={40} />
+            </div>
+        );
+    }
+
+    if (blocks && blocks.length > 0) {
+        return (
+            <main className="min-h-screen pb-20 bg-background overflow-x-hidden pt-20">
+                {blocks.map(block => (
+                    <BlockRenderer key={block.id} block={block} isEditing={false} onUpdate={() => {}} onSelect={() => {}} isSelected={false} />
+                ))}
+            </main>
+        );
+    }
 
     return (
         <main>

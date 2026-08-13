@@ -115,7 +115,7 @@ const MediaLibrary: React.FC<MediaLibraryProps> = ({ onSelect, onClose, isModal 
     };
 
     const content = (
-        <div className="flex flex-col h-full bg-white sm:rounded-2xl flex-1 max-h-[85vh]">
+        <div className={`flex flex-col h-full bg-white flex-1 ${isModal ? 'sm:rounded-2xl max-h-[85vh]' : ''}`}>
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-warm-200 shrink-0">
                 <h3 className="font-bold text-warm-900 flex items-center gap-2">

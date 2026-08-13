@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bold, Italic, Palette, Square, Circle, Image as ImageIcon, Type, Link2 } from 'lucide-react';
+import { Bold, Italic, Palette, Square, Circle, Image as ImageIcon, Type, Link2, AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
@@ -126,6 +126,24 @@ export const WixFloatingToolbar: React.FC = () => {
                 <button onClick={() => execCommand('italic')} className="p-1.5 text-warm-700 hover:text-primary hover:bg-primary/10 rounded-md transition-colors" title="Itálico">
                     <Italic size={16} />
                 </button>
+
+                <div className="w-px h-5 bg-warm-200 mx-1"></div>
+
+                {/* Alinhamento */}
+                <div className="flex items-center">
+                    <button onClick={() => execCommand('justifyLeft')} className="p-1.5 text-warm-700 hover:text-primary hover:bg-primary/10 rounded-md transition-colors" title="Alinhar à Esquerda">
+                        <AlignLeft size={16} />
+                    </button>
+                    <button onClick={() => execCommand('justifyCenter')} className="p-1.5 text-warm-700 hover:text-primary hover:bg-primary/10 rounded-md transition-colors" title="Centralizar">
+                        <AlignCenter size={16} />
+                    </button>
+                    <button onClick={() => execCommand('justifyRight')} className="p-1.5 text-warm-700 hover:text-primary hover:bg-primary/10 rounded-md transition-colors" title="Alinhar à Direita">
+                        <AlignRight size={16} />
+                    </button>
+                    <button onClick={() => execCommand('justifyFull')} className="p-1.5 text-warm-700 hover:text-primary hover:bg-primary/10 rounded-md transition-colors" title="Justificar">
+                        <AlignJustify size={16} />
+                    </button>
+                </div>
 
                 <div className="w-px h-5 bg-warm-200 mx-1"></div>
 

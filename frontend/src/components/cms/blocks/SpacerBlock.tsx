@@ -1,7 +1,7 @@
 import React from 'react';
 import type { BlockProps } from './types';
 
-const SpacerBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdate, onSelect }) => {
+const SpacerBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onSelect }) => {
     const { height = 60 } = block.styles || {};
 
     return (

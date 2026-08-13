@@ -2,7 +2,6 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { UserCircle, LogOut, Settings, Users, BookOpen, Activity, Palette } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import ModuleEditor from '../components/cms/ModuleEditor';
 
 const Perfil: React.FC = () => {
     const { user, logout } = useAuth();
@@ -68,7 +67,6 @@ const Perfil: React.FC = () => {
                                         <p className="text-sm text-warm-600">Aprove artigos e gerencie referências científicas.</p>
                                     </div>
                                 </div>
-                                <ModuleEditor />
                                 <div className="mt-8 bg-gradient-to-r from-primary to-secondary p-8 rounded-3xl text-white flex flex-col sm:flex-row items-center justify-between shadow-xl hover:shadow-2xl transition-all">
                                     <div>
                                         <h3 className="text-2xl font-bold mb-2 flex items-center gap-2"><Palette /> Estúdio de Criação</h3>
@@ -95,7 +93,6 @@ const Perfil: React.FC = () => {
                                         <p className="text-sm text-warm-600">Configure integrações como OAuth do Google e API do Groq.</p>
                                     </div>
                                 </div>
-                                <ModuleEditor />
                                 <div className="mt-8 bg-gradient-to-r from-primary to-secondary p-8 rounded-3xl text-white flex flex-col sm:flex-row items-center justify-between shadow-xl hover:shadow-2xl transition-all">
                                     <div>
                                         <h3 className="text-2xl font-bold mb-2 flex items-center gap-2"><Palette /> Estúdio de Criação</h3>

@@ -1,6 +1,6 @@
 export interface BlockData {
     id: string;
-    type: 'HeroBlock' | 'ModulesGridBlock' | 'TextBlock' | 'SpacerBlock';
+    type: 'HeroBlock' | 'ModulesGridBlock' | 'TextBlock' | 'SpacerBlock' | 'ImageBlock' | 'QuizBlock' | 'FlashcardBlock' | 'MediaBlock';
     data: any;
     styles?: Record<string, any>;
 }

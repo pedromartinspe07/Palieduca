@@ -3,10 +3,13 @@ import { useAuth } from '../../context/AuthContext';
 import {
     Save, AlertTriangle, ArrowLeft, Sparkles, X, Layers, Image as ImageIcon, Settings,
     CheckCircle2, Loader2, ChevronUp, ChevronDown, Copy, Trash2, Type, Minus,
-    AlignLeft, AlignCenter, AlignRight, Palette, Bot, Send
+    AlignLeft, AlignCenter, AlignRight, Bot, Send, Crop
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BlockRenderer from './blocks/BlockRenderer';
+import MediaLibrary from './MediaLibrary';
+import ImageCropperModal from './ImageCropperModal';
+import ModuleEditor from './ModuleEditor';
 import type { BlockData } from './blocks/types';
 
 const API_URL =
@@ -38,6 +41,10 @@ defaultData: { content: '<p>Clique para editar este bloco de texto. Use <strong>
 {
 type: 'SpacerBlock', label: 'Espaçador', icon: <Minus size={20} />, description: 'Espaçamento visual entre seções',
 defaultData: {}
+},
+{
+type: 'ImageBlock', label: 'Imagem', icon: <ImageIcon size={20} />, description: 'Adicione uma imagem destacada',
+defaultData: { src: '', alt: 'Imagem', caption: '' }
 }
 ];
 
@@ -58,6 +65,9 @@ const [successMessage, setSuccessMessage] = useState('');
 const [showPublishModal, setShowPublishModal] = useState(false);
 const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+// Canva Sidebar State
+const [leftSidebarTab, setLeftSidebarTab] = useState<'blocos' | 'midia' | 'configs' | null>('blocos');
+
 // AI Copilot States
 const [rightSidebarTab, setRightSidebarTab] = useState<'properties' | 'ai'>('properties');
 const [chatMessages, setChatMessages] = useState<{ role: string, content: string }[]>([
@@ -65,7 +75,11 @@ const [chatMessages, setChatMessages] = useState<{ role: string, content: string
 ]);
 const [chatInput, setChatInput] = useState('');
 const [isChatLoading, setIsChatLoading] = useState(false);
+const [croppingImage, setCroppingImage] = useState<string | null>(null);
+
 const chatEndRef = useRef<HTMLDivElement>(null);
+
+const [showModuleEditor, setShowModuleEditor] = useState(false);
 
 // Scroll to bottom of chat
 useEffect(() => {
@@ -83,17 +97,38 @@ const handleChatSubmit = async (e: React.FormEvent) => {
     setIsChatLoading(true);
 
     try {
+        const systemPrompt = {
+            role: 'system',
+            content: `Você é um assistente do editor de páginas (CMS). Quando o usuário pedir para criar um bloco (como um texto, hero section, espaçador, ou imagem), VOCÊ DEVE retornar NO FINAL da sua resposta um bloco de código JSON começando com \`\`\`json. O JSON deve ser: { "action": "ADD_BLOCK", "type": "[HeroBlock|TextBlock|SpacerBlock|ImageBlock]", "data": { ... } }. Para HeroBlock, use "title", "subtitle". Para TextBlock, use "content" (com tags html). Para ImageBlock, use "alt" e "caption" se desejar. Explique o que fez no texto normal.`
+        };
+
         const res = await fetch(`${API_URL}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: updatedMessages })
+            body: JSON.stringify({ messages: [systemPrompt, ...updatedMessages] })
         });
 
         if (res.ok) {
             const data = await res.json();
-            setChatMessages([...updatedMessages, { role: 'assistant', content: data.reply }]);
+            let replyContent = data.reply;
+            
+            // Verifica se há comando JSON na resposta
+            const jsonMatch = replyContent.match(/```json\n([\s\S]*?)\n```/);
+            if (jsonMatch) {
+                try {
+                    const cmd = JSON.parse(jsonMatch[1]);
+                    if (cmd.action === 'ADD_BLOCK') {
+                        addBlock(cmd.type, cmd.data);
+                    }
+                    replyContent = replyContent.replace(/```json\n[\s\S]*?\n```/, '').trim();
+                } catch(e) {
+                    console.error("Erro ao fazer parse do comando JSON", e);
+                }
+            }
+
+            setChatMessages([...updatedMessages, { role: 'assistant', content: replyContent || 'Ação executada com sucesso!' }]);
         } else {
-            setChatMessages([...updatedMessages, { role: 'assistant', content: 'Desculpe, ocorreu um erro de conexão com a IA (Verifique a GROQ_API_KEY no backend).' }]);
+            setChatMessages([...updatedMessages, { role: 'assistant', content: 'Desculpe, ocorreu um erro de conexão com a IA.' }]);
         }
     } catch (error) {
         setChatMessages([...updatedMessages, { role: 'assistant', content: 'Desculpe, não consegui conectar ao servidor.' }]);
@@ -166,34 +201,48 @@ timeoutRef.current = setTimeout(() => setSuccessMessage(''), 4000);
 };
 
 const handleSave = async (publish: boolean = false) => {
-setSaving(true);
-try {
-const endpoint = publish
-? `${API_URL}/api/pages/${selectedPage}/publish`
-: `${API_URL}/api/pages/${selectedPage}`;
+    setSaving(true);
+    try {
+        // Se for publicar, primeiro salvamos o rascunho para garantir que a versão final está no banco.
+        const draftEndpoint = `${API_URL}/api/pages/${selectedPage}/draft`;
+        const draftRes = await fetch(draftEndpoint, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ draft_content: JSON.stringify(blocks) })
+        });
 
-const res = await fetch(endpoint, {
-method: publish ? 'POST' : 'PUT',
-headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-body: JSON.stringify({ content: JSON.stringify(blocks), draft_content: JSON.stringify(blocks) })
-});
+        if (!draftRes.ok) throw new Error('Falha ao salvar rascunho');
 
-if (!res.ok) throw new Error('Falha ao salvar');
-setOriginalBlocks(blocks);
-setIsDirty(false);
-if (publish) setShowPublishModal(false);
-showToast(publish ? 'Publicado com sucesso!' : 'Rascunho salvo!');
-} catch (error) {
-console.error(error);
-alert('Falha ao salvar. Tente novamente.');
-} finally { setSaving(false); }
+        if (publish) {
+            const publishEndpoint = `${API_URL}/api/pages/${selectedPage}/publish`;
+            const publishRes = await fetch(publishEndpoint, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!publishRes.ok) throw new Error('Falha ao publicar');
+        }
+
+        setOriginalBlocks(blocks);
+        setIsDirty(false);
+        if (publish) setShowPublishModal(false);
+        showToast(publish ? 'Publicado com sucesso!' : 'Rascunho salvo!');
+    } catch (error) {
+        console.error(error);
+        alert('Falha ao salvar. Tente novamente.');
+    } finally { setSaving(false); }
 };
 
-const addBlock = (type: BlockData['type']) => {
+const addBlock = (type: BlockData['type'], initialData?: any) => {
 const template = BLOCK_TEMPLATES.find(t => t.type === type);
 if (!template) return;
-const newBlock: BlockData = { id: `block-${Date.now()}`, type, data: { ...template.defaultData } };
+const newBlock: BlockData = { 
+    id: `block-${Date.now()}`, 
+    type, 
+    data: initialData ? { ...template.defaultData, ...initialData } : { ...template.defaultData } 
+};
 setBlocks(prev => [...prev, newBlock]);
+setIsDirty(true);
 };
 
 const updateBlock = (id: string, updates: Partial<BlockData>) => {
@@ -265,7 +314,7 @@ return (
 {/* ═══ HEADER ═══ */}
 <div className="h-14 bg-white border-b border-warm-200 flex items-center justify-between px-4 sm:px-6 shrink-0 z-50">
 <div className="flex items-center gap-3">
-<button onClick={() => navigate('/admin')} className="p-2 text-warm-500 hover:text-warm-900 hover:bg-warm-100 rounded-lg transition-colors">
+<button onClick={() => navigate('/perfil')} className="p-2 text-warm-500 hover:text-warm-900 hover:bg-warm-100 rounded-lg transition-colors">
 <ArrowLeft size={20} />
 </button>
 <div className="h-5 w-px bg-warm-200 hidden sm:block" />
@@ -304,28 +353,112 @@ className="px-4 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary-
 {/* ═══ TRIPLE LAYOUT ═══ */}
 <div className="flex-1 flex overflow-hidden min-h-0">
 
-{/* ─── LEFT SIDEBAR ─── */}
-<div className="w-60 bg-white border-r border-warm-200 flex flex-col z-40 shrink-0">
-<div className="p-3 border-b border-warm-100">
-<h3 className="text-xs font-bold text-warm-500 uppercase tracking-wider">Adicionar Seção</h3>
-</div>
-<div className="p-3 flex flex-col gap-2 overflow-y-auto flex-1">
-{BLOCK_TEMPLATES.map(tmpl => (
-<button
-key={tmpl.type}
-onClick={() => addBlock(tmpl.type)}
-className="flex items-center gap-3 p-3 bg-warm-50 border border-warm-100 rounded-xl hover:border-primary hover:bg-primary/5 hover:shadow-sm transition-all group text-left"
->
-<div className="p-2 bg-white rounded-lg border border-warm-200 text-warm-400 group-hover:text-primary group-hover:border-primary/30 transition-colors shrink-0">
-{tmpl.icon}
-</div>
-<div className="min-w-0">
-<div className="text-sm font-bold text-warm-800 group-hover:text-primary transition-colors">{tmpl.label}</div>
-<div className="text-[11px] text-warm-500 truncate">{tmpl.description}</div>
-</div>
-</button>
-))}
-</div>
+{/* ─── LEFT SIDEBAR (CANVA STYLE) ─── */}
+<div className="flex shrink-0 h-full">
+    {/* Primary Narrow Icon Bar */}
+    <div className="w-[72px] bg-warm-900 flex flex-col items-center py-4 gap-4 z-50 shadow-md">
+        <button
+            onClick={() => setLeftSidebarTab(leftSidebarTab === 'blocos' ? null : 'blocos')}
+            className={`flex flex-col items-center gap-1.5 w-14 py-2.5 rounded-xl transition-all ${
+                leftSidebarTab === 'blocos' ? 'text-white bg-white/10' : 'text-warm-400 hover:text-white hover:bg-white/5'
+            }`}
+        >
+            <Layers size={22} className={leftSidebarTab === 'blocos' ? 'drop-shadow-md' : ''} />
+            <span className="text-[10px] font-medium tracking-wide">Blocos</span>
+        </button>
+        
+        <button
+            onClick={() => setLeftSidebarTab(leftSidebarTab === 'midia' ? null : 'midia')}
+            className={`flex flex-col items-center gap-1.5 w-14 py-2.5 rounded-xl transition-all ${
+                leftSidebarTab === 'midia' ? 'text-white bg-white/10' : 'text-warm-400 hover:text-white hover:bg-white/5'
+            }`}
+        >
+            <ImageIcon size={22} className={leftSidebarTab === 'midia' ? 'drop-shadow-md' : ''} />
+            <span className="text-[10px] font-medium tracking-wide">Uploads</span>
+        </button>
+
+        <button
+            onClick={() => setLeftSidebarTab(leftSidebarTab === 'configs' ? null : 'configs')}
+            className={`flex flex-col items-center gap-1.5 w-14 py-2.5 rounded-xl transition-all ${
+                leftSidebarTab === 'configs' ? 'text-white bg-white/10' : 'text-warm-400 hover:text-white hover:bg-white/5'
+            }`}
+        >
+            <Settings size={22} className={leftSidebarTab === 'configs' ? 'drop-shadow-md' : ''} />
+            <span className="text-[10px] font-medium tracking-wide">Configs</span>
+        </button>
+    </div>
+
+    {/* Secondary Expanding Panel */}
+    <div className={`bg-white border-r border-warm-200 flex flex-col z-40 overflow-hidden shadow-lg transition-all duration-300 ease-in-out ${
+        leftSidebarTab !== null ? 'w-[320px] opacity-100' : 'w-0 opacity-0 border-r-0'
+    }`}>
+        {leftSidebarTab === 'blocos' && (
+            <>
+                <div className="p-4 border-b border-warm-100 flex items-center justify-between gap-2 bg-white shrink-0">
+                    <h3 className="text-sm font-bold text-warm-800">Modelos e Seções</h3>
+                    <button onClick={() => setLeftSidebarTab(null)} className="p-1 hover:bg-warm-100 rounded-md text-warm-400 hover:text-warm-700">
+                        <X size={16} />
+                    </button>
+                </div>
+                <div className="p-4 flex flex-col gap-3 overflow-y-auto flex-1 custom-scrollbar">
+                    <p className="text-xs text-warm-500 mb-1 leading-relaxed">Clique nos blocos abaixo para adicioná-los ao fim da sua página.</p>
+                    {BLOCK_TEMPLATES.map(tmpl => (
+                        <button
+                            key={tmpl.type}
+                            onClick={() => addBlock(tmpl.type)}
+                            className="flex flex-col items-start p-3.5 bg-white border border-warm-200 rounded-xl hover:border-primary hover:shadow-md transition-all group text-left relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 left-0 w-1 h-full bg-primary transform -translate-x-full group-hover:translate-x-0 transition-transform" />
+                            <div className="flex items-center gap-3 w-full mb-2">
+                                <div className="p-2 bg-warm-50 rounded-lg text-primary group-hover:scale-110 transition-transform">
+                                    {tmpl.icon}
+                                </div>
+                                <div className="text-sm font-bold text-warm-800 group-hover:text-primary transition-colors">{tmpl.label}</div>
+                            </div>
+                            <div className="text-[11px] text-warm-500 leading-relaxed pr-2">{tmpl.description}</div>
+                        </button>
+                    ))}
+                </div>
+            </>
+        )}
+
+        {leftSidebarTab === 'midia' && (
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
+                <MediaLibrary isModal={false} onSelect={(url) => {
+                    if (selectedBlockId) {
+                        const block = blocks.find(b => b.id === selectedBlockId);
+                        if (block && block.type === 'HeroBlock') {
+                            updateBlock(selectedBlockId, { data: { ...block.data, bgImage: url } });
+                            showToast('Imagem selecionada para o bloco!');
+                        } else if (block && block.type === 'ImageBlock') {
+                            updateBlock(selectedBlockId, { data: { ...block.data, src: url } });
+                            showToast('Imagem selecionada para o bloco!');
+                        } else {
+                            showToast('O bloco selecionado não suporta imagem.');
+                        }
+                    } else {
+                        showToast('Nenhum bloco selecionado para receber a imagem.');
+                    }
+                }} />
+            </div>
+        )}
+
+        {leftSidebarTab === 'configs' && (
+            <div className="flex-1 overflow-y-auto flex flex-col">
+                <div className="p-4 border-b border-warm-100 flex items-center justify-between gap-2 bg-white shrink-0">
+                    <h3 className="text-sm font-bold text-warm-800">Configurações Gerais</h3>
+                    <button onClick={() => setLeftSidebarTab(null)} className="p-1 hover:bg-warm-100 rounded-md text-warm-400 hover:text-warm-700">
+                        <X size={16} />
+                    </button>
+                </div>
+                <div className="p-4 text-center mt-10 space-y-3 text-warm-500">
+                    <Settings size={40} className="mx-auto opacity-30" />
+                    <p className="text-sm font-medium text-warm-700">Em Breve</p>
+                    <p className="text-xs">Aqui você poderá editar o SEO (Título e Descrição) e as cores globais da página.</p>
+                </div>
+            </div>
+        )}
+    </div>
 </div>
 
 {/* ─── CENTER CANVAS ─── */}
@@ -523,6 +656,14 @@ onSelect={setSelectedBlockId}
                                         </button>
                                     </div>
                                 )}
+                                {selectedBlock.data.bgImage && (
+                                    <button 
+                                        onClick={() => setCroppingImage(selectedBlock.data.bgImage)}
+                                        className="w-full mt-2 px-4 py-2.5 bg-primary/10 text-primary font-bold rounded-xl hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Crop size={16} /> Recortar Imagem
+                                    </button>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-xs font-medium text-warm-600 mb-1">Opacidade do Overlay</label>
@@ -580,9 +721,17 @@ onSelect={setSelectedBlockId}
                                     className="w-full bg-warm-50 border border-warm-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none resize-none"
                                 />
                             </div>
-                            <p className="text-[11px] text-warm-500 bg-warm-50 p-2 rounded-lg border border-warm-100">
-                                Os módulos são carregados dinamicamente do banco de dados.
-                            </p>
+                            <div className="bg-warm-50 p-4 rounded-xl border border-warm-200 mt-2">
+                                <p className="text-[11px] text-warm-500 mb-3">
+                                    Os módulos são carregados dinamicamente do banco de dados.
+                                </p>
+                                <button
+                                    onClick={() => setShowModuleEditor(true)}
+                                    className="w-full py-2 bg-primary text-white font-bold rounded-lg shadow-md hover:bg-primary-dark transition-colors"
+                                >
+                                    Gerenciar Módulos
+                                </button>
+                            </div>
 
                             <h4 className="text-xs font-bold text-warm-500 uppercase tracking-wider pt-2">Estilo</h4>
                             <div>
@@ -658,9 +807,77 @@ onSelect={setSelectedBlockId}
                         </div>
                     )}
 
+                    {selectedBlock.type === 'ImageBlock' && (
+                        <div className="space-y-4">
+                            <h4 className="text-xs font-bold text-warm-500 uppercase tracking-wider">Estilo da Imagem</h4>
+                            {selectedBlock.data.src && (
+                                <button 
+                                    onClick={() => setCroppingImage(selectedBlock.data.src)}
+                                    className="w-full mb-4 px-4 py-2.5 bg-primary/10 text-primary font-bold rounded-xl hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Crop size={16} /> Recortar Imagem
+                                </button>
+                            )}
+                            <div>
+                                <label className="block text-xs font-medium text-warm-600 mb-1">Preenchimento (Object Fit)</label>
+                                <select
+                                    value={selectedBlock.styles?.objectFit || 'cover'}
+                                    onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, objectFit: e.target.value } })}
+                                    className="w-full bg-warm-50 border border-warm-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                >
+                                    <option value="cover">Preencher (Corta bordas)</option>
+                                    <option value="contain">Conter (Mostra inteira)</option>
+                                    <option value="fill">Esticar</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-warm-600 mb-1">Bordas Arredondadas</label>
+                                <select
+                                    value={selectedBlock.styles?.rounded || 'xl'}
+                                    onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, rounded: e.target.value } })}
+                                    className="w-full bg-warm-50 border border-warm-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                >
+                                    <option value="none">Quadrado</option>
+                                    <option value="md">Suave</option>
+                                    <option value="xl">Médio</option>
+                                    <option value="2xl">Grande</option>
+                                    <option value="full">Círculo</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-warm-600 mb-1">Altura Máxima</label>
+                                <input
+                                    type="range" min="100" max="800" step="50"
+                                    value={selectedBlock.styles?.height ?? 400}
+                                    onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, height: parseInt(e.target.value) } })}
+                                    className="w-full accent-primary"
+                                />
+                                <div className="text-[10px] text-right text-warm-400">{selectedBlock.styles?.height ?? 400}px</div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-warm-600 mb-1">Largura</label>
+                                <select
+                                    value={selectedBlock.styles?.containerWidth || 'max-w-4xl'}
+                                    onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, containerWidth: e.target.value } })}
+                                    className="w-full bg-warm-50 border border-warm-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                >
+                                    <option value="max-w-md">Estreita</option>
+                                    <option value="max-w-2xl">Média</option>
+                                    <option value="max-w-4xl">Larga</option>
+                                    <option value="max-w-6xl">Super Larga</option>
+                                    <option value="w-full">Tela Inteira</option>
+                                </select>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="pt-4 border-t border-warm-100">
                         <button
-                            onClick={() => deleteBlock(selectedBlock.id)}
+                            onClick={() => {
+                                if (window.confirm('Tem certeza que deseja excluir esta seção? Esta ação não pode ser desfeita.')) {
+                                    deleteBlock(selectedBlock.id);
+                                }
+                            }}
                             className="w-full py-2 bg-red-50 text-red-600 hover:bg-red-100 font-medium rounded-lg text-xs transition-colors border border-red-200 flex items-center justify-center gap-1.5"
                         >
                             <Trash2 size={13} /> Excluir Seção
@@ -710,6 +927,44 @@ Confirmar
 </div>
 </div>
 )}
+
+{/* ═══ MODULE EDITOR MODAL ═══ */}
+{showModuleEditor && (
+    <div className="fixed inset-0 z-[100] bg-warm-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+        <div className="bg-[#f0f2f5] w-full max-w-6xl h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative">
+            <div className="bg-white p-4 border-b border-warm-200 flex justify-between items-center shrink-0">
+                <h3 className="text-xl font-bold text-warm-900">Gerenciar Módulos</h3>
+                <button onClick={() => setShowModuleEditor(false)} className="p-2 bg-warm-100 text-warm-600 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                    <X size={20} />
+                </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 relative">
+                <ModuleEditor />
+            </div>
+        </div>
+    </div>
+)}
+
+{/* IMAGE CROPPER MODAL */}
+{croppingImage && (
+    <ImageCropperModal
+        imageUrl={croppingImage}
+        onClose={() => setCroppingImage(null)}
+        onCropComplete={(newUrl) => {
+            if (selectedBlockId) {
+                const block = blocks.find(b => b.id === selectedBlockId);
+                if (block && block.type === 'HeroBlock') {
+                    updateBlock(selectedBlockId, { data: { ...block.data, bgImage: newUrl } });
+                } else if (block && block.type === 'ImageBlock') {
+                    updateBlock(selectedBlockId, { data: { ...block.data, src: newUrl } });
+                }
+                showToast('Imagem recortada com sucesso!');
+            }
+            setCroppingImage(null);
+        }}
+    />
+)}
+
 </div>
 );
 };
