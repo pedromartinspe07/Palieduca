@@ -1,14 +1,15 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
     UserCircle, LogOut, Users, BookOpen, Palette, KeyRound, 
     Lock, X, CheckCircle2, AlertCircle, Loader2, ShieldCheck, Clock, Camera, 
     Trash2, Globe, UploadCloud, Sparkles, Download, Database, RefreshCw, 
-    Search, Award, CheckCheck, TrendingUp, Layers, ChevronRight
+    Award, TrendingUp, Layers, ChevronRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { parseGoogleDriveUrl, parseZohoWorkDriveUrl, getFullMediaUrl } from '../utils/mediaUtils';
 import CertificateModal from '../components/CertificateModal';
+import StudentAnalyticsDashboard from '../components/StudentAnalyticsDashboard';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://127.0.0.1:8000'
@@ -42,7 +43,6 @@ const Perfil: React.FC = () => {
     // Admin & Teacher Analytics State (Dona / Desenvolvedor)
     const [adminMetrics, setAdminMetrics] = useState<any>(null);
     const [loadingAdminMetrics, setLoadingAdminMetrics] = useState(false);
-    const [studentSearch, setStudentSearch] = useState('');
     const [backupLoading, setBackupLoading] = useState(false);
     const [backupMessage, setBackupMessage] = useState('');
     const backupFileRef = useRef<HTMLInputElement>(null);
@@ -81,9 +81,44 @@ const Perfil: React.FC = () => {
         }
     }, [token, user]);
 
-    // Exportar CSV de alunos
-    const handleExportCSV = () => {
-        window.open(`${API_URL}/api/admin/export-students-csv`, '_blank');
+    // Exportar Planilha Excel (.xlsx) com gráficos nativos embutidos
+    const handleExportExcel = async () => {
+        if (!token) return;
+        try {
+            const res = await fetch(`${API_URL}/api/admin/export-students-excel`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Falha ao exportar relatório em Excel');
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Relatorio_Turma_Palieduca_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (err: any) {
+            alert(err.message || 'Erro ao baixar relatório Excel');
+        }
+    };
+
+    // Exportar CSV de alunos com autenticação Bearer e download direto
+    const handleExportCSV = async () => {
+        if (!token) return;
+        try {
+            const res = await fetch(`${API_URL}/api/admin/export-students-csv`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Falha ao exportar planilha de alunos');
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Alunos_Palieduca_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (err: any) {
+            alert(err.message || 'Erro ao baixar planilha');
+        }
     };
 
     // Exportar Backup Completo JSON
@@ -329,16 +364,6 @@ const Perfil: React.FC = () => {
         }
     };
 
-    // Filtro de alunos para o painel da professora
-    const filteredStudents = useMemo(() => {
-        if (!adminMetrics?.students) return [];
-        if (!studentSearch.trim()) return adminMetrics.students;
-        const q = studentSearch.toLowerCase();
-        return adminMetrics.students.filter((s: any) => 
-            s.nome.toLowerCase().includes(q) || s.email.toLowerCase().includes(q)
-        );
-    }, [adminMetrics, studentSearch]);
-
     if (!user) {
         return (
             <div className="pt-32 text-center">
@@ -486,108 +511,13 @@ const Perfil: React.FC = () => {
                                 </button>
                             </div>
 
-                            {/* Tabela de Alunos & Gestão */}
-                            <div className="glassmorphism p-6 rounded-3xl border border-warm-200 shadow-sm bg-white">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-                                    <div>
-                                        <h3 className="text-lg font-bold text-warm-900 flex items-center gap-2">
-                                            <Users size={20} className="text-primary" /> Gestão de Alunos da Turma
-                                        </h3>
-                                        <p className="text-xs text-warm-500">Acompanhe o progresso real de cada aluno em tempo real</p>
-                                    </div>
-
-                                    <button
-                                        onClick={handleExportCSV}
-                                        className="flex items-center gap-1.5 px-4 py-2 bg-sage-100 hover:bg-sage-200 text-sage-800 rounded-xl font-bold text-xs border border-sage-300 transition-all cursor-pointer shadow-xs self-start sm:self-auto"
-                                    >
-                                        <Download size={14} /> Exportar Planilha (CSV/Excel)
-                                    </button>
-                                </div>
-
-                                {/* Busca de Alunos */}
-                                <div className="relative mb-4">
-                                    <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warm-400" />
-                                    <input 
-                                        type="text"
-                                        value={studentSearch}
-                                        onChange={(e) => setStudentSearch(e.target.value)}
-                                        placeholder="Buscar aluno por nome ou e-mail..."
-                                        className="w-full pl-9 pr-4 py-2.5 bg-warm-50 border border-warm-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-primary"
-                                    />
-                                </div>
-
-                                {/* Lista / Tabela */}
-                                {loadingAdminMetrics ? (
-                                    <div className="py-12 flex items-center justify-center">
-                                        <Loader2 size={28} className="animate-spin text-primary" />
-                                    </div>
-                                ) : filteredStudents.length === 0 ? (
-                                    <div className="py-8 text-center text-warm-500 text-xs">
-                                        Nenhum aluno encontrado.
-                                    </div>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left text-xs">
-                                            <thead>
-                                                <tr className="border-b border-warm-200 text-warm-500 uppercase font-bold text-[10px]">
-                                                    <th className="pb-2.5">Aluno</th>
-                                                    <th className="pb-2.5">E-mail</th>
-                                                    <th className="pb-2.5">Progresso</th>
-                                                    <th className="pb-2.5 text-center">Certificado</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-warm-100">
-                                                {filteredStudents.map((s: any) => (
-                                                    <tr key={s.id} className="hover:bg-warm-50/60 transition-colors">
-                                                        <td className="py-3 font-semibold text-warm-900 flex items-center gap-2">
-                                                            {s.foto_url ? (
-                                                                <img src={getFullMediaUrl(s.foto_url)} alt="" className="w-7 h-7 rounded-full object-cover" />
-                                                            ) : (
-                                                                <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
-                                                                    {s.nome[0]}
-                                                                </div>
-                                                            )}
-                                                            <span>{s.nome}</span>
-                                                        </td>
-                                                        <td className="py-3 text-warm-600">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span>{s.email}</span>
-                                                                {s.email_verified && (
-                                                                    <span title="E-mail Verificado">
-                                                                        <CheckCheck size={14} className="text-emerald-600 shrink-0" />
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3">
-                                                            <div className="flex items-center gap-2 min-w-[120px]">
-                                                                <div className="flex-1 bg-warm-200 rounded-full h-2 overflow-hidden">
-                                                                    <div 
-                                                                        className="bg-primary h-2 rounded-full transition-all" 
-                                                                        style={{ width: `${s.progress_percentage}%` }}
-                                                                    />
-                                                                </div>
-                                                                <span className="font-bold text-[11px] text-warm-700">{s.progress_percentage}%</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 text-center">
-                                                            {s.is_certificate_eligible ? (
-                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                                                                    <Award size={11} /> Apto
-                                                                </span>
-                                                            ) : (
-                                                                <span className="text-warm-400 text-[11px] font-medium">
-                                                                    {s.completed_activities_count}/{s.total_activities_count}
-                                                                </span>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
+                            {/* Central de Inteligência, Gráficos e Planilha Interativa */}
+                            <StudentAnalyticsDashboard 
+                                data={adminMetrics} 
+                                loading={loadingAdminMetrics} 
+                                onExportExcel={handleExportExcel}
+                                onExportCSV={handleExportCSV} 
+                            />
 
                             {/* Central de Segurança e Backup em 1 Clique */}
                             <div className="glassmorphism p-6 rounded-3xl border border-warm-200 shadow-sm bg-white">

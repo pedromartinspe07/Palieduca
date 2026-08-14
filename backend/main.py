@@ -2,7 +2,7 @@ import os
 import shutil
 from datetime import datetime
 from typing import Optional
-from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Form, Request
+from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Form, Request, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -999,8 +999,15 @@ def get_admin_dashboard_metrics(
     # Módulos e total de atividades da plataforma
     modules = db.query(models.Module).all()
     all_activity_ids = []
+    module_activity_map = {}
+    
     for mod in modules:
-        all_activity_ids.extend(get_module_activity_ids(mod.slug_id, db))
+        act_ids = get_module_activity_ids(mod.slug_id, db)
+        all_activity_ids.extend(act_ids)
+        module_activity_map[mod.slug_id] = {
+            "title": mod.title,
+            "activities": act_ids
+        }
     
     total_activities_count = len(all_activity_ids)
     all_activity_set = set(all_activity_ids)
@@ -1010,16 +1017,40 @@ def get_admin_dashboard_metrics(
     student_metrics = []
     total_progress_sum = 0
 
+    completed_students_count = 0
+    in_progress_students_count = 0
+    not_started_students_count = 0
+
+    # Rastreamento de conclusão por módulo
+    module_completion_totals = {mod.slug_id: 0 for mod in modules}
+
     for s in students:
         s_records = db.query(models.UserActivityProgress).filter(
             models.UserActivityProgress.user_id == s.id,
             models.UserActivityProgress.completed == True
         ).all()
         
-        s_completed_ids = [r.activity_id for r in s_records if r.activity_id in all_activity_set]
+        s_completed_ids = set(r.activity_id for r in s_records if r.activity_id in all_activity_set)
         s_done = len(s_completed_ids)
         s_pct = round((s_done / total_activities_count) * 100) if total_activities_count > 0 else 0
         total_progress_sum += s_pct
+
+        if s_pct >= 100 and s_done > 0:
+            completed_students_count += 1
+        elif s_pct > 0:
+            in_progress_students_count += 1
+        else:
+            not_started_students_count += 1
+
+        # Calcula pontos (10 pontos por atividade/quiz concluído)
+        points = s_done * 10
+
+        # Verifica progresso por módulo para o gráfico de crescimento
+        for mod in modules:
+            mod_acts = module_activity_map[mod.slug_id]["activities"]
+            mod_done = len([aid for aid in mod_acts if aid in s_completed_ids])
+            if len(mod_acts) > 0 and mod_done == len(mod_acts):
+                module_completion_totals[mod.slug_id] += 1
 
         student_metrics.append({
             "id": s.id,
@@ -1030,28 +1061,339 @@ def get_admin_dashboard_metrics(
             "completed_activities_count": s_done,
             "total_activities_count": total_activities_count,
             "progress_percentage": s_pct,
+            "points": points,
             "is_certificate_eligible": s_pct >= 100 and s_done > 0
         })
 
+    # Ordena alunos por maior pontuação (ranking decrescente)
+    student_metrics.sort(key=lambda x: (x["points"], x["progress_percentage"]), reverse=True)
+
     avg_progress = round(total_progress_sum / len(students)) if len(students) > 0 else 0
+
+    # Estatísticas detalhadas por módulo para gráficos
+    module_stats = []
+    for mod in modules:
+        mod_acts_count = len(module_activity_map[mod.slug_id]["activities"])
+        comp_count = module_completion_totals[mod.slug_id]
+        comp_rate = round((comp_count / len(students)) * 100) if len(students) > 0 else 0
+        module_stats.append({
+            "slug": mod.slug_id,
+            "title": mod.title,
+            "activities_count": mod_acts_count,
+            "completed_students": comp_count,
+            "completion_rate": comp_rate
+        })
 
     return {
         "total_students": len(students),
         "total_modules": len(modules),
         "total_activities": total_activities_count,
         "average_progress_percentage": avg_progress,
+        "status_distribution": {
+            "completed": completed_students_count,
+            "in_progress": in_progress_students_count,
+            "not_started": not_started_students_count
+        },
+        "module_stats": module_stats,
         "students": student_metrics
     }
 
+import io
+import openpyxl
+from openpyxl.chart import PieChart, BarChart, Reference
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 from fastapi.responses import Response
+
+@app.get("/api/admin/export-students-excel")
+def export_students_excel(
+    token: Optional[str] = Query(None),
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
+    user = None
+    if token:
+        payload = auth.decode_access_token(token)
+        if payload and payload.get("sub"):
+            user = db.query(models.User).filter(models.User.email == payload.get("sub")).first()
+    elif authorization and authorization.startswith("Bearer "):
+        jwt_token = authorization.split(" ")[1]
+        payload = auth.decode_access_token(jwt_token)
+        if payload and payload.get("sub"):
+            user = db.query(models.User).filter(models.User.email == payload.get("sub")).first()
+
+    if not user or user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=401, detail="Sem permissão ou não autenticado.")
+
+    # 1. Coleta e processamento dos dados
+    modules = db.query(models.Module).all()
+    all_activity_ids = []
+    module_activity_map = {}
+    for mod in modules:
+        act_ids = get_module_activity_ids(mod.slug_id, db)
+        all_activity_ids.extend(act_ids)
+        module_activity_map[mod.slug_id] = {
+            "title": mod.title,
+            "activities": act_ids
+        }
+    
+    total_activities = len(all_activity_ids)
+    all_activity_set = set(all_activity_ids)
+    students = db.query(models.User).filter(models.User.cargo == "aluno").all()
+
+    completed_count = 0
+    in_progress_count = 0
+    not_started_count = 0
+    module_completion_totals = {mod.slug_id: 0 for mod in modules}
+    student_rows = []
+
+    for s in students:
+        s_records = db.query(models.UserActivityProgress).filter(
+            models.UserActivityProgress.user_id == s.id,
+            models.UserActivityProgress.completed == True
+        ).all()
+        s_completed_ids = set(r.activity_id for r in s_records if r.activity_id in all_activity_set)
+        s_done = len(s_completed_ids)
+        s_pct = round((s_done / total_activities) * 100) if total_activities > 0 else 0
+        points = s_done * 10
+
+        if s_pct >= 100 and s_done > 0:
+            completed_count += 1
+        elif s_pct > 0:
+            in_progress_count += 1
+        else:
+            not_started_count += 1
+
+        for mod in modules:
+            mod_acts = module_activity_map[mod.slug_id]["activities"]
+            mod_done = len([aid for aid in mod_acts if aid in s_completed_ids])
+            if len(mod_acts) > 0 and mod_done == len(mod_acts):
+                module_completion_totals[mod.slug_id] += 1
+
+        student_rows.append({
+            "nome": s.nome,
+            "email": s.email,
+            "verified": "Sim" if s.email_verified else "Não",
+            "points": points,
+            "completed": s_done,
+            "total": total_activities,
+            "progress": s_pct,
+            "certificate": "Apto (100%)" if s_pct >= 100 and s_done > 0 else "Em Andamento" if s_pct > 0 else "Não Iniciado"
+        })
+
+    student_rows.sort(key=lambda x: (x["points"], x["progress"]), reverse=True)
+
+    # 2. Construção do Excel (.xlsx) com Estilos e Gráficos Nativos
+    wb = openpyxl.Workbook()
+    
+    PRIMARY_COLOR = "2C5E55" # Verde Palieduca
+    HEADER_FILL = PatternFill(start_color=PRIMARY_COLOR, end_color=PRIMARY_COLOR, fill_type="solid")
+    SUBHEADER_FILL = PatternFill(start_color="4A7C72", end_color="4A7C72", fill_type="solid")
+    ZEBRA_FILL = PatternFill(start_color="F7FAF8", end_color="F7FAF8", fill_type="solid")
+    CARD_FILL = PatternFill(start_color="EAF2EF", end_color="EAF2EF", fill_type="solid")
+
+    HEADER_FONT = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+    TITLE_FONT = Font(name="Calibri", size=14, bold=True, color="FFFFFF")
+    SUBTITLE_FONT = Font(name="Calibri", size=10, italic=True, color="E0ECE8")
+    BOLD_FONT = Font(name="Calibri", size=11, bold=True, color="2C5E55")
+    REGULAR_FONT = Font(name="Calibri", size=10)
+    
+    THIN_BORDER = Border(
+        left=Side(style='thin', color='D0DCD7'),
+        right=Side(style='thin', color='D0DCD7'),
+        top=Side(style='thin', color='D0DCD7'),
+        bottom=Side(style='thin', color='D0DCD7')
+    )
+
+    # =========================================================================
+    # ABA 1: 📊 Dashboard & Gráficos
+    # =========================================================================
+    ws_dash = wb.active
+    ws_dash.title = "📊 Dashboard & Graficos"
+    ws_dash.views.sheetView[0].showGridLines = True
+
+    # Banner Superior
+    ws_dash.merge_cells('A1:L2')
+    top_cell = ws_dash['A1']
+    top_cell.value = "  UNIVERSIDADE FEDERAL DA PARAÍBA (UFPB) • PALIEDUCA — PAINEL DA TURMA"
+    top_cell.font = TITLE_FONT
+    top_cell.fill = HEADER_FILL
+    top_cell.alignment = Alignment(vertical="center")
+
+    ws_dash.merge_cells('A3:L3')
+    sub_cell = ws_dash['A3']
+    sub_cell.value = f"  Relatório Gerado em: {datetime.now().strftime('%d/%m/%Y às %H:%M')} | Professora: Patricia Maria de Oliveira Andrade"
+    sub_cell.font = SUBTITLE_FONT
+    sub_cell.fill = SUBHEADER_FILL
+    sub_cell.alignment = Alignment(vertical="center")
+
+    # KPIs
+    avg_prog = round(sum(s['progress'] for s in student_rows) / len(student_rows)) if student_rows else 0
+    kpis = [
+        ("A5:B6", "Total Alunos", len(students)),
+        ("C5:D6", "Módulos", len(modules)),
+        ("E5:F6", "Atividades", total_activities),
+        ("G5:H6", "Média Geral", f"{avg_prog}%"),
+        ("I5:L6", "Aptos Certificado", f"{completed_count} de {len(students)}")
+    ]
+
+    for merge_range, label, val in kpis:
+        ws_dash.merge_cells(merge_range)
+        first_cell_ref = merge_range.split(":")[0]
+        ws_dash[first_cell_ref] = f"{label}: {val}"
+        ws_dash[first_cell_ref].font = Font(name="Calibri", size=11, bold=True, color="2C5E55")
+        ws_dash[first_cell_ref].fill = CARD_FILL
+        ws_dash[first_cell_ref].alignment = Alignment(horizontal="center", vertical="center")
+        ws_dash[first_cell_ref].border = THIN_BORDER
+
+    # Tabela 1: Distribuição de Desempenho
+    ws_dash['A9'] = "Status de Desempenho da Turma"
+    ws_dash['A9'].font = BOLD_FONT
+    ws_dash['A10'] = "Status"
+    ws_dash['B10'] = "Qtd Alunos"
+    ws_dash['A10'].fill = SUBHEADER_FILL
+    ws_dash['B10'].fill = SUBHEADER_FILL
+    ws_dash['A10'].font = HEADER_FONT
+    ws_dash['B10'].font = HEADER_FONT
+
+    dist_data = [
+        ("100% Concluido (Apto)", completed_count),
+        ("Em Andamento (1-99%)", in_progress_count),
+        ("Nao Iniciado (0%)", not_started_count)
+    ]
+    for idx, (status_lbl, qty) in enumerate(dist_data, start=11):
+        ws_dash[f'A{idx}'] = status_lbl
+        ws_dash[f'B{idx}'] = qty
+        ws_dash[f'A{idx}'].font = REGULAR_FONT
+        ws_dash[f'B{idx}'].font = REGULAR_FONT
+        ws_dash[f'A{idx}'].border = THIN_BORDER
+        ws_dash[f'B{idx}'].border = THIN_BORDER
+        ws_dash[f'B{idx}'].alignment = Alignment(horizontal="center")
+
+    # Gráfico de Pizza Nativo (Pie Chart)
+    pie = PieChart()
+    pie.title = "Distribuicao de Desempenho dos Alunos"
+    pie_labels = Reference(ws_dash, min_col=1, min_row=11, max_row=13)
+    pie_data = Reference(ws_dash, min_col=2, min_row=10, max_row=13)
+    pie.add_data(pie_data, titles_from_data=True)
+    pie.set_categories(pie_labels)
+    pie.width = 14
+    pie.height = 7
+    ws_dash.add_chart(pie, "D9")
+
+    # Tabela 2: Conclusão por Módulo
+    ws_dash['A16'] = "Taxa de Conclusao por Modulo"
+    ws_dash['A16'].font = BOLD_FONT
+    ws_dash['A17'] = "Modulo"
+    ws_dash['B17'] = "Conclusao (%)"
+    ws_dash['A17'].fill = SUBHEADER_FILL
+    ws_dash['B17'].fill = SUBHEADER_FILL
+    ws_dash['A17'].font = HEADER_FONT
+    ws_dash['B17'].font = HEADER_FONT
+
+    row_start_mod = 18
+    for idx, mod in enumerate(modules, start=row_start_mod):
+        comp_count = module_completion_totals[mod.slug_id]
+        comp_rate = round((comp_count / len(students)) * 100) if students else 0
+        ws_dash[f'A{idx}'] = mod.title
+        ws_dash[f'B{idx}'] = comp_rate
+        ws_dash[f'A{idx}'].font = REGULAR_FONT
+        ws_dash[f'B{idx}'].font = REGULAR_FONT
+        ws_dash[f'A{idx}'].border = THIN_BORDER
+        ws_dash[f'B{idx}'].border = THIN_BORDER
+        ws_dash[f'B{idx}'].alignment = Alignment(horizontal="center")
+    row_end_mod = row_start_mod + len(modules) - 1
+
+    # Gráfico de Barras Nativo (Bar Chart)
+    bar = BarChart()
+    bar.type = "col"
+    bar.style = 10
+    bar.title = "Taxa de Conclusao por Modulo (%)"
+    bar.y_axis.title = "Conclusao (%)"
+    bar.x_axis.title = "Modulos"
+    bar_data = Reference(ws_dash, min_col=2, min_row=17, max_row=row_end_mod)
+    bar_labels = Reference(ws_dash, min_col=1, min_row=row_start_mod, max_row=row_end_mod)
+    bar.add_data(bar_data, titles_from_data=True)
+    bar.set_categories(bar_labels)
+    bar.legend = None
+    bar.width = 14
+    bar.height = 7
+    ws_dash.add_chart(bar, "D16")
+
+    # =========================================================================
+    # ABA 2: 👥 Lista de Alunos & Desempenho
+    # =========================================================================
+    ws_students = wb.create_sheet(title="👥 Alunos & Notas")
+    ws_students.views.sheetView[0].showGridLines = True
+
+    headers = [
+        "Posicao Ranking", "Nome Completo do Aluno", "E-mail", 
+        "E-mail Verificado", "Pontos (pts)", "Atividades Feitas", 
+        "Total Atividades", "Progresso (%)", "Status do Certificado"
+    ]
+    for col_idx, h in enumerate(headers, start=1):
+        cell = ws_students.cell(row=1, column=col_idx, value=h)
+        cell.font = HEADER_FONT
+        cell.fill = HEADER_FILL
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = THIN_BORDER
+
+    ws_students.row_dimensions[1].height = 26
+
+    for r_idx, s in enumerate(student_rows, start=2):
+        row_data = [
+            f"#{r_idx - 1}", s["nome"], s["email"], s["verified"],
+            s["points"], s["completed"], s["total"], f"{s['progress']}%", s["certificate"]
+        ]
+        is_even = (r_idx % 2 == 0)
+        for col_idx, val in enumerate(row_data, start=1):
+            c = ws_students.cell(row=r_idx, column=col_idx, value=val)
+            c.font = REGULAR_FONT
+            c.border = THIN_BORDER
+            if is_even:
+                c.fill = ZEBRA_FILL
+            if col_idx in [1, 4, 5, 6, 7, 8, 9]:
+                c.alignment = Alignment(horizontal="center")
+
+    # Auto-ajuste de largura de colunas
+    for ws in [ws_dash, ws_students]:
+        for col in ws.columns:
+            vals = [str(cell.value or '') for cell in col if cell.value is not None]
+            max_len = max((len(v) for v in vals), default=10)
+            col_letter = get_column_letter(col[0].column)
+            ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+
+    # 3. Salva em memória e envia
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    filename = f"Relatorio_Turma_Palieduca_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+    return Response(
+        content=output.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 @app.get("/api/admin/export-students-csv")
 def export_students_csv(
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    token: Optional[str] = Query(None),
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
 ):
-    if current_user.cargo not in ["dona", "desenvolvedor"]:
-        raise HTTPException(status_code=403, detail="Sem permissão")
+    user = None
+    if token:
+        payload = auth.decode_access_token(token)
+        if payload and payload.get("sub"):
+            user = db.query(models.User).filter(models.User.email == payload.get("sub")).first()
+    elif authorization and authorization.startswith("Bearer "):
+        jwt_token = authorization.split(" ")[1]
+        payload = auth.decode_access_token(jwt_token)
+        if payload and payload.get("sub"):
+            user = db.query(models.User).filter(models.User.email == payload.get("sub")).first()
+
+    if not user or user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=401, detail="Sem permissão ou não autenticado.")
 
     modules = db.query(models.Module).all()
     all_activity_ids = []
@@ -1062,9 +1404,16 @@ def export_students_csv(
     all_activity_set = set(all_activity_ids)
     students = db.query(models.User).filter(models.User.cargo == "aluno").all()
 
-    # CSV com BOM UTF-8 para abrir no Excel em português
-    csv_lines = ["\ufeffNome;E-mail;E-mail Verificado;Atividades Concluidas;Total Atividades;Progresso (%);Certificado Liberado"]
+    # CSV com BOM UTF-8 e seções para Google Sheets e Excel
+    csv_lines = [
+        "\ufeff=== RELATORIO GERAL DA TURMA - PALIEDUCA (UFPB) ===",
+        f"Data: {datetime.now().strftime('%d/%m/%Y %H:%M')};Total Alunos: {len(students)};Modulos Ativos: {len(modules)};Total Atividades: {total_activities}",
+        "",
+        "=== LISTA DE ALUNOS E DESEMPENHO ===",
+        "Ranking;Nome;E-mail;E-mail Verificado;Pontos (pts);Atividades Concluidas;Total Atividades;Progresso (%);Certificado Liberado"
+    ]
     
+    student_list = []
     for s in students:
         s_records = db.query(models.UserActivityProgress).filter(
             models.UserActivityProgress.user_id == s.id,
@@ -1072,10 +1421,17 @@ def export_students_csv(
         ).all()
         s_done = len([r.activity_id for r in s_records if r.activity_id in all_activity_set])
         s_pct = round((s_done / total_activities) * 100) if total_activities > 0 else 0
+        points = s_done * 10
         verified_text = "Sim" if s.email_verified else "Nao"
         cert_text = "Sim" if s_pct >= 100 and s_done > 0 else "Nao"
         
-        csv_lines.append(f"{s.nome};{s.email};{verified_text};{s_done};{total_activities};{s_pct}%;{cert_text}")
+        student_list.append((points, s_pct, s.nome, s.email, verified_text, s_done, total_activities, cert_text))
+
+    student_list.sort(key=lambda x: (x[0], x[1]), reverse=True)
+
+    for idx, item in enumerate(student_list, start=1):
+        pts, pct, name, mail, ver, done, tot, cert = item
+        csv_lines.append(f"#{idx};{name};{mail};{ver};{pts};{done};{tot};{pct}%;{cert}")
 
     csv_content = "\n".join(csv_lines)
     return Response(

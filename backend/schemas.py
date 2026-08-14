@@ -145,6 +145,7 @@ class StudentMetricItem(BaseModel):
     completed_activities_count: int
     total_activities_count: int
     progress_percentage: int
+    points: int
     is_certificate_eligible: bool
 
 class AdminDashboardMetrics(BaseModel):
@@ -152,4 +153,6 @@ class AdminDashboardMetrics(BaseModel):
     total_modules: int
     total_activities: int
     average_progress_percentage: int
+    status_distribution: dict # { "completed": int, "in_progress": int, "not_started": int }
+    module_stats: list[dict] # [ { "slug": str, "title": str, "activities_count": int, "completion_rate": int } ]
     students: list[StudentMetricItem]
