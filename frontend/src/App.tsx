@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
-import { HashRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import ChatBox from './components/ChatBox';
 import FontSizeControl from './components/FontSizeControl';
