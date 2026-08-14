@@ -5,6 +5,9 @@ class UserBase(BaseModel):
     email: EmailStr
     nome: str
     cargo: Optional[str] = "aluno"
+    email_verified: Optional[bool] = False
+    last_password_change: Optional[str] = None
+    foto_url: Optional[str] = None
 
 class UserCreate(UserBase):
     senha: str
@@ -12,6 +15,17 @@ class UserCreate(UserBase):
 class UserLogin(BaseModel):
     email: EmailStr
     senha: str
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+class VerifyEmailRequest(BaseModel):
+    email: EmailStr
+    code: str
+
+class ResendCodeRequest(BaseModel):
+    email: EmailStr
 
 class UserResponse(UserBase):
     id: int

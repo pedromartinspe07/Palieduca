@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { BlockProps } from './types';
 import { Loader2 } from 'lucide-react';
+import { getFullMediaUrl } from '../../../utils/mediaUtils';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://127.0.0.1:8000'
@@ -79,7 +80,7 @@ const HeroBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
                 isSelected ? 'ring-4 ring-primary ring-inset z-10 rounded-xl' : 'hover:ring-2 hover:ring-blue-400/50 hover:ring-inset rounded-xl'
             } ${isDragging ? 'ring-4 ring-primary ring-inset opacity-90' : ''}`}
             style={{
-                backgroundImage: bgImage ? `url(${bgImage})` : 'linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)',
+                backgroundImage: bgImage ? `url(${getFullMediaUrl(bgImage)})` : 'linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
             }}

@@ -3,6 +3,7 @@ import { User, HeartPulse, BookOpen, LayoutDashboard, Type, MessageSquare, Info,
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import SearchBar from './SearchBar';
 import { useAuth } from '../context/AuthContext';
+import { getFullMediaUrl } from '../utils/mediaUtils';
 
 const NAV_ITEMS = [
     { to: "/", icon: <LayoutDashboard size={18} />, label: "Início" },
@@ -63,13 +64,21 @@ const Header: React.FC = () => {
                     <div className="hidden md:flex items-center gap-4">
                         <SearchBar />
                         {user ? (
-                            <button onClick={() => navigate('/perfil')} className="flex items-center gap-2 px-5 py-2.5 bg-sage-100 text-sage-700 rounded-full font-medium shadow-sm hover:bg-sage-200 transition-all border border-sage-200">
-                                <User size={18} />
+                            <button onClick={() => navigate('/perfil')} className="flex items-center gap-2.5 px-4 py-2 bg-sage-100/80 text-sage-800 rounded-full font-semibold shadow-xs hover:bg-sage-200 transition-all border border-sage-200 text-xs cursor-pointer">
+                                {user.foto_url ? (
+                                    <img 
+                                        src={getFullMediaUrl(user.foto_url)} 
+                                        alt={user.nome} 
+                                        className="w-6 h-6 rounded-full object-cover border border-primary/30"
+                                    />
+                                ) : (
+                                    <User size={16} />
+                                )}
                                 <span>{user.nome.split(' ')[0]}</span>
                             </button>
                         ) : (
-                            <button onClick={() => navigate('/login')} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-medium shadow-md hover:shadow-lg interactive-btn">
-                                <User size={18} />
+                            <button onClick={() => navigate('/login')} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-medium shadow-md hover:shadow-lg interactive-btn text-xs">
+                                <User size={16} />
                                 <span>Entrar</span>
                             </button>
                         )}
@@ -110,7 +119,15 @@ const Header: React.FC = () => {
                     <div className="pt-3 border-t border-warm-100 flex gap-2">
                         {user ? (
                             <button onClick={() => navigate('/perfil')} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-sage-100 text-sage-700 rounded-full font-medium shadow-sm text-sm">
-                                <User size={16} />
+                                {user.foto_url ? (
+                                    <img 
+                                        src={getFullMediaUrl(user.foto_url)} 
+                                        alt={user.nome} 
+                                        className="w-5 h-5 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <User size={16} />
+                                )}
                                 <span>{user.nome.split(' ')[0]}</span>
                             </button>
                         ) : (

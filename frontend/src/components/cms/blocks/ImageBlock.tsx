@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { BlockProps } from './types';
 import { ImageIcon, Loader2 } from 'lucide-react';
+import { getFullMediaUrl } from '../../../utils/mediaUtils';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://127.0.0.1:8000'
@@ -30,10 +31,16 @@ const ImageBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpda
         e.preventDefault();
         setIsDragging(false);
 
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) {
-            await uploadImage(file);
+        const files = e.dataTransfer.files;
+        if (files.length === 0) return;
+
+        const file = files[0];
+        if (!file.type.startsWith('image/')) {
+            alert('Por favor, arraste apenas arquivos de imagem.');
+            return;
         }
+
+        await uploadImage(file);
     };
 
     const uploadImage = async (file: File) => {
@@ -90,8 +97,8 @@ const ImageBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpda
                             <Loader2 className="animate-spin text-primary" size={40} />
                         ) : (
                             <>
-                                <ImageIcon size={48} className="text-warm-400 mb-4" />
-                                <p className="text-warm-500 font-medium">Arraste uma imagem para cá</p>
+                                <ImageIcon className="text-warm-400 mb-2" size={48} />
+                                <p className="text-sm font-semibold text-warm-600">Arraste uma imagem ou clique para selecionar</p>
                                 <p className="text-sm text-warm-400 mt-1">ou use o painel lateral para enviar</p>
                             </>
                         )}
@@ -107,7 +114,7 @@ const ImageBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpda
                             </div>
                         )}
                         <img 
-                            src={src} 
+                            src={getFullMediaUrl(src)} 
                             alt={alt || "Imagem"} 
                             className="w-full h-full transition-transform duration-500 hover:scale-105"
                             style={{ objectFit: objectFit as React.CSSProperties['objectFit'] }}

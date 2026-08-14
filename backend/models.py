@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Boolean
 from database import Base
 
 class User(Base):
@@ -7,8 +7,13 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String, index=True)
     email = Column(String, unique=True, index=True)
-    senha_hash = Column(String)
-    cargo = Column(String, default="aluno")  # 'dono', 'desenvolvedor', 'aluno'
+    senha_hash = Column(String, nullable=True)
+    cargo = Column(String, default="aluno")  # 'dona', 'desenvolvedor', 'aluno'
+    email_verified = Column(Boolean, default=False)
+    verification_code = Column(String, nullable=True)
+    auth_provider = Column(String, default="local") # 'local', 'google'
+    last_password_change = Column(String, nullable=True) # ISO string da data da última troca
+    foto_url = Column(String, nullable=True) # URL da foto de perfil ou avatar customizado
 
 class Module(Base):
     __tablename__ = "modules"

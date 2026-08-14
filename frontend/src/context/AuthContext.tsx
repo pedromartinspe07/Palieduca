@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
-interface User {
+export interface User {
     id: number;
     email: string;
     nome: string;
     cargo: string;
+    foto_url?: string | null;
 }
 
 interface AuthContextType {
@@ -13,6 +14,7 @@ interface AuthContextType {
     token: string | null;
     login: (token: string, user: User) => void;
     logout: () => void;
+    updateUser: (updatedData: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,8 +28,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const storedToken = localStorage.getItem('palieduca_token');
         const storedUser = localStorage.getItem('palieduca_user');
         if (storedToken && storedUser) {
-            setToken(storedToken);
-            setUser(JSON.parse(storedUser));
+            try {
+                setToken(storedToken);
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                console.error('Erro ao recuperar sessão:', e);
+            }
         }
     }, []);
 
@@ -45,8 +51,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.removeItem('palieduca_user');
     };
 
+    const updateUser = (updatedData: Partial<User>) => {
+        if (!user) return;
+        const newUser = { ...user, ...updatedData };
+        setUser(newUser);
+        localStorage.setItem('palieduca_user', JSON.stringify(newUser));
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, login, logout }}>
+        <AuthContext.Provider value={{ user, token, login, logout, updateUser }}>
             {children}
         </AuthContext.Provider>
     );

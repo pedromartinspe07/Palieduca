@@ -87,27 +87,34 @@
   }
 
   .custom-quill .ql-editor ul,
-  .rich-text-content ul {
+  .rich-text-content ul,
+  [contenteditable="true"] ul {
     list-style-type: disc !important;
     padding-left: 1.75rem !important;
-    margin-bottom: 1.25rem !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 1rem !important;
   }
 
   .custom-quill .ql-editor ol,
-  .rich-text-content ol {
+  .rich-text-content ol,
+  [contenteditable="true"] ol {
     list-style-type: decimal !important;
     padding-left: 1.75rem !important;
-    margin-bottom: 1.25rem !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 1rem !important;
   }
 
   .custom-quill .ql-editor li,
-  .rich-text-content li {
-    margin-bottom: 0.5rem;
-    line-height: 1.7;
+  .rich-text-content li,
+  [contenteditable="true"] li {
+    margin-bottom: 0.35rem !important;
+    line-height: 1.6;
+    display: list-item !important;
   }
 
   .custom-quill .ql-editor img,
-  .rich-text-content img {
+  .rich-text-content img,
+  [contenteditable="true"] img {
     max-width: 100%;
     height: auto;
     border-radius: 1rem;
@@ -116,7 +123,8 @@
   }
 
   .custom-quill .ql-editor iframe,
-  .rich-text-content iframe {
+  .rich-text-content iframe,
+  [contenteditable="true"] iframe {
     max-width: 100%;
     border-radius: 1rem;
     margin: 1.5rem 0;
@@ -124,12 +132,15 @@
   }
 
   .custom-quill .ql-editor blockquote,
-  .rich-text-content blockquote {
-    border-left: 4px solid #487157;
-    padding-left: 1rem;
-    font-style: italic;
-    color: #6f4a36;
-    margin: 1.25rem 0;
+  .rich-text-content blockquote,
+  [contenteditable="true"] blockquote {
+    border-left: 4px solid #10b981 !important;
+    padding: 0.5rem 1rem !important;
+    font-style: italic !important;
+    color: #4b5563 !important;
+    background-color: #f0fdf4 !important;
+    margin: 1rem 0 !important;
+    border-radius: 0.375rem !important;
   }
 
   .glassmorphism-card {
