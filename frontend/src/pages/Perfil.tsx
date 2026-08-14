@@ -55,9 +55,9 @@ const Perfil: React.FC = () => {
         navigate('/login');
     };
 
-    // Busca métricas do painel administrativo se for Dona ou Dev
+    // Busca métricas do painel administrativo se for Dona, Dev, Professor ou Moderador
     useEffect(() => {
-        if (token && user && (user.cargo === 'dona' || user.cargo === 'desenvolvedor')) {
+        if (token && user && ['dona', 'desenvolvedor', 'professor', 'moderador'].includes(user.cargo)) {
             setLoadingAdminMetrics(true);
             fetch(`${API_URL}/api/admin/metrics`, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -118,6 +118,45 @@ const Perfil: React.FC = () => {
             URL.revokeObjectURL(url);
         } catch (err: any) {
             alert(err.message || 'Erro ao baixar planilha');
+        }
+    };
+
+    // Atualizar Cargo de Usuário (RBAC)
+    const handleUpdateRole = async (userId: number, newRole: string) => {
+        if (!token) throw new Error('Não autenticado');
+        const res = await fetch(`${API_URL}/api/admin/users/${userId}/cargo`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ cargo: newRole })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.detail || 'Erro ao atualizar cargo');
+        }
+        
+        // Atualiza estado local do painel de métricas
+        setAdminMetrics((prev: any) => {
+            if (!prev) return prev;
+            const updatedAllUsers = prev.all_users?.map((u: any) => 
+                u.id === userId ? { ...u, cargo: newRole } : u
+            ) || [];
+            const updatedStudents = updatedAllUsers.filter((u: any) => u.cargo === 'aluno');
+            const updatedTeam = updatedAllUsers.filter((u: any) => u.cargo !== 'aluno');
+            return {
+                ...prev,
+                total_students: updatedStudents.length,
+                total_team_members: updatedTeam.length,
+                all_users: updatedAllUsers,
+                students: updatedStudents
+            };
+        });
+
+        // Se o usuário alterou o próprio cargo
+        if (user && user.id === userId) {
+            updateUser({ cargo: newRole });
         }
     };
 
@@ -416,8 +455,15 @@ const Perfil: React.FC = () => {
                         </h2>
                         <p className="text-warm-500 text-sm mb-2.5">{user.email}</p>
                         
-                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full uppercase tracking-wider">
-                            Cargo: {user.cargo}
+                        <div className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${
+                            user.cargo === 'dona' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
+                            user.cargo === 'desenvolvedor' ? 'bg-blue-100 text-blue-900 border border-blue-300' :
+                            user.cargo === 'professor' ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' :
+                            user.cargo === 'moderador' ? 'bg-purple-100 text-purple-900 border border-purple-300' :
+                            user.cargo === 'suporte' ? 'bg-cyan-100 text-cyan-900 border border-cyan-300' :
+                            'bg-sage-100 text-sage-900 border border-sage-300'
+                        }`}>
+                            <span>Cargo: {user.cargo === 'dona' ? '👑 Dona' : user.cargo === 'desenvolvedor' ? '💻 Desenvolvedor' : user.cargo === 'professor' ? '👨‍🏫 Professor' : user.cargo === 'moderador' ? '🛡️ Moderador' : user.cargo === 'suporte' ? '🎧 Suporte' : '🎓 Aluno'}</span>
                         </div>
                     </div>
 
@@ -452,9 +498,9 @@ const Perfil: React.FC = () => {
                 <div className="w-full md:w-2/3 space-y-6">
 
                     {/* ======================================================== */}
-                    {/* PAINEL DA PROFESSORA / DONA / DESENVOLVEDOR              */}
+                    {/* PAINEL DA PROFESSORA / DONA / DESENVOLVEDOR / EQUIPE     */}
                     {/* ======================================================== */}
-                    {(user.cargo === 'dona' || user.cargo === 'desenvolvedor') && (
+                    {['dona', 'desenvolvedor', 'professor', 'moderador'].includes(user.cargo) && (
                         <div className="space-y-6">
                             
                             {/* Cards de Métricas em Tempo Real */}
@@ -500,23 +546,28 @@ const Perfil: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Banner do Estúdio de Criação */}
-                            <div className="bg-gradient-to-r from-primary to-secondary p-7 rounded-3xl text-white flex flex-col sm:flex-row items-center justify-between shadow-xl hover:shadow-2xl transition-all">
-                                <div>
-                                    <h3 className="text-xl font-bold mb-1.5 flex items-center gap-2"><Palette /> Estúdio de Criação</h3>
-                                    <p className="text-white/90 text-xs max-w-md">Construa e edite páginas, quizzes e recursos interativos com Live Preview e Inteligência Artificial.</p>
+                            {/* Banner do Estúdio de Criação (Apenas para quem pode criar conteúdo) */}
+                            {['dona', 'desenvolvedor', 'professor'].includes(user.cargo) && (
+                                <div className="bg-gradient-to-r from-primary to-secondary p-7 rounded-3xl text-white flex flex-col sm:flex-row items-center justify-between shadow-xl hover:shadow-2xl transition-all">
+                                    <div>
+                                        <h3 className="text-xl font-bold mb-1.5 flex items-center gap-2"><Palette /> Estúdio de Criação</h3>
+                                        <p className="text-white/90 text-xs max-w-md">Construa e edite páginas, quizzes e recursos interativos com Live Preview e Inteligência Artificial.</p>
+                                    </div>
+                                    <button onClick={() => navigate('/editor')} className="mt-4 sm:mt-0 px-6 py-3 bg-white text-primary font-bold rounded-2xl shadow-md hover:scale-105 transition-transform text-xs cursor-pointer whitespace-nowrap">
+                                        Abrir Estúdio
+                                    </button>
                                 </div>
-                                <button onClick={() => navigate('/editor')} className="mt-4 sm:mt-0 px-6 py-3 bg-white text-primary font-bold rounded-2xl shadow-md hover:scale-105 transition-transform text-xs cursor-pointer whitespace-nowrap">
-                                    Abrir Estúdio
-                                </button>
-                            </div>
+                            )}
 
                             {/* Central de Inteligência, Gráficos e Planilha Interativa */}
                             <StudentAnalyticsDashboard 
                                 data={adminMetrics} 
                                 loading={loadingAdminMetrics} 
                                 onExportExcel={handleExportExcel}
-                                onExportCSV={handleExportCSV} 
+                                onExportCSV={handleExportCSV}
+                                onUpdateRole={handleUpdateRole}
+                                currentUserEmail={user.email}
+                                currentUserRole={user.cargo}
                             />
 
                             {/* Central de Segurança e Backup em 1 Clique */}

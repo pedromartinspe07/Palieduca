@@ -141,6 +141,7 @@ class StudentMetricItem(BaseModel):
     nome: str
     email: str
     email_verified: bool
+    cargo: str
     foto_url: Optional[str] = None
     completed_activities_count: int
     total_activities_count: int
@@ -148,11 +149,16 @@ class StudentMetricItem(BaseModel):
     points: int
     is_certificate_eligible: bool
 
+class UserRoleUpdateRequest(BaseModel):
+    cargo: str
+
 class AdminDashboardMetrics(BaseModel):
     total_students: int
+    total_team_members: int
     total_modules: int
     total_activities: int
     average_progress_percentage: int
     status_distribution: dict # { "completed": int, "in_progress": int, "not_started": int }
     module_stats: list[dict] # [ { "slug": str, "title": str, "activities_count": int, "completion_rate": int } ]
     students: list[StudentMetricItem]
+    all_users: list[StudentMetricItem]

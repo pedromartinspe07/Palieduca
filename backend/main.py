@@ -988,13 +988,15 @@ def toggle_activity_progress(
 # Painel da Dona: Métricas & Gestão
 # ================================
 
+VALID_ROLES = ["dona", "desenvolvedor", "professor", "moderador", "suporte", "aluno"]
+
 @app.get("/api/admin/metrics", response_model=schemas.AdminDashboardMetrics)
 def get_admin_dashboard_metrics(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    if current_user.cargo not in ["dona", "desenvolvedor"]:
-        raise HTTPException(status_code=403, detail="Sem permissão")
+    if current_user.cargo not in ["dona", "desenvolvedor", "professor", "moderador"]:
+        raise HTTPException(status_code=403, detail="Sem permissão de acesso ao painel.")
 
     # Módulos e total de atividades da plataforma
     modules = db.query(models.Module).all()
@@ -1012,70 +1014,71 @@ def get_admin_dashboard_metrics(
     total_activities_count = len(all_activity_ids)
     all_activity_set = set(all_activity_ids)
 
-    # Busca todos os alunos
-    students = db.query(models.User).filter(models.User.cargo == "aluno").all()
-    student_metrics = []
-    total_progress_sum = 0
+    # Busca todos os usuários cadastrados
+    all_db_users = db.query(models.User).all()
+    
+    students = [u for u in all_db_users if u.cargo == "aluno"]
+    team_members = [u for u in all_db_users if u.cargo != "aluno"]
 
-    completed_students_count = 0
-    in_progress_students_count = 0
-    not_started_students_count = 0
-
-    # Rastreamento de conclusão por módulo
-    module_completion_totals = {mod.slug_id: 0 for mod in modules}
-
-    for s in students:
+    def process_user_metric(u: models.User):
         s_records = db.query(models.UserActivityProgress).filter(
-            models.UserActivityProgress.user_id == s.id,
+            models.UserActivityProgress.user_id == u.id,
             models.UserActivityProgress.completed == True
         ).all()
         
         s_completed_ids = set(r.activity_id for r in s_records if r.activity_id in all_activity_set)
         s_done = len(s_completed_ids)
         s_pct = round((s_done / total_activities_count) * 100) if total_activities_count > 0 else 0
-        total_progress_sum += s_pct
-
-        if s_pct >= 100 and s_done > 0:
-            completed_students_count += 1
-        elif s_pct > 0:
-            in_progress_students_count += 1
-        else:
-            not_started_students_count += 1
-
-        # Calcula pontos (10 pontos por atividade/quiz concluído)
         points = s_done * 10
 
-        # Verifica progresso por módulo para o gráfico de crescimento
-        for mod in modules:
-            mod_acts = module_activity_map[mod.slug_id]["activities"]
-            mod_done = len([aid for aid in mod_acts if aid in s_completed_ids])
-            if len(mod_acts) > 0 and mod_done == len(mod_acts):
-                module_completion_totals[mod.slug_id] += 1
-
-        student_metrics.append({
-            "id": s.id,
-            "nome": s.nome,
-            "email": s.email,
-            "email_verified": s.email_verified,
-            "foto_url": s.foto_url,
+        return {
+            "id": u.id,
+            "nome": u.nome,
+            "email": u.email,
+            "email_verified": u.email_verified,
+            "cargo": u.cargo,
+            "foto_url": u.foto_url,
             "completed_activities_count": s_done,
             "total_activities_count": total_activities_count,
             "progress_percentage": s_pct,
             "points": points,
-            "is_certificate_eligible": s_pct >= 100 and s_done > 0
-        })
+            "is_certificate_eligible": s_pct >= 100 and s_done > 0,
+            "s_completed_ids": s_completed_ids
+        }
 
-    # Ordena alunos por maior pontuação (ranking decrescente)
+    all_users_metrics = [process_user_metric(u) for u in all_db_users]
+    student_metrics = [m for m in all_users_metrics if m["cargo"] == "aluno"]
+
+    # Estatísticas de distribuição dos alunos
+    completed_students_count = len([m for m in student_metrics if m["progress_percentage"] >= 100 and m["completed_activities_count"] > 0])
+    in_progress_students_count = len([m for m in student_metrics if 0 < m["progress_percentage"] < 100])
+    not_started_students_count = len([m for m in student_metrics if m["progress_percentage"] == 0])
+
+    # Estatísticas por módulo da trilha
+    module_completion_totals = {mod.slug_id: 0 for mod in modules}
+    for m in student_metrics:
+        for mod in modules:
+            mod_acts = module_activity_map[mod.slug_id]["activities"]
+            mod_done = len([aid for aid in mod_acts if aid in m["s_completed_ids"]])
+            if len(mod_acts) > 0 and mod_done == len(mod_acts):
+                module_completion_totals[mod.slug_id] += 1
+
+    # Remove campo temporário auxiliar
+    for m in all_users_metrics:
+        m.pop("s_completed_ids", None)
+
+    # Ordena por pontos
     student_metrics.sort(key=lambda x: (x["points"], x["progress_percentage"]), reverse=True)
+    all_users_metrics.sort(key=lambda x: (x["points"], x["progress_percentage"]), reverse=True)
 
-    avg_progress = round(total_progress_sum / len(students)) if len(students) > 0 else 0
+    total_progress_sum = sum(m["progress_percentage"] for m in student_metrics)
+    avg_progress = round(total_progress_sum / len(student_metrics)) if len(student_metrics) > 0 else 0
 
-    # Estatísticas detalhadas por módulo para gráficos
     module_stats = []
     for mod in modules:
         mod_acts_count = len(module_activity_map[mod.slug_id]["activities"])
         comp_count = module_completion_totals[mod.slug_id]
-        comp_rate = round((comp_count / len(students)) * 100) if len(students) > 0 else 0
+        comp_rate = round((comp_count / len(student_metrics)) * 100) if len(student_metrics) > 0 else 0
         module_stats.append({
             "slug": mod.slug_id,
             "title": mod.title,
@@ -1085,7 +1088,8 @@ def get_admin_dashboard_metrics(
         })
 
     return {
-        "total_students": len(students),
+        "total_students": len(student_metrics),
+        "total_team_members": len(team_members),
         "total_modules": len(modules),
         "total_activities": total_activities_count,
         "average_progress_percentage": avg_progress,
@@ -1095,7 +1099,71 @@ def get_admin_dashboard_metrics(
             "not_started": not_started_students_count
         },
         "module_stats": module_stats,
-        "students": student_metrics
+        "students": student_metrics,
+        "all_users": all_users_metrics
+    }
+
+@app.get("/api/admin/users")
+def get_all_admin_users(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor", "professor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão.")
+
+    users = db.query(models.User).all()
+    return [{
+        "id": u.id,
+        "nome": u.nome,
+        "email": u.email,
+        "cargo": u.cargo,
+        "email_verified": u.email_verified,
+        "foto_url": u.foto_url,
+        "auth_provider": u.auth_provider
+    } for u in users]
+
+@app.put("/api/admin/users/{user_id}/cargo")
+def update_user_role(
+    user_id: int,
+    data: schemas.UserRoleUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Apenas a Dona ou Desenvolvedor podem alterar cargos.")
+
+    new_role = data.cargo.lower().strip()
+    if new_role not in VALID_ROLES:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Cargo inválido. Escolha entre: {', '.join(VALID_ROLES)}"
+        )
+
+    target_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+
+    # Regras de Cibersegurança e Proteção da Dona:
+    # 1. A conta institucional principal da Dona nunca pode ser rebaixada
+    if target_user.email == "patriciaandrade@palieduca.com.br" and new_role != "dona":
+        raise HTTPException(status_code=403, detail="O cargo da Dona Proprietária não pode ser alterado.")
+
+    # 2. Desenvolvedores não podem promover ninguém ao cargo de Dona (Apenas a Dona pode passar esse título)
+    if current_user.cargo == "desenvolvedor" and new_role == "dona" and current_user.email != "patriciaandrade@palieduca.com.br":
+        raise HTTPException(status_code=403, detail="Apenas a Dona pode conceder o cargo de Dona.")
+
+    # 3. Desenvolvedores não podem alterar o cargo de outro usuário que já seja 'dona'
+    if current_user.cargo == "desenvolvedor" and target_user.cargo == "dona":
+        raise HTTPException(status_code=403, detail="Desenvolvedores não podem alterar cargos de Donas.")
+
+    target_user.cargo = new_role
+    db.commit()
+    db.refresh(target_user)
+
+    return {
+        "message": f"Cargo de {target_user.nome} atualizado para '{new_role}' com sucesso!",
+        "user_id": target_user.id,
+        "novo_cargo": target_user.cargo
     }
 
 import io
