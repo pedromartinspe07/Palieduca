@@ -162,3 +162,21 @@ class AdminDashboardMetrics(BaseModel):
     module_stats: list[dict] # [ { "slug": str, "title": str, "activities_count": int, "completion_rate": int } ]
     students: list[StudentMetricItem]
     all_users: list[StudentMetricItem]
+
+# Schemas do Agente IA Construtor de Páginas e Imagens
+class AIGenerateBlocksRequest(BaseModel):
+    prompt: str
+    target_type: Optional[str] = "full_page" # "full_page", "cards", "quiz", "text", "hero", "flashcard"
+    context_module: Optional[str] = None
+
+class AIGenerateBlocksResponse(BaseModel):
+    summary: str
+    blocks: list[dict]
+
+class ImageSearchItem(BaseModel):
+    id: str
+    title: str
+    category: str
+    url: str
+    thumb_url: str
+    author: str

@@ -5,7 +5,8 @@ import {
     CheckCircle2, Loader2, ChevronUp, ChevronDown, Copy, Trash2, Type, Minus,
     LayoutList, Play, Crop, RotateCcw, RotateCw, Monitor, Tablet, Smartphone,
     AlertCircle, RefreshCw, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-    Underline, Strikethrough, Pipette, Sparkles
+    Underline, Strikethrough, Pipette, Sparkles, Wand2, Search, Check, Plus,
+    CheckCheck, ExternalLink, Link as LinkIcon
 } from 'lucide-react';
 import BlockRenderer from './blocks/BlockRenderer';
 import MediaLibrary from './MediaLibrary';
@@ -68,6 +69,24 @@ const ModuleContentEditor: React.FC = () => {
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const [leftSidebarTab, setLeftSidebarTab] = useState<'blocos' | 'midia' | null>('blocos');
+
+    // Right Sidebar Tabs: 'properties' | 'ai' | 'images'
+    const [rightSidebarTab, setRightSidebarTab] = useState<'properties' | 'ai' | 'images'>('properties');
+
+    // AI Agent Builder States
+    const [aiPrompt, setAiPrompt] = useState('');
+    const [aiTargetType, setAiTargetType] = useState<string>('full_page');
+    const [isAiGenerating, setIsAiGenerating] = useState(false);
+    const [generatedBlocksResult, setGeneratedBlocksResult] = useState<{ summary: string; blocks: BlockData[] } | null>(null);
+
+    // Image Bank States
+    const [imageSearchQuery, setImageSearchQuery] = useState('');
+    const [imageCategory, setImageCategory] = useState('Todas');
+    const [imageResults, setImageResults] = useState<any[]>([]);
+    const [isImageLoading, setIsImageLoading] = useState(false);
+    const [copiedImageUrl, setCopiedImageUrl] = useState<string | null>(null);
+    const [directUrlInput, setDirectUrlInput] = useState('');
+    const [isResolvingDirectUrl, setIsResolvingDirectUrl] = useState(false);
 
     // Helper for blocks update with History Push
     const setBlocksWithHistory = useCallback((updater: BlockData[] | ((prev: BlockData[]) => BlockData[])) => {
@@ -315,6 +334,145 @@ const ModuleContentEditor: React.FC = () => {
         updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, questions } });
     };
 
+    // ─── AI Agent Builder & Image Bank Handlers ───
+    const fetchHealthcareImages = useCallback(async (query: string = '', cat: string = 'Todas') => {
+        setIsImageLoading(true);
+        try {
+            const url = new URL(`${API_URL}/api/ai/search-images`);
+            if (query.trim()) url.searchParams.append('q', query.trim());
+            if (cat && cat !== 'Todas') url.searchParams.append('category', cat);
+            
+            const res = await fetch(url.toString());
+            if (res.ok) {
+                const data = await res.json();
+                setImageResults(data);
+            }
+        } catch (e) {
+            console.error("Erro ao buscar imagens de saúde:", e);
+        } finally {
+            setIsImageLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (rightSidebarTab === 'images') {
+            fetchHealthcareImages(imageSearchQuery, imageCategory);
+        }
+    }, [rightSidebarTab, imageCategory, fetchHealthcareImages]);
+
+    const handleAiGenerate = async (presetPrompt?: string, presetType?: string) => {
+        const promptToUse = presetPrompt || aiPrompt;
+        const typeToUse = presetType || aiTargetType;
+        if (!promptToUse.trim()) return;
+
+        setIsAiGenerating(true);
+        try {
+            const res = await fetch(`${API_URL}/api/ai/generate-blocks`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    prompt: promptToUse,
+                    target_type: typeToUse,
+                    context_module: selectedModuleSlug
+                })
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.detail || 'Erro ao gerar blocos com IA');
+            }
+
+            const data = await res.json();
+            setGeneratedBlocksResult(data);
+            showToast('✨ Blocos gerados com sucesso pelo Agente IA!');
+        } catch (err: any) {
+            console.error('Erro na IA:', err);
+            showToast(err.message || 'Erro ao comunicar com a IA');
+        } finally {
+            setIsAiGenerating(false);
+        }
+    };
+
+    const handleInsertAllGeneratedBlocks = () => {
+        if (!generatedBlocksResult || !generatedBlocksResult.blocks.length) return;
+        setBlocksWithHistory(prev => [...prev, ...generatedBlocksResult.blocks]);
+        showToast(`🎉 ${generatedBlocksResult.blocks.length} blocos inseridos na Aula!`);
+        setGeneratedBlocksResult(null);
+        setRightSidebarTab('properties');
+    };
+
+    const handleInsertSingleGeneratedBlock = (block: BlockData) => {
+        setBlocksWithHistory(prev => [...prev, block]);
+        showToast(`✅ Bloco "${block.type}" inserido!`);
+    };
+
+    const handleInsertImageAsBlock = (img: { url: string; title: string }) => {
+        const newImageBlock: BlockData = {
+            id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+            type: 'ImageBlock',
+            data: {
+                imageUrl: img.url,
+                alt: img.title,
+                caption: img.title
+            }
+        };
+        setBlocksWithHistory(prev => [...prev, newImageBlock]);
+        showToast(`🖼️ Imagem médica inserida na Aula!`);
+    };
+
+    const handleCopyImageUrl = (url: string) => {
+        navigator.clipboard.writeText(url);
+        setCopiedImageUrl(url);
+        showToast('📋 Link da imagem copiado!');
+        setTimeout(() => setCopiedImageUrl(null), 2500);
+    };
+
+    const handleInsertDirectUrl = async () => {
+        if (!directUrlInput.trim()) return;
+        setIsResolvingDirectUrl(true);
+        try {
+            let finalUrl = directUrlInput.trim();
+            let finalTitle = "Imagem Externa (Unsplash / Web)";
+
+            if (!finalUrl.match(/\.(jpg|jpeg|png|webp|gif|svg)$/i) && !finalUrl.includes('images.unsplash.com')) {
+                const res = await fetch(`${API_URL}/api/ai/resolve-image-url`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: finalUrl })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.image_url) {
+                        finalUrl = data.image_url;
+                        if (data.title) finalTitle = data.title;
+                    }
+                }
+            }
+
+            const newImageBlock: BlockData = {
+                id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+                type: 'ImageBlock',
+                data: {
+                    imageUrl: finalUrl,
+                    alt: finalTitle,
+                    caption: finalTitle
+                }
+            };
+            setBlocksWithHistory(prev => [...prev, newImageBlock]);
+            showToast('🖼️ Imagem do Unsplash / Web inserida na Aula!');
+            setDirectUrlInput('');
+            setRightSidebarTab('properties');
+        } catch (err) {
+            console.error('Erro ao inserir link direto:', err);
+            showToast('Erro ao processar imagem.');
+        } finally {
+            setIsResolvingDirectUrl(false);
+        }
+    };
+
     return (
         <div className="bg-[#f0f2f5] h-full flex flex-col overflow-hidden font-sans rounded-xl border border-warm-200 relative">
             {/* ═══ HEADER ═══ */}
@@ -389,6 +547,33 @@ const ModuleContentEditor: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-1.5 sm:gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setRightSidebarTab('ai')}
+                        className={`px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                            rightSidebarTab === 'ai' 
+                                ? 'bg-purple-600 text-white shadow-sm' 
+                                : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'
+                        }`}
+                        title="Abrir Agente Construtor com IA (Qwen 3.6)"
+                    >
+                        <Wand2 size={14} className={rightSidebarTab === 'ai' ? 'animate-spin' : 'text-purple-600'} />
+                        <span className="hidden md:inline">Agente IA</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setRightSidebarTab('images')}
+                        className={`px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                            rightSidebarTab === 'images' 
+                                ? 'bg-emerald-600 text-white shadow-sm' 
+                                : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                        }`}
+                        title="Abrir Banco de Imagens (Unsplash & Web)"
+                    >
+                        <ImageIcon size={14} className={rightSidebarTab === 'images' ? '' : 'text-emerald-600'} />
+                        <span className="hidden md:inline">Imagens</span>
+                    </button>
+                    <div className="h-5 w-px bg-warm-200 hidden sm:block" />
                     <button
                         onClick={() => handleSave(false)}
                         disabled={!isDirty || saving}
@@ -539,23 +724,424 @@ const ModuleContentEditor: React.FC = () => {
                     )}
                 </div>
 
-                {/* ─── RIGHT SIDEBAR (PROPERTIES) ─── */}
-                {selectedBlock && (
-                    <div className="w-[320px] bg-white border-l border-warm-200 shrink-0 flex flex-col z-30 shadow-lg overflow-y-auto">
-                        <div className="p-4 border-b border-warm-100 bg-warm-50 flex items-center justify-between shrink-0">
-                            <h3 className="font-bold text-warm-900 flex items-center gap-2">
-                                <Settings size={18} className="text-primary" />
-                                Propriedades
-                            </h3>
-                            <button onClick={() => setSelectedBlockId(null)} className="p-1 hover:bg-warm-200 rounded text-warm-500"><X size={16} /></button>
-                        </div>
+                {/* ─── RIGHT SIDEBAR (3 TABS) ─── */}
+                <div className="w-84 sm:w-96 bg-white border-l border-warm-200 flex flex-col z-40 shrink-0 shadow-lg">
+                    {/* Tab Bar Header */}
+                    <div className="flex items-center border-b border-warm-200 bg-warm-50/70 p-1.5 gap-1 shrink-0">
+                        <button
+                            type="button"
+                            onClick={() => setRightSidebarTab('properties')}
+                            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                                rightSidebarTab === 'properties'
+                                    ? 'bg-white text-warm-900 shadow-xs border border-warm-200/60'
+                                    : 'text-warm-500 hover:text-warm-800 hover:bg-white/50'
+                            }`}
+                        >
+                            <Settings size={14} className={rightSidebarTab === 'properties' ? 'text-primary' : ''} />
+                            <span>Propriedades</span>
+                        </button>
 
-                        <div className="p-4 flex-1 overflow-y-auto space-y-5">
-                            <div className="flex gap-1.5 mb-6">
-                                <button onClick={() => moveBlock(selectedBlock.id, 'up')} disabled={selectedBlockIndex === 0} className="flex-1 p-2 bg-warm-50 border rounded-lg text-xs flex justify-center hover:bg-warm-100 disabled:opacity-30"><ChevronUp size={14} /></button>
-                                <button onClick={() => moveBlock(selectedBlock.id, 'down')} disabled={selectedBlockIndex === blocks.length - 1} className="flex-1 p-2 bg-warm-50 border rounded-lg text-xs flex justify-center hover:bg-warm-100 disabled:opacity-30"><ChevronDown size={14} /></button>
-                                <button onClick={() => duplicateBlock(selectedBlock.id)} className="p-2 bg-warm-50 border rounded-lg hover:bg-warm-100"><Copy size={14} /></button>
+                        <button
+                            type="button"
+                            onClick={() => setRightSidebarTab('ai')}
+                            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                                rightSidebarTab === 'ai'
+                                    ? 'bg-purple-600 text-white shadow-xs'
+                                    : 'text-purple-700 bg-purple-50/50 hover:bg-purple-100/70 border border-purple-200/50'
+                            }`}
+                        >
+                            <Wand2 size={14} className={rightSidebarTab === 'ai' ? 'animate-spin' : 'text-purple-600'} />
+                            <span>Agente IA</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setRightSidebarTab('images')}
+                            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                                rightSidebarTab === 'images'
+                                    ? 'bg-emerald-600 text-white shadow-xs'
+                                    : 'text-emerald-700 bg-emerald-50/50 hover:bg-emerald-100/70 border border-emerald-200/50'
+                            }`}
+                        >
+                            <ImageIcon size={14} className={rightSidebarTab === 'images' ? '' : 'text-emerald-600'} />
+                            <span>Imagens</span>
+                        </button>
+                    </div>
+
+                    {/* TAB 1: AGENTE IA (QWEN 3.6) */}
+                    {rightSidebarTab === 'ai' && (
+                        <div className="flex flex-col h-full min-h-0 p-4 overflow-y-auto space-y-4 bg-purple-50/30">
+                            <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-200 p-3 rounded-xl space-y-1.5">
+                                <div className="flex items-center gap-2 text-purple-900 font-bold text-xs">
+                                    <Sparkles size={16} className="text-purple-600" />
+                                    <span>Agente Arquiteto de Aulas (Qwen 3.6 27B)</span>
+                                </div>
+                                <p className="text-[11px] text-purple-700">
+                                    Gere aulas completas, cards com ícones, textos didáticos e quizzes que entram direto na Aula!
+                                </p>
                             </div>
+
+                            {/* Prompt Form */}
+                            <div className="space-y-3 bg-white p-3.5 rounded-xl border border-warm-200 shadow-xs">
+                                <label className="block text-xs font-bold text-warm-800">
+                                    O que você gostaria de criar nesta aula?
+                                </label>
+                                <textarea
+                                    value={aiPrompt}
+                                    onChange={(e) => setAiPrompt(e.target.value)}
+                                    placeholder="Ex: Crie uma aula completa sobre Comunicação de Más Notícias com protocolo SPIKES, 3 cards com ícones e um quiz..."
+                                    className="w-full bg-warm-50 border border-warm-200 rounded-lg p-2.5 text-xs text-warm-900 focus:ring-2 focus:ring-purple-400 outline-none resize-none h-24 transition-shadow"
+                                    disabled={isAiGenerating}
+                                />
+
+                                {/* Target Type Selector */}
+                                <div>
+                                    <label className="block text-[11px] font-semibold text-warm-600 mb-1.5">
+                                        Tipo de Conteúdo:
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                        {[
+                                            { id: 'full_page', label: '🚀 Aula Completa' },
+                                            { id: 'cards', label: '🎴 Cards c/ Ícones' },
+                                            { id: 'quiz', label: '❓ Quiz Fixação' },
+                                            { id: 'text', label: '📖 Texto Teórico' },
+                                            { id: 'flashcard', label: '🗂️ Flashcards' },
+                                            { id: 'hero', label: '✨ Banner Hero' },
+                                        ].map(t => (
+                                            <button
+                                                key={t.id}
+                                                type="button"
+                                                onClick={() => setAiTargetType(t.id)}
+                                                className={`text-[11px] py-1.5 px-2 rounded-lg border font-medium transition-all text-left ${
+                                                    aiTargetType === t.id
+                                                        ? 'bg-purple-50 text-purple-700 border-purple-300 font-bold shadow-2xs'
+                                                        : 'bg-white text-warm-600 border-warm-200 hover:bg-warm-50'
+                                                }`}
+                                            >
+                                                {t.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Quick Suggestion Chips */}
+                                <div>
+                                    <label className="block text-[11px] font-semibold text-warm-600 mb-1">
+                                        Sugestões rápidas de temas:
+                                    </label>
+                                    <div className="flex flex-wrap gap-1">
+                                        {[
+                                            'Comunicação SPIKES',
+                                            'Escala de Dor OMS',
+                                            'Bioética e Autonomia',
+                                            'Luto e Apoio Familiar'
+                                        ].map((chip) => (
+                                            <button
+                                                key={chip}
+                                                type="button"
+                                                onClick={() => {
+                                                    setAiPrompt(`Crie uma aula completa sobre ${chip} com introdução, cards explicativos com ícones e um quiz de fixação.`);
+                                                    setAiTargetType('full_page');
+                                                }}
+                                                className="text-[10px] bg-warm-100 hover:bg-purple-100 text-warm-700 hover:text-purple-800 px-2 py-0.5 rounded-full border border-warm-200 transition-colors"
+                                            >
+                                                + {chip}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Generate Button */}
+                                <button
+                                    type="button"
+                                    onClick={() => handleAiGenerate()}
+                                    disabled={!aiPrompt.trim() || isAiGenerating}
+                                    className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-bold text-xs shadow-md hover:shadow-lg disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                                >
+                                    {isAiGenerating ? (
+                                        <>
+                                            <Loader2 size={16} className="animate-spin" />
+                                            <span>Agente IA Criando Blocos...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Wand2 size={16} />
+                                            <span>Gerar Estrutura com Agente IA</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* Generated Blocks Preview & Insertion */}
+                            {generatedBlocksResult && (
+                                <div className="bg-white border-2 border-purple-200 rounded-xl p-3.5 space-y-3 shadow-md animate-slide-down">
+                                    <div className="flex items-start justify-between gap-2 border-b border-purple-100 pb-2">
+                                        <div>
+                                            <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider">
+                                                ✨ Estrutura Gerada
+                                            </span>
+                                            <p className="text-xs font-semibold text-warm-900 mt-0.5">
+                                                {generatedBlocksResult.summary}
+                                            </p>
+                                        </div>
+                                        <button 
+                                            onClick={() => setGeneratedBlocksResult(null)} 
+                                            className="text-warm-400 hover:text-warm-700 p-1 rounded-md"
+                                            title="Limpar sugestão"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+
+                                    {/* Block Preview List */}
+                                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                                        {generatedBlocksResult.blocks.map((b, i) => (
+                                            <div key={b.id || i} className="flex items-center justify-between p-2 bg-purple-50/70 border border-purple-100 rounded-lg text-xs">
+                                                <div className="flex items-center gap-2 truncate">
+                                                    <span className="font-bold text-purple-800 bg-purple-200/70 px-1.5 py-0.5 rounded text-[10px]">
+                                                        {b.type.replace('Block', '')}
+                                                    </span>
+                                                    <span className="text-warm-700 truncate text-[11px]">
+                                                        {b.data?.title || b.data?.headline || b.data?.question || 'Bloco de Conteúdo'}
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleInsertSingleGeneratedBlock(b)}
+                                                    className="p-1 text-purple-700 hover:bg-purple-200 rounded text-[10px] font-bold shrink-0 flex items-center gap-0.5"
+                                                    title="Inserir apenas este bloco"
+                                                >
+                                                    <Plus size={12} /> Inserir
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Insert All Button */}
+                                    <button
+                                        type="button"
+                                        onClick={handleInsertAllGeneratedBlocks}
+                                        className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                    >
+                                        <CheckCheck size={16} />
+                                        <span>Inserir Todos os {generatedBlocksResult.blocks.length} Blocos na Aula</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* TAB 2: BANCO DE IMAGENS MÉDICAS & SAÚDE */}
+                    {rightSidebarTab === 'images' && (
+                        <div className="flex flex-col h-full min-h-0 p-4 overflow-y-auto space-y-3 bg-gray-50/50">
+                            {/* Header & Direct Link Importer */}
+                            <div className="bg-white p-3.5 rounded-xl border border-warm-200 shadow-xs space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold text-warm-800 flex items-center gap-1.5">
+                                        <ImageIcon size={16} className="text-emerald-600" />
+                                        Banco de Imagens Externo
+                                    </span>
+                                    <a
+                                        href="https://unsplash.com/pt-br"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1 transition-colors"
+                                        title="Abrir o site oficial do Unsplash Brasil em nova aba"
+                                    >
+                                        <span>Unsplash Brasil</span>
+                                        <ExternalLink size={10} />
+                                    </a>
+                                </div>
+
+                                {/* Direct URL Import Box */}
+                                <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-2.5 space-y-2">
+                                    <label className="block text-[11px] font-bold text-emerald-950 flex items-center gap-1">
+                                        <LinkIcon size={12} className="text-emerald-700" />
+                                        Colar link copiado do Unsplash ou Web:
+                                    </label>
+                                    <div className="flex gap-1.5">
+                                        <input
+                                            type="text"
+                                            value={directUrlInput}
+                                            onChange={(e) => setDirectUrlInput(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleInsertDirectUrl()}
+                                            placeholder="Ex: https://unsplash.com/pt-br/fotos/..."
+                                            className="flex-1 bg-white border border-emerald-200 rounded-lg px-2.5 py-1.5 text-xs text-warm-900 focus:ring-2 focus:ring-emerald-400 outline-none placeholder:text-warm-400"
+                                            disabled={isResolvingDirectUrl}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleInsertDirectUrl}
+                                            disabled={!directUrlInput.trim() || isResolvingDirectUrl}
+                                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-2xs disabled:opacity-50 transition-all flex items-center gap-1 shrink-0 cursor-pointer"
+                                        >
+                                            {isResolvingDirectUrl ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
+                                            <span>Inserir</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                {/* Search Bar */}
+                                <div className="space-y-1.5 pt-1">
+                                    <label className="block text-[11px] font-bold text-warm-700">
+                                        Ou pesquise ao vivo no acervo:
+                                    </label>
+                                    <div className="relative">
+                                        <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-warm-400" />
+                                        <input
+                                            type="text"
+                                            value={imageSearchQuery}
+                                            onChange={(e) => {
+                                                setImageSearchQuery(e.target.value);
+                                                fetchHealthcareImages(e.target.value, imageCategory);
+                                            }}
+                                            placeholder="Buscar enfermagem, hospital, idoso..."
+                                            className="w-full bg-warm-50 border border-warm-200 rounded-lg pl-8 pr-7 py-1.5 text-xs text-warm-800 focus:ring-2 focus:ring-emerald-400 outline-none"
+                                        />
+                                        {imageSearchQuery && (
+                                            <button 
+                                                onClick={() => {
+                                                    setImageSearchQuery('');
+                                                    fetchHealthcareImages('', imageCategory);
+                                                }}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-warm-400 hover:text-warm-600 p-0.5"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Category Pills */}
+                                <div className="flex flex-wrap gap-1 pt-1">
+                                    {[
+                                        'Todas',
+                                        'Cuidados Paliativos',
+                                        'Enfermagem',
+                                        'Idoso & Família',
+                                        'Comunicação',
+                                        'Bioética',
+                                        'Medicamentos'
+                                    ].map((cat) => (
+                                        <button
+                                            key={cat}
+                                            type="button"
+                                            onClick={() => {
+                                                setImageCategory(cat);
+                                                fetchHealthcareImages(imageSearchQuery, cat);
+                                            }}
+                                            className={`text-[10px] px-2 py-0.5 rounded-full font-medium transition-all ${
+                                                imageCategory === cat
+                                                    ? 'bg-emerald-600 text-white font-bold shadow-2xs'
+                                                    : 'bg-warm-100 text-warm-700 hover:bg-warm-200'
+                                            }`}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Image Grid */}
+                            {isImageLoading ? (
+                                <div className="p-8 text-center text-warm-400">
+                                    <Loader2 size={24} className="animate-spin mx-auto mb-2 text-emerald-600" />
+                                    <p className="text-xs">Buscando imagens...</p>
+                                </div>
+                            ) : imageResults.length === 0 ? (
+                                <div className="p-8 text-center text-warm-400">
+                                    <ImageIcon size={32} className="mx-auto mb-2 opacity-30" />
+                                    <p className="text-xs">Nenhuma imagem encontrada para esta busca.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    <span className="text-[11px] font-semibold text-warm-500">
+                                        {imageResults.length} imagem(ns) disponível(is):
+                                    </span>
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {imageResults.map((img) => (
+                                            <div 
+                                                key={img.id}
+                                                className="group relative bg-white border border-warm-200 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all"
+                                            >
+                                                <div className="aspect-video w-full overflow-hidden bg-warm-100 relative">
+                                                    <img 
+                                                        src={img.thumb_url || img.url} 
+                                                        alt={img.title} 
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                        loading="lazy"
+                                                    />
+                                                    <span className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                                                        {img.category}
+                                                    </span>
+                                                </div>
+                                                <div className="p-2.5 space-y-2">
+                                                    <p className="text-xs font-bold text-warm-800 line-clamp-1" title={img.title}>
+                                                        {img.title}
+                                                    </p>
+                                                    <div className="flex items-center justify-between pt-1 border-t border-warm-100">
+                                                        <span className="text-[10px] text-warm-400 truncate max-w-[120px]">
+                                                            📷 {img.author}
+                                                        </span>
+                                                        <div className="flex items-center gap-1">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleCopyImageUrl(img.url)}
+                                                                className="p-1 text-warm-500 hover:text-warm-800 hover:bg-warm-100 rounded text-[10px] flex items-center gap-0.5"
+                                                                title="Copiar link direto da foto"
+                                                            >
+                                                                {copiedImageUrl === img.url ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleInsertImageAsBlock(img)}
+                                                                className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold flex items-center gap-1 shadow-2xs"
+                                                                title="Inserir como bloco de imagem na Aula"
+                                                            >
+                                                                <Plus size={12} /> Inserir Bloco
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* TAB 3: PROPRIEDADES DO BLOCO */}
+                    {rightSidebarTab === 'properties' && (
+                        <div className="p-4 flex-1 overflow-y-auto">
+                            {!selectedBlock ? (
+                                <div className="text-center text-warm-400 mt-12 space-y-2">
+                                    <Settings size={32} className="mx-auto opacity-30" />
+                                    <p className="text-sm font-medium">Nenhum bloco selecionado</p>
+                                    <p className="text-xs">Clique em uma seção na aula para editar suas propriedades.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-5">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold bg-primary/10 text-primary px-2 py-1 rounded-md">
+                                            {BLOCK_TEMPLATES.find(t => t.type === selectedBlock.type)?.label || selectedBlock.type}
+                                        </span>
+                                        <span className="text-[10px] text-warm-400">#{selectedBlockIndex + 1}</span>
+                                    </div>
+
+                                    <div className="flex gap-1.5">
+                                        <button onClick={() => moveBlock(selectedBlock.id, 'up')} disabled={selectedBlockIndex === 0} className="flex-1 flex items-center justify-center gap-1 p-2 bg-warm-50 border border-warm-200 rounded-lg text-warm-600 hover:bg-warm-100 disabled:opacity-30 text-xs font-medium transition-colors">
+                                            <ChevronUp size={14} /> Subir
+                                        </button>
+                                        <button onClick={() => moveBlock(selectedBlock.id, 'down')} disabled={selectedBlockIndex === blocks.length - 1} className="flex-1 flex items-center justify-center gap-1 p-2 bg-warm-50 border border-warm-200 rounded-lg text-warm-600 hover:bg-warm-100 disabled:opacity-30 text-xs font-medium transition-colors">
+                                            <ChevronDown size={14} /> Descer
+                                        </button>
+                                        <button onClick={() => duplicateBlock(selectedBlock.id)} className="p-2 bg-warm-50 border border-warm-200 rounded-lg text-warm-600 hover:bg-warm-100 transition-colors" title="Duplicar">
+                                            <Copy size={14} />
+                                        </button>
+                                    </div>
+
+                                    <hr className="border-warm-100" />
 
                             {/* TextBlock Typography Studio */}
                             {selectedBlock.type === 'TextBlock' && (
@@ -1033,8 +1619,10 @@ const ModuleContentEditor: React.FC = () => {
                                 </button>
                             </div>
                         </div>
+                    )}
                     </div>
                 )}
+                </div>
             </div>
 
             {/* TOAST & MODAL */}

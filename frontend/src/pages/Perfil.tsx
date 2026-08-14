@@ -160,6 +160,34 @@ const Perfil: React.FC = () => {
         }
     };
 
+    // Remover Usuário do Sistema
+    const handleDeleteUser = async (userId: number) => {
+        if (!token) throw new Error('Não autenticado');
+        const res = await fetch(`${API_URL}/api/admin/users/${userId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.detail || 'Falha ao remover usuário');
+        }
+
+        // Atualiza estado local de adminMetrics
+        setAdminMetrics((prev: any) => {
+            if (!prev) return prev;
+            const updatedAllUsers = prev.all_users?.filter((u: any) => u.id !== userId) || [];
+            const updatedStudents = prev.students?.filter((u: any) => u.id !== userId) || [];
+            const updatedTeam = updatedAllUsers.filter((u: any) => u.cargo !== 'aluno');
+            return {
+                ...prev,
+                total_students: updatedStudents.length,
+                total_team_members: updatedTeam.length,
+                all_users: updatedAllUsers,
+                students: updatedStudents
+            };
+        });
+    };
+
     // Exportar Backup Completo JSON
     const handleExportBackup = async () => {
         setBackupLoading(true);
@@ -566,6 +594,7 @@ const Perfil: React.FC = () => {
                                 onExportExcel={handleExportExcel}
                                 onExportCSV={handleExportCSV}
                                 onUpdateRole={handleUpdateRole}
+                                onDeleteUser={handleDeleteUser}
                                 currentUserEmail={user.email}
                                 currentUserRole={user.cargo}
                             />

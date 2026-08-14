@@ -1,5 +1,8 @@
 import os
+import re
 import shutil
+import uuid
+import json
 from datetime import datetime
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Form, Request, Header, Query
@@ -302,18 +305,20 @@ def google_auth(token_data: schemas.GoogleToken, db: Session = Depends(get_db)):
             senha_hash=None, # Não tem senha local
             cargo="aluno",
             email_verified=True,
-            auth_provider="google"
+            auth_provider="google",
+            foto_url=idinfo.get("picture")
         )
         db.add(user)
         db.commit()
         db.refresh(user)
     else:
-        # Se já existia, garante que está verificado
+        # Se já existia, garante que está verificado e atualiza foto caso não tenha foto customizada
         if not user.email_verified:
             user.email_verified = True
-            user.auth_provider = "google"
-            db.commit()
-            db.refresh(user)
+        if not user.foto_url and idinfo.get("picture"):
+            user.foto_url = idinfo.get("picture")
+        db.commit()
+        db.refresh(user)
         
     access_token = auth.create_access_token(data={"sub": user.email, "role": user.cargo})
     
@@ -682,11 +687,11 @@ async def chat(request: ChatRequest):
     ai_messages = [SYSTEM_PROMPT] + [msg.model_dump() for msg in request.messages]
 
     payload = {
-        # Atualizado para o modelo atual e ativo da Groq
-        "model": "llama-3.3-70b-versatile",
+        # Modelo oficial de última geração, raciocínio avançado e ultrarrápido na Groq (100% Gratuito)
+        "model": "qwen/qwen3.6-27b",
         "messages": ai_messages,
         "temperature": 0.7,
-        "max_tokens": 1024
+        "max_tokens": 1500
     }
 
     async with httpx.AsyncClient() as client:
@@ -695,17 +700,397 @@ async def chat(request: ChatRequest):
                 "https://api.groq.com/openai/v1/chat/completions",
                 headers=headers,
                 json=payload,
-                timeout=30.0
+                timeout=35.0
             )
             response.raise_for_status()
             data = response.json()
-            reply = data.get("choices", [{}])[0].get("message", {}).get("content")
-            if not reply:
+            raw_reply = data.get("choices", [{}])[0].get("message", {}).get("content")
+            if not raw_reply:
                 raise ValueError("Resposta inválida da API do Groq.")
+            
+            # Limpa blocos de raciocínio <think> se existirem para entregar resposta final limpa ao aluno
+            reply = re.sub(r'<think>.*?</think>', '', raw_reply, flags=re.DOTALL).strip()
+            if not reply:
+                reply = raw_reply.strip()
+
             return {"reply": reply}
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
+# ================================
+# Agente IA Construtor de Páginas & Banco de Imagens
+# ================================
+
+CURATED_HEALTHCARE_IMAGES = [
+    {
+        "id": "med_1",
+        "title": "Acolhimento e Escuta Terapêutica em Cuidados Paliativos",
+        "category": "Cuidados Paliativos",
+        "url": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80",
+        "thumb_url": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=400&q=80",
+        "author": "National Cancer Institute"
+    },
+    {
+        "id": "med_2",
+        "title": "Equipe Multiprofissional de Enfermagem em Hospital",
+        "category": "Enfermagem",
+        "url": "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=1200&q=80",
+        "thumb_url": "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=400&q=80",
+        "author": "Online Marketing"
+    },
+    {
+        "id": "med_3",
+        "title": "Apoio e Conforto ao Paciente Idoso e Família",
+        "category": "Idoso & Família",
+        "url": "https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?auto=format&fit=crop&w=1200&q=80",
+        "thumb_url": "https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?auto=format&fit=crop&w=400&q=80",
+        "author": "Dominik Lange"
+    },
+    {
+        "id": "med_4",
+        "title": "Estetoscópio e Avaliação Clínica de Sintomas",
+        "category": "Equipamentos & Exames",
+        "url": "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1200&q=80",
+        "thumb_url": "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=400&q=80",
+        "author": "Online Marketing"
+    },
+    {
+        "id": "med_5",
+        "title": "Presença Compassiva e Toque Terapêutico",
+        "category": "Cuidados Paliativos",
+        "url": "https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&w=1200&q=80",
+        "thumb_url": "https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&w=400&q=80",
+        "author": "Marcelo Leal"
+    },
+    {
+        "id": "med_6",
+        "title": "Comunicação de Notícias Difíceis e Tomada de Decisão",
+        "category": "Comunicação",
+        "url": "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=80",
+        "thumb_url": "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=400&q=80",
+        "author": "National Cancer Institute"
+    },
+    {
+        "id": "med_7",
+        "title": "Profissional de Enfermagem em Consulta Acolhedora",
+        "category": "Enfermagem",
+        "url": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1200&q=80",
+        "thumb_url": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
+        "author": "Bruno Rodrigues"
+    },
+    {
+        "id": "med_8",
+        "title": "Mãos Dadas: Humanização e Cuidado Integral",
+        "category": "Cuidados Paliativos",
+        "url": "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=1200&q=80",
+        "thumb_url": "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=400&q=80",
+        "author": "Hush Naidoo Jade Photography"
+    },
+    {
+        "id": "med_9",
+        "title": "Discussão de Bioética e Diretivas Antecipadas",
+        "category": "Bioética",
+        "url": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80",
+        "thumb_url": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=400&q=80",
+        "author": "Scott Graham"
+    },
+    {
+        "id": "med_10",
+        "title": "Manejo Farmacológico e Controle de Sintomas",
+        "category": "Medicamentos",
+        "url": "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=1200&q=80",
+        "thumb_url": "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=400&q=80",
+        "author": "Laurynas Mereckas"
+    }
+]
+
+TRANSLATIONS = {
+    "cuidados paliativos": "palliative care patient",
+    "paliativo": "palliative care",
+    "enfermagem": "nurse nursing healthcare",
+    "enfermeira": "nurse caring patient",
+    "enfermeiro": "nurse hospital care",
+    "medicina": "doctor healthcare hospital",
+    "médico": "doctor medical examination",
+    "hospital": "hospital room clinic",
+    "idoso": "elderly senior patient care",
+    "idosos": "elderly senior healthcare",
+    "familia": "family patient hospital comfort",
+    "família": "family comforting patient",
+    "dor": "pain management patient care",
+    "estetoscopio": "stethoscope doctor clinic",
+    "estetoscópio": "stethoscope medical exam",
+    "remedio": "medicine pills pharmacy",
+    "remédio": "medicine pills healthcare",
+    "medicamentos": "medication pharmacy healthcare",
+    "bioetica": "medical ethics discussion",
+    "bioética": "medical ethics doctor",
+    "comunicacao": "doctor patient conversation empathy",
+    "comunicação": "doctor patient empathy talk",
+    "luto": "comforting grief support",
+    "espiritualidade": "peaceful meditation hope",
+    "anatomia": "human anatomy medical"
+}
+
+@app.get("/api/ai/search-images")
+async def search_healthcare_images(
+    q: Optional[str] = Query(None),
+    category: Optional[str] = Query(None),
+    source: Optional[str] = Query("all")
+):
+    results = []
+    
+    # 1. Filtra acervo curado
+    curated = CURATED_HEALTHCARE_IMAGES
+    if category and category.lower() != "todas":
+        curated = [img for img in curated if img["category"].lower() == category.lower()]
+    if q and q.strip():
+        term = q.lower().strip()
+        curated = [img for img in curated if term in img["title"].lower() or term in img["category"].lower()]
+    
+    results.extend(curated)
+    
+    # 2. Busca ao vivo em bancos externos (Unsplash / Openverse / Creative Commons)
+    if q and q.strip() and source != "curated":
+        raw_q = q.lower().strip()
+        translated_q = TRANSLATIONS.get(raw_q, raw_q)
+        try:
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                res = await client.get(
+                    f"https://api.openverse.org/v1/images/?q={translated_q}&page_size=20",
+                    headers={"User-Agent": "Palieduca-App/1.0"}
+                )
+                if res.status_code == 200:
+                    data = res.json()
+                    for item in data.get("results", []):
+                        img_url = item.get("url")
+                        thumb = item.get("thumbnail") or img_url
+                        if img_url:
+                            results.append({
+                                "id": f"ext_{item.get('id')}",
+                                "title": item.get("title") or f"Imagem sobre {q}",
+                                "category": "Unsplash / Web",
+                                "url": img_url,
+                                "thumb_url": thumb,
+                                "author": item.get("creator") or "Unsplash / CC"
+                            })
+        except Exception as err:
+            print("Erro ao buscar banco externo:", err)
+            
+    return results
+
+class ResolveUrlRequest(BaseModel):
+    url: str
+
+@app.post("/api/ai/resolve-image-url")
+async def resolve_image_url(req: ResolveUrlRequest):
+    raw_url = req.url.strip()
+    if not raw_url:
+        raise HTTPException(status_code=400, detail="URL inválida")
+        
+    # Se já for link direto de imagem
+    if any(ext in raw_url.lower() for ext in [".jpg", ".jpeg", ".png", ".webp", ".gif", "images.unsplash.com"]):
+        return {"image_url": raw_url, "title": "Imagem Externa"}
+        
+    # Se for página do Unsplash (unsplash.com/pt-br/fotos/...)
+    try:
+        async with httpx.AsyncClient(timeout=8.0, follow_redirects=True) as client:
+            res = await client.get(raw_url, headers={"User-Agent": "Mozilla/5.0"})
+            if res.status_code == 200:
+                og_match = re.search(r'<meta property=["\']og:image["\'] content=["\']([^"\']+)["\']', res.text)
+                title_match = re.search(r'<title>([^<]+)</title>', res.text)
+                if og_match:
+                    title = title_match.group(1).split("|")[0].strip() if title_match else "Imagem Unsplash"
+                    return {"image_url": og_match.group(1), "title": title}
+    except Exception as e:
+        print("Erro ao resolver URL:", e)
+        
+    return {"image_url": raw_url, "title": "Imagem Externa"}
+
+AI_AGENT_BUILDER_SYSTEM_PROMPT = """Você é o Agente Arquiteto de Páginas e Aulas do Palieduca (UFPB).
+Sua missão é transformar o pedido do professor em blocos visuais estruturados para o construtor visual de páginas.
+Responda APENAS com um bloco de código JSON puro iniciado por ```json e finalizado por ```, SEM NENHUM COMENTÁRIO com // ou /* */ no JSON.
+
+Estrutura JSON esperada:
+```json
+{
+  "summary": "Resumo em 1 frase da aula montada",
+  "blocks": [
+    {
+      "id": "hero_1",
+      "type": "HeroBlock",
+      "data": {
+        "title": "Título Principal da Aula",
+        "subtitle": "Subtítulo explicativo e cativante",
+        "badgeText": "Módulo • Cuidados Paliativos",
+        "primaryButtonText": "Iniciar Estudo",
+        "imageUrl": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80",
+        "align": "left"
+      }
+    },
+    {
+      "id": "cards_1",
+      "type": "FeatureCardsBlock",
+      "data": {
+        "title": "Tópicos Fundamentais",
+        "subtitle": "Conceitos-chave para a prática assistencial",
+        "cards": [
+          {
+            "id": "c1",
+            "icon_name": "HeartPulse",
+            "iconColor": "#059669",
+            "iconBg": "#ecfdf5",
+            "badge": "Tópico 1",
+            "title": "Acolhimento e Escuta",
+            "description": "Explicação concisa e prática para o aluno."
+          },
+          {
+            "id": "c2",
+            "icon_name": "MessageSquare",
+            "iconColor": "#d97706",
+            "iconBg": "#fef3c7",
+            "badge": "Tópico 2",
+            "title": "Comunicação Empática",
+            "description": "Técnicas de escuta ativa e diálogo humanizado."
+          }
+        ]
+      }
+    },
+    {
+      "id": "text_1",
+      "type": "TextBlock",
+      "data": {
+        "htmlContent": "<h3>Fundamentação Teórica</h3><p>Explicação detalhada alinhada às diretrizes da ANCP e OMS...</p>",
+        "align": "left"
+      }
+    },
+    {
+      "id": "quiz_1",
+      "type": "QuizBlock",
+      "data": {
+        "title": "Quiz de Fixação: Teste seus Conhecimentos",
+        "description": "Responda à questão abaixo com feedback imediato.",
+        "questions": [
+          {
+            "id": "q1",
+            "question": "Enunciado da questão sobre o tema abordado?",
+            "options": [
+              "Opção A incorreta",
+              "Opção B correta e fundamentada",
+              "Opção C incorreta",
+              "Opção D incorreta"
+            ],
+            "correctOptionIndex": 1,
+            "explanation": "Explicação pedagógica detalhada da resposta correta."
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+Ícones válidos para os cards: HeartPulse, Stethoscope, Scale, MessageSquare, ShieldCheck, Users, Brain, Activity, Clock, Award, BookOpen, Smile, FileText.
+IMPORTANTE: Não coloque nenhum comentário // dentro do código JSON.
+"""
+
+@app.post("/api/ai/generate-blocks", response_model=schemas.AIGenerateBlocksResponse)
+async def generate_page_blocks_agent(
+    request: schemas.AIGenerateBlocksRequest,
+    current_user: models.User = Depends(get_current_user)
+):
+    allowed_roles = ["dona", "desenvolvedor", "administrador", "professor", "coordenador", "monitor", "suporte"]
+    if current_user.cargo not in allowed_roles:
+        raise HTTPException(status_code=403, detail="Sem permissão para utilizar o Agente Construtor.")
+
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    if not groq_api_key:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY não configurada no backend/.env")
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {groq_api_key}"
+    }
+
+    user_prompt = request.prompt
+    if request.target_type and request.target_type != "full_page":
+        user_prompt += f" (Foco: {request.target_type})"
+    if request.context_module:
+        user_prompt += f" (Módulo: {request.context_module})"
+
+    payload = {
+        "model": "qwen/qwen3.6-27b",
+        "messages": [
+            {"role": "system", "content": AI_AGENT_BUILDER_SYSTEM_PROMPT + "\nIMPORTANTE: Retorne a resposta estritamente como um objeto JSON válido."},
+            {"role": "user", "content": user_prompt}
+        ],
+        "response_format": {"type": "json_object"},
+        "temperature": 0.3,
+        "max_tokens": 4096
+    }
+
+    async with httpx.AsyncClient(timeout=45.0) as client:
+        try:
+            response = await client.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers=headers,
+                json=payload
+            )
+            
+            if response.status_code == 401:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Chave da Groq API inválida ou expirada. Atualize a GROQ_API_KEY no arquivo backend/.env."
+                )
+            
+            if response.status_code != 200:
+                err_text = response.text[:200]
+                raise HTTPException(status_code=response.status_code, detail=f"Erro na Groq API: {err_text}")
+
+            data = response.json()
+            raw_reply = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+            
+            # Limpa eventuais tags de pensamento <think> se presentes
+            clean = re.sub(r"<think>[\s\S]*?</think>", "", raw_reply, flags=re.DOTALL).strip()
+            
+            # Remove blocos markdown caso o modelo tenha envolvido
+            if clean.startswith("```"):
+                clean = re.sub(r"^```(?:json)?\s*", "", clean)
+                clean = re.sub(r"\s*```$", "", clean)
+
+            # Limpeza de comentários (preservando URLs http e https)
+            clean = re.sub(r"(?<!http:)(?<!https:)//.*", "", clean)
+            clean = re.sub(r"/\*[\s\S]*?\*/", "", clean)
+            clean = re.sub(r",\s*([\}\]])", r"\1", clean)
+
+            first_brace = clean.find('{')
+            last_brace = clean.rfind('}')
+            if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+                json_str = clean[first_brace:last_brace + 1]
+            else:
+                json_str = clean
+
+            parsed_data = json.loads(json_str, strict=False)
+
+            summary = parsed_data.get("summary", "Blocos gerados com sucesso pela IA!")
+            generated_blocks = parsed_data.get("blocks", [])
+
+            # Garante IDs únicos para cada bloco gerado
+            for idx, b in enumerate(generated_blocks):
+                unique_suffix = uuid.uuid4().hex[:6]
+                b["id"] = f"{b.get('type', 'block').lower()}_{int(datetime.now().timestamp())}_{idx}_{unique_suffix}"
+
+            return {
+                "summary": summary,
+                "blocks": generated_blocks
+            }
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            print("Erro ao processar resposta do Agente IA:", e)
+            raise HTTPException(status_code=500, detail=f"Erro ao processar blocos com IA: {str(e)}")
 
 @app.get("/api/modules/{module_slug}/resources", response_model=list[schemas.InteractiveResourceResponse])
 def get_interactive_resources(module_slug: str, db: Session = Depends(get_db)):
@@ -1164,6 +1549,43 @@ def update_user_role(
         "message": f"Cargo de {target_user.nome} atualizado para '{new_role}' com sucesso!",
         "user_id": target_user.id,
         "novo_cargo": target_user.cargo
+    }
+
+@app.delete("/api/admin/users/{user_id}")
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Apenas a Dona ou Desenvolvedor podem remover usuários.")
+
+    target_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+
+    # Regras de Cibersegurança e Proteção da Dona:
+    # 1. Não permite apagar a conta principal da Dona ou usuários com cargo de Dona
+    if target_user.email == "patriciaandrade@palieduca.com.br" or target_user.cargo == "dona":
+        raise HTTPException(status_code=403, detail="Não é permitido remover a conta da Dona Proprietária.")
+
+    # 2. Não permite apagar a si próprio pelo painel administrativo
+    if target_user.id == current_user.id:
+        raise HTTPException(status_code=400, detail="Você não pode excluir sua própria conta pelo painel de controle.")
+
+    user_name = target_user.nome
+    user_email = target_user.email
+
+    # Remove o progresso e atividades do usuário no banco
+    db.query(models.UserActivityProgress).filter(models.UserActivityProgress.user_id == user_id).delete()
+
+    # Remove o usuário do banco de dados
+    db.delete(target_user)
+    db.commit()
+
+    return {
+        "message": f"Usuário {user_name} ({user_email}) removido com sucesso!",
+        "deleted_user_id": user_id
     }
 
 import io

@@ -5,7 +5,7 @@ import {
     ArrowUpDown, ChevronDown, ChevronUp, PieChart as PieIcon,
     BarChart3, Medal, Clock, FileSpreadsheet, Shield,
     UserCog, Crown, Code2, GraduationCap, ShieldCheck, Headphones,
-    Lock, Loader2
+    Lock, Loader2, Trash2
 } from 'lucide-react';
 import { getFullMediaUrl } from '../utils/mediaUtils';
 
@@ -53,6 +53,7 @@ interface Props {
     onExportExcel: () => void;
     onExportCSV: () => void;
     onUpdateRole?: (userId: number, newRole: string) => Promise<void>;
+    onDeleteUser?: (userId: number) => Promise<void>;
     currentUserEmail?: string;
     currentUserRole?: string;
 }
@@ -102,6 +103,7 @@ export const StudentAnalyticsDashboard: React.FC<Props> = ({
     onExportExcel, 
     onExportCSV,
     onUpdateRole,
+    onDeleteUser,
     currentUserEmail,
     currentUserRole
 }) => {
@@ -113,8 +115,9 @@ export const StudentAnalyticsDashboard: React.FC<Props> = ({
     const [sortField, setSortField] = useState<'nome' | 'points' | 'progress_percentage'>('points');
     const [sortAsc, setSortAsc] = useState(false);
     
-    // Estado de carregamento na troca de cargo
+    // Estado de carregamento na troca de cargo e exclusão
     const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
+    const [deletingUserId, setDeletingUserId] = useState<number | null>(null);
     const [roleUpdateMsg, setRoleUpdateMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
     // Filtros e ordenação da planilha de alunos
@@ -189,6 +192,31 @@ export const StudentAnalyticsDashboard: React.FC<Props> = ({
             setTimeout(() => setRoleUpdateMsg(null), 4000);
         } finally {
             setUpdatingUserId(null);
+        }
+    };
+
+    const handleDeleteUser = async (userId: number, userName: string, userEmail: string) => {
+        if (!onDeleteUser) return;
+        const confirm = window.confirm(`Tem certeza que deseja remover o usuário "${userName}" (${userEmail})?\n\nEsta ação apagará permanentemente o acesso e o histórico desta pessoa.`);
+        if (!confirm) return;
+
+        setDeletingUserId(userId);
+        setRoleUpdateMsg(null);
+        try {
+            await onDeleteUser(userId);
+            setRoleUpdateMsg({ 
+                text: `Usuário "${userName}" (${userEmail}) removido com sucesso!`, 
+                type: 'success' 
+            });
+            setTimeout(() => setRoleUpdateMsg(null), 4000);
+        } catch (err: any) {
+            setRoleUpdateMsg({ 
+                text: err.message || 'Erro ao remover usuário.', 
+                type: 'error' 
+            });
+            setTimeout(() => setRoleUpdateMsg(null), 4000);
+        } finally {
+            setDeletingUserId(null);
         }
     };
 
@@ -707,6 +735,7 @@ export const StudentAnalyticsDashboard: React.FC<Props> = ({
                                     <th className="py-3 px-4">Cargo Atual</th>
                                     <th className="py-3 px-4">Alterar Cargo</th>
                                     <th className="py-3 px-4 text-center">Permissões</th>
+                                    <th className="py-3 px-4 text-center">Ações</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-warm-100 bg-white">
@@ -715,6 +744,7 @@ export const StudentAnalyticsDashboard: React.FC<Props> = ({
                                     const isCurrentUser = u.email === currentUserEmail;
                                     const roleInfo = ROLES_INFO[u.cargo] || ROLES_INFO.aluno;
                                     const isUpdating = updatingUserId === u.id;
+                                    const isDeleting = deletingUserId === u.id;
 
                                     return (
                                         <tr key={u.id} className="hover:bg-warm-50/60 transition-colors">
@@ -766,7 +796,7 @@ export const StudentAnalyticsDashboard: React.FC<Props> = ({
                                                     <div className="flex items-center gap-2">
                                                         <select
                                                             value={u.cargo}
-                                                            disabled={isUpdating}
+                                                            disabled={isUpdating || isDeleting}
                                                             onChange={(e) => handleRoleChange(u.id, e.target.value, u.nome)}
                                                             className="px-2.5 py-1.5 bg-white border border-warm-300 rounded-xl text-xs font-bold text-warm-800 outline-none cursor-pointer hover:border-primary focus:ring-2 focus:ring-primary disabled:opacity-50"
                                                         >
@@ -787,6 +817,23 @@ export const StudentAnalyticsDashboard: React.FC<Props> = ({
                                             {/* Descrição das Permissões */}
                                             <td className="py-3 px-4 text-warm-500 text-[11px] max-w-xs truncate">
                                                 {roleInfo.desc}
+                                            </td>
+
+                                            {/* Botão de Excluir Usuário */}
+                                            <td className="py-3 px-4 text-center">
+                                                {isPrimaryOwner || isCurrentUser ? (
+                                                    <span className="text-[10px] text-warm-400 font-bold">—</span>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        disabled={isDeleting || isUpdating}
+                                                        onClick={() => handleDeleteUser(u.id, u.nome, u.email)}
+                                                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all cursor-pointer border border-transparent hover:border-red-200 disabled:opacity-50 shadow-2xs"
+                                                        title={`Remover permanentemente o usuário ${u.nome}`}
+                                                    >
+                                                        {isDeleting ? <Loader2 size={14} className="animate-spin text-red-500" /> : <Trash2 size={14} />}
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     );
