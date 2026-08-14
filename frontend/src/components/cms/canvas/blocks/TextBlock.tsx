@@ -36,6 +36,14 @@ export const TextBlock: React.FC<Props> = ({ element, isSelected, onSelect, onUp
         }
     }, [isEditing]);
 
+    useEffect(() => {
+        if (contentEditableRef.current && !isEditing) {
+            if (contentEditableRef.current.innerHTML !== (textEl.content || '')) {
+                contentEditableRef.current.innerHTML = textEl.content || '';
+            }
+        }
+    }, [textEl.content, isEditing]);
+
     const handleDoubleClick = (e: React.MouseEvent) => {
         e.stopPropagation();
         setIsEditing(true);
@@ -73,7 +81,7 @@ export const TextBlock: React.FC<Props> = ({ element, isSelected, onSelect, onUp
                     textAlign: textEl.textAlign,
                     fontWeight: textEl.fontWeight,
                     fontStyle: textEl.fontStyle,
-                    textDecoration: textEl.textDecoration,
+                    textDecoration: textDecorationClean(textEl.textDecoration),
                     cursor: isEditing ? 'text' : 'move',
                     userSelect: isEditing ? 'auto' : 'none'
                 }}
@@ -83,8 +91,11 @@ export const TextBlock: React.FC<Props> = ({ element, isSelected, onSelect, onUp
                 onBlur={(e) => {
                     onUpdate({ content: e.currentTarget.innerHTML });
                 }}
-                dangerouslySetInnerHTML={{ __html: textEl.content }}
             />
         </Rnd>
     );
 };
+
+function textDecorationClean(val?: string) {
+    return val || undefined;
+}

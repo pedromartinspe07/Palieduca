@@ -2,7 +2,7 @@ import os
 import shutil
 from datetime import datetime
 from typing import Optional
-from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -196,12 +196,34 @@ def verify_email(data: schemas.VerifyEmailRequest, db: Session = Depends(get_db)
             "id": user.id,
             "email": user.email,
             "nome": user.nome,
-            "cargo": user.cargo
+            "cargo": user.cargo,
+            "foto_url": user.foto_url
         }
     }
 
+# In-memory Rate Limiter para Ciberseguranca (Protecao Anti-Brute Force e Anti-Spam)
+RATE_LIMIT_STORE: dict[str, list[float]] = {}
+
+def check_rate_limit(key: str, max_requests: int, window_seconds: int) -> bool:
+    now = datetime.now().timestamp()
+    timestamps = RATE_LIMIT_STORE.get(key, [])
+    # Filtra apenas timestamps dentro da janela
+    timestamps = [t for t in timestamps if now - t < window_seconds]
+    if len(timestamps) >= max_requests:
+        return False
+    timestamps.append(now)
+    RATE_LIMIT_STORE[key] = timestamps
+    return True
+
 @app.post("/api/auth/resend-code")
-def resend_verification_code(data: schemas.ResendCodeRequest, db: Session = Depends(get_db)):
+def resend_verification_code(data: schemas.ResendCodeRequest, request: Request, db: Session = Depends(get_db)):
+    client_ip = request.client.host if request.client else "unknown"
+    if not check_rate_limit(f"resend_{data.email}_{client_ip}", max_requests=3, window_seconds=300):
+        raise HTTPException(
+            status_code=429,
+            detail="Muitas solicitações de código seguidas. Por segurança, aguarde 5 minutos antes de tentar novamente."
+        )
+
     user = db.query(models.User).filter(models.User.email == data.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
@@ -217,7 +239,14 @@ def resend_verification_code(data: schemas.ResendCodeRequest, db: Session = Depe
     return {"message": f"Novo código enviado para {user.email}!"}
 
 @app.post("/api/auth/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    client_ip = request.client.host if request.client else "unknown"
+    if not check_rate_limit(f"login_{client_ip}", max_requests=10, window_seconds=60):
+        raise HTTPException(
+            status_code=429,
+            detail="Muitas tentativas de login consecutivas. Por segurança, aguarde 1 minuto para tentar novamente."
+        )
+
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
     if not user or not user.senha_hash or not auth.verify_password(form_data.password, user.senha_hash):
         raise HTTPException(
@@ -845,33 +874,280 @@ def add_zoho_workdrive_link(
     db.refresh(media)
     return media
 
-@app.get("/api/media", response_model=list[schemas.MediaFileResponse])
-def get_media_files(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    if current_user.cargo not in ["dona", "desenvolvedor"]:
-        raise HTTPException(status_code=403, detail="Sem permissão")
-    return db.query(models.MediaFile).order_by(models.MediaFile.id.desc()).all()
+# ================================
+# Progresso Granular & Atividades
+# ================================
 
-@app.delete("/api/media/{media_id}")
-def delete_media_file(
-    media_id: int,
+import json
+
+def get_module_activity_ids(module_slug: str, db: Session) -> list[str]:
+    """Retorna todos os IDs de atividades/blocos existentes dentro de um módulo."""
+    activity_ids = []
+    
+    # 1. Busca blocos no PageContent (modulo_{slug})
+    page = db.query(models.PageContent).filter(models.PageContent.page_name == f"modulo_{module_slug}").first()
+    if page and page.content:
+        try:
+            blocks = json.loads(page.content)
+            if isinstance(blocks, list):
+                for b in blocks:
+                    if isinstance(b, dict) and b.get("id"):
+                        activity_ids.append(str(b["id"]))
+        except Exception:
+            pass
+
+    # 2. Busca recursos interativos cadastrados para o módulo
+    resources = db.query(models.InteractiveResource).filter(models.InteractiveResource.module_slug == module_slug).all()
+    for r in resources:
+        activity_ids.append(f"res_{r.id}")
+
+    # 3. Se ainda não houver nenhum bloco, garante pelo menos o bloco padrão de introdução
+    if not activity_ids:
+        activity_ids.append(f"{module_slug}_intro")
+
+    return list(set(activity_ids))
+
+@app.get("/api/progress", response_model=schemas.ActivityProgressResponse)
+def get_user_progress(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    # Busca todas as atividades que o aluno já completou
+    user_progress_records = db.query(models.UserActivityProgress).filter(
+        models.UserActivityProgress.user_id == current_user.id,
+        models.UserActivityProgress.completed == True
+    ).all()
+    
+    completed_ids = set(r.activity_id for r in user_progress_records)
+    
+    modules = db.query(models.Module).all()
+    module_progress = {}
+    
+    total_activities_sum = 0
+    total_completed_sum = 0
+
+    for mod in modules:
+        act_ids = get_module_activity_ids(mod.slug_id, db)
+        completed_in_mod = [aid for aid in act_ids if aid in completed_ids]
+        
+        mod_total = len(act_ids)
+        mod_done = len(completed_in_mod)
+        mod_pct = round((mod_done / mod_total) * 100) if mod_total > 0 else 0
+        
+        module_progress[mod.slug_id] = {
+            "completed": mod_done,
+            "total": mod_total,
+            "percentage": mod_pct
+        }
+        
+        total_activities_sum += mod_total
+        total_completed_sum += mod_done
+
+    overall_pct = round((total_completed_sum / total_activities_sum) * 100) if total_activities_sum > 0 else 0
+
+    return {
+        "completed_activities": list(completed_ids),
+        "module_progress": module_progress,
+        "overall_percentage": overall_pct,
+        "total_completed": total_completed_sum,
+        "total_activities": total_activities_sum
+    }
+
+@app.post("/api/progress/toggle")
+def toggle_activity_progress(
+    data: schemas.ActivityToggleRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    progress_entry = db.query(models.UserActivityProgress).filter(
+        models.UserActivityProgress.user_id == current_user.id,
+        models.UserActivityProgress.activity_id == data.activity_id
+    ).first()
+
+    if data.completed:
+        if not progress_entry:
+            progress_entry = models.UserActivityProgress(
+                user_id=current_user.id,
+                module_slug=data.module_slug,
+                activity_id=data.activity_id,
+                completed=True,
+                completed_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            )
+            db.add(progress_entry)
+        else:
+            progress_entry.completed = True
+            progress_entry.completed_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        if progress_entry:
+            progress_entry.completed = False
+
+    db.commit()
+    return {"message": "Progresso atualizado com sucesso!", "activity_id": data.activity_id, "completed": data.completed}
+
+# ================================
+# Painel da Dona: Métricas & Gestão
+# ================================
+
+@app.get("/api/admin/metrics", response_model=schemas.AdminDashboardMetrics)
+def get_admin_dashboard_metrics(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
     if current_user.cargo not in ["dona", "desenvolvedor"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
+
+    # Módulos e total de atividades da plataforma
+    modules = db.query(models.Module).all()
+    all_activity_ids = []
+    for mod in modules:
+        all_activity_ids.extend(get_module_activity_ids(mod.slug_id, db))
+    
+    total_activities_count = len(all_activity_ids)
+    all_activity_set = set(all_activity_ids)
+
+    # Busca todos os alunos
+    students = db.query(models.User).filter(models.User.cargo == "aluno").all()
+    student_metrics = []
+    total_progress_sum = 0
+
+    for s in students:
+        s_records = db.query(models.UserActivityProgress).filter(
+            models.UserActivityProgress.user_id == s.id,
+            models.UserActivityProgress.completed == True
+        ).all()
         
-    media = db.query(models.MediaFile).filter(models.MediaFile.id == media_id).first()
-    if not media:
-        raise HTTPException(status_code=404, detail="Arquivo não encontrado")
+        s_completed_ids = [r.activity_id for r in s_records if r.activity_id in all_activity_set]
+        s_done = len(s_completed_ids)
+        s_pct = round((s_done / total_activities_count) * 100) if total_activities_count > 0 else 0
+        total_progress_sum += s_pct
+
+        student_metrics.append({
+            "id": s.id,
+            "nome": s.nome,
+            "email": s.email,
+            "email_verified": s.email_verified,
+            "foto_url": s.foto_url,
+            "completed_activities_count": s_done,
+            "total_activities_count": total_activities_count,
+            "progress_percentage": s_pct,
+            "is_certificate_eligible": s_pct >= 100 and s_done > 0
+        })
+
+    avg_progress = round(total_progress_sum / len(students)) if len(students) > 0 else 0
+
+    return {
+        "total_students": len(students),
+        "total_modules": len(modules),
+        "total_activities": total_activities_count,
+        "average_progress_percentage": avg_progress,
+        "students": student_metrics
+    }
+
+from fastapi.responses import Response
+
+@app.get("/api/admin/export-students-csv")
+def export_students_csv(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+
+    modules = db.query(models.Module).all()
+    all_activity_ids = []
+    for mod in modules:
+        all_activity_ids.extend(get_module_activity_ids(mod.slug_id, db))
+    
+    total_activities = len(all_activity_ids)
+    all_activity_set = set(all_activity_ids)
+    students = db.query(models.User).filter(models.User.cargo == "aluno").all()
+
+    # CSV com BOM UTF-8 para abrir no Excel em português
+    csv_lines = ["\ufeffNome;E-mail;E-mail Verificado;Atividades Concluidas;Total Atividades;Progresso (%);Certificado Liberado"]
+    
+    for s in students:
+        s_records = db.query(models.UserActivityProgress).filter(
+            models.UserActivityProgress.user_id == s.id,
+            models.UserActivityProgress.completed == True
+        ).all()
+        s_done = len([r.activity_id for r in s_records if r.activity_id in all_activity_set])
+        s_pct = round((s_done / total_activities) * 100) if total_activities > 0 else 0
+        verified_text = "Sim" if s.email_verified else "Nao"
+        cert_text = "Sim" if s_pct >= 100 and s_done > 0 else "Nao"
         
-    # Remover arquivo físico
-    file_path = media.file_url.lstrip("/") # de /static/uploads/x.jpg para static/uploads/x.jpg
-    if os.path.exists(file_path):
-        os.remove(file_path)
-        
-    db.delete(media)
-    db.commit()
-    return {"message": "Arquivo deletado"}
+        csv_lines.append(f"{s.nome};{s.email};{verified_text};{s_done};{total_activities};{s_pct}%;{cert_text}")
+
+    csv_content = "\n".join(csv_lines)
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=Alunos_Palieduca_{datetime.now().strftime('%Y%m%d')}.csv"}
+    )
+
+# ================================
+# Backup de Seguranca em 1 Clique
+# ================================
+
+@app.get("/api/admin/backup/export")
+def export_system_backup(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+
+    pages = db.query(models.PageContent).all()
+    modules = db.query(models.Module).all()
+    resources = db.query(models.InteractiveResource).all()
+
+    backup_data = {
+        "platform": "Palieduca",
+        "exported_at": datetime.now().isoformat(),
+        "exported_by": current_user.nome,
+        "pages": [{"page_name": p.page_name, "content": p.content, "draft_content": p.draft_content, "meta_title": p.meta_title, "meta_description": p.meta_description, "slug": p.slug} for p in pages],
+        "modules": [{"slug_id": m.slug_id, "title": m.title, "description": m.description, "icon_name": m.icon_name, "resources": m.resources, "image_url": m.image_url, "delay": m.delay} for m in modules],
+        "interactive_resources": [{"module_slug": r.module_slug, "type": r.type, "title": r.title, "content_json": r.content_json} for r in resources]
+    }
+
+    return backup_data
+
+@app.post("/api/admin/backup/restore")
+def restore_system_backup(
+    backup_data: dict,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+
+    try:
+        # Restaura páginas
+        for p in backup_data.get("pages", []):
+            page = db.query(models.PageContent).filter(models.PageContent.page_name == p["page_name"]).first()
+            if page:
+                page.content = p.get("content", "")
+                page.draft_content = p.get("draft_content")
+                page.meta_title = p.get("meta_title")
+                page.meta_description = p.get("meta_description")
+                page.slug = p.get("slug")
+            else:
+                db.add(models.PageContent(**p))
+
+        # Restaura módulos
+        for m in backup_data.get("modules", []):
+            mod = db.query(models.Module).filter(models.Module.slug_id == m["slug_id"]).first()
+            if mod:
+                mod.title = m.get("title", mod.title)
+                mod.description = m.get("description", mod.description)
+                mod.icon_name = m.get("icon_name", mod.icon_name)
+                mod.image_url = m.get("image_url", mod.image_url)
+            else:
+                db.add(models.Module(**m))
+
+        db.commit()
+        return {"message": "Backup restaurado com sucesso!"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro ao restaurar backup: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

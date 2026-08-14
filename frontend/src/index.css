@@ -199,3 +199,28 @@
     transform: scale(1.2);
     transition: transform 0.1s ease;
 }
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #printable-certificate, #printable-certificate * {
+        visibility: visible;
+    }
+    #printable-certificate {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        border: 4px solid #d97706 !important;
+        margin: 0 !important;
+        padding: 2.5rem !important;
+        background: white !important;
+        box-shadow: none !important;
+    }
+    .no-print {
+        display: none !important;
+    }
+}
+

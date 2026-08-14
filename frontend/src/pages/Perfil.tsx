@@ -1,8 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { UserCircle, LogOut, Settings, Users, BookOpen, Activity, Palette, KeyRound, Lock, X, CheckCircle2, AlertCircle, Loader2, ShieldCheck, Clock, Camera, Trash2, Globe, UploadCloud, Sparkles } from 'lucide-react';
+import { 
+    UserCircle, LogOut, Users, BookOpen, Palette, KeyRound, 
+    Lock, X, CheckCircle2, AlertCircle, Loader2, ShieldCheck, Clock, Camera, 
+    Trash2, Globe, UploadCloud, Sparkles, Download, Database, RefreshCw, 
+    Search, Award, CheckCheck, TrendingUp, Layers, ChevronRight
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { parseGoogleDriveUrl, parseZohoWorkDriveUrl, getFullMediaUrl } from '../utils/mediaUtils';
+import CertificateModal from '../components/CertificateModal';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://127.0.0.1:8000'
@@ -30,12 +36,119 @@ const Perfil: React.FC = () => {
     const [photoSuccess, setPhotoSuccess] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Certificate modal
+    const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+
+    // Admin & Teacher Analytics State (Dona / Desenvolvedor)
+    const [adminMetrics, setAdminMetrics] = useState<any>(null);
+    const [loadingAdminMetrics, setLoadingAdminMetrics] = useState(false);
+    const [studentSearch, setStudentSearch] = useState('');
+    const [backupLoading, setBackupLoading] = useState(false);
+    const [backupMessage, setBackupMessage] = useState('');
+    const backupFileRef = useRef<HTMLInputElement>(null);
+
+    // Student Progress State
+    const [studentProgress, setStudentProgress] = useState<any>(null);
+
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
 
-    // Client-side lightweight image compression (max 400x400, 80% quality)
+    // Busca métricas do painel administrativo se for Dona ou Dev
+    useEffect(() => {
+        if (token && user && (user.cargo === 'dona' || user.cargo === 'desenvolvedor')) {
+            setLoadingAdminMetrics(true);
+            fetch(`${API_URL}/api/admin/metrics`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => setAdminMetrics(data))
+            .catch(err => console.error('Erro ao buscar métricas da professora:', err))
+            .finally(() => setLoadingAdminMetrics(false));
+        }
+    }, [token, user]);
+
+    // Busca progresso do aluno se for aluno
+    useEffect(() => {
+        if (token && user) {
+            fetch(`${API_URL}/api/progress`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => setStudentProgress(data))
+            .catch(err => console.error('Erro ao buscar progresso do aluno:', err));
+        }
+    }, [token, user]);
+
+    // Exportar CSV de alunos
+    const handleExportCSV = () => {
+        window.open(`${API_URL}/api/admin/export-students-csv`, '_blank');
+    };
+
+    // Exportar Backup Completo JSON
+    const handleExportBackup = async () => {
+        setBackupLoading(true);
+        setBackupMessage('');
+        try {
+            const res = await fetch(`${API_URL}/api/admin/backup/export`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Erro ao gerar backup');
+            const data = await res.json();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Palieduca_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            setBackupMessage('Backup baixado com sucesso!');
+        } catch (err: any) {
+            setBackupMessage(err.message || 'Falha ao exportar backup');
+        } finally {
+            setBackupLoading(false);
+        }
+    };
+
+    // Restaurar Backup JSON
+    const handleRestoreBackup = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        if (!window.confirm('Tem certeza que deseja restaurar este backup? Os conteúdos existentes serão atualizados.')) {
+            return;
+        }
+
+        setBackupLoading(true);
+        setBackupMessage('');
+
+        try {
+            const fileText = await file.text();
+            const backupJson = JSON.parse(fileText);
+
+            const res = await fetch(`${API_URL}/api/admin/backup/restore`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(backupJson)
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'Erro ao restaurar backup');
+
+            setBackupMessage('Backup restaurado com sucesso! Recarregando...');
+            setTimeout(() => window.location.reload(), 1500);
+        } catch (err: any) {
+            setBackupMessage(err.message || 'Falha ao processar arquivo de backup');
+        } finally {
+            setBackupLoading(false);
+            if (backupFileRef.current) backupFileRef.current.value = '';
+        }
+    };
+
+    // Client-side lightweight image compression com corte quadrado centralizado 1:1 perfeito
     const compressImage = (file: File): Promise<Blob> => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -45,26 +158,17 @@ const Perfil: React.FC = () => {
                 img.src = event.target?.result as string;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX_SIZE = 400;
-                    let width = img.width;
-                    let height = img.height;
+                    
+                    // Corta o centro exato da foto em proporção 1:1 perfeita (evita esticar fotos verticais ou horizontais)
+                    const minDim = Math.min(img.width, img.height);
+                    const startX = (img.width - minDim) / 2;
+                    const startY = (img.height - minDim) / 2;
+                    const TARGET_SIZE = Math.min(minDim, 400);
 
-                    if (width > height) {
-                        if (width > MAX_SIZE) {
-                            height = Math.round((height * MAX_SIZE) / width);
-                            width = MAX_SIZE;
-                        }
-                    } else {
-                        if (height > MAX_SIZE) {
-                            width = Math.round((width * MAX_SIZE) / height);
-                            height = MAX_SIZE;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
+                    canvas.width = TARGET_SIZE;
+                    canvas.height = TARGET_SIZE;
                     const ctx = canvas.getContext('2d');
-                    ctx?.drawImage(img, 0, 0, width, height);
+                    ctx?.drawImage(img, startX, startY, minDim, minDim, 0, 0, TARGET_SIZE, TARGET_SIZE);
 
                     canvas.toBlob((blob) => {
                         if (blob) resolve(blob);
@@ -86,7 +190,6 @@ const Perfil: React.FC = () => {
         setPhotoSuccess('');
 
         try {
-            // Comprime a imagem no cliente antes de enviar para garantir velocidade máxima
             const compressedBlob = await compressImage(file);
             const formData = new FormData();
             formData.append('file', compressedBlob, `avatar_${Date.now()}.webp`);
@@ -226,6 +329,16 @@ const Perfil: React.FC = () => {
         }
     };
 
+    // Filtro de alunos para o painel da professora
+    const filteredStudents = useMemo(() => {
+        if (!adminMetrics?.students) return [];
+        if (!studentSearch.trim()) return adminMetrics.students;
+        const q = studentSearch.toLowerCase();
+        return adminMetrics.students.filter((s: any) => 
+            s.nome.toLowerCase().includes(q) || s.email.toLowerCase().includes(q)
+        );
+    }, [adminMetrics, studentSearch]);
+
     if (!user) {
         return (
             <div className="pt-32 text-center">
@@ -235,10 +348,13 @@ const Perfil: React.FC = () => {
     }
 
     const resolvedFotoUrl = user.foto_url ? getFullMediaUrl(user.foto_url) : null;
+    const overallStudentProgress = studentProgress?.overall_percentage ?? 0;
+    const isCertUnlocked = overallStudentProgress >= 100;
 
     return (
-        <main className="min-h-[85vh] pt-32 pb-20 px-4 max-w-5xl mx-auto">
+        <main className="min-h-[85vh] pt-32 pb-20 px-4 max-w-6xl mx-auto">
             <div className="flex flex-col md:flex-row gap-8">
+                
                 {/* Sidebar do Perfil */}
                 <div className="w-full md:w-1/3 glassmorphism p-6 rounded-3xl h-fit border border-warm-200 shadow-sm">
                     <div className="flex flex-col items-center text-center pb-6 border-b border-warm-100">
@@ -249,10 +365,10 @@ const Perfil: React.FC = () => {
                                 <img 
                                     src={resolvedFotoUrl} 
                                     alt={user.nome} 
-                                    className="w-24 h-24 rounded-full object-cover shadow-md border-2 border-primary/40 group-hover:opacity-90 transition-all"
+                                    className="w-24 h-24 rounded-full object-cover object-center aspect-square shrink-0 shadow-md border-2 border-primary/40 group-hover:opacity-90 transition-all"
                                 />
                             ) : (
-                                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary/20 to-primary/10 text-primary flex items-center justify-center shadow-inner border border-primary/20">
+                                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary/20 to-primary/10 text-primary flex items-center justify-center shadow-inner border border-primary/20 aspect-square shrink-0">
                                     <UserCircle size={64} />
                                 </div>
                             )}
@@ -309,78 +425,286 @@ const Perfil: React.FC = () => {
 
                 {/* Conteúdo Dinâmico por Cargo (RBAC) */}
                 <div className="w-full md:w-2/3 space-y-6">
-                    <div className="glassmorphism p-8 rounded-3xl border border-warm-200 shadow-sm">
-                        <h3 className="text-2xl font-bold text-warm-900 mb-6 flex items-center gap-2">
-                            <Settings className="text-primary" /> Painel de Controle
-                        </h3>
 
-                        {user.cargo === 'dona' && (
-                            <div className="space-y-8">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="p-6 bg-sage-50 rounded-2xl border border-sage-100 hover:shadow-md transition-all">
-                                        <Users size={32} className="text-sage-600 mb-4" />
-                                        <h4 className="font-semibold text-warm-900 mb-2">Gestão de Alunos</h4>
-                                        <p className="text-sm text-warm-600">Gerencie matrículas e acompanhe o engajamento da turma de Enfermagem.</p>
+                    {/* ======================================================== */}
+                    {/* PAINEL DA PROFESSORA / DONA / DESENVOLVEDOR              */}
+                    {/* ======================================================== */}
+                    {(user.cargo === 'dona' || user.cargo === 'desenvolvedor') && (
+                        <div className="space-y-6">
+                            
+                            {/* Cards de Métricas em Tempo Real */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                <div className="p-4 bg-white rounded-3xl border border-warm-200 shadow-xs">
+                                    <div className="p-2 w-9 h-9 rounded-xl bg-sage-100 text-sage-700 flex items-center justify-center mb-2">
+                                        <Users size={18} />
                                     </div>
-                                    <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 hover:shadow-md transition-all">
-                                        <BookOpen size={32} className="text-blue-600 mb-4" />
-                                        <h4 className="font-semibold text-warm-900 mb-2">Acervo Biblioteca</h4>
-                                        <p className="text-sm text-warm-600">Aprove artigos e gerencie referências científicas.</p>
-                                    </div>
+                                    <p className="text-[11px] font-bold text-warm-500 uppercase">Alunos</p>
+                                    <h4 className="text-2xl font-black text-warm-900 mt-0.5">
+                                        {adminMetrics?.total_students ?? 0}
+                                    </h4>
                                 </div>
-                                <div className="mt-8 bg-gradient-to-r from-primary to-secondary p-8 rounded-3xl text-white flex flex-col sm:flex-row items-center justify-between shadow-xl hover:shadow-2xl transition-all">
-                                    <div>
-                                        <h3 className="text-2xl font-bold mb-2 flex items-center gap-2"><Palette /> Estúdio de Criação</h3>
-                                        <p className="text-white/90 max-w-xl text-sm">Acesse o construtor de páginas em tela cheia com Inteligência Artificial e Live Preview.</p>
+
+                                <div className="p-4 bg-white rounded-3xl border border-warm-200 shadow-xs">
+                                    <div className="p-2 w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center mb-2">
+                                        <BookOpen size={18} />
                                     </div>
-                                    <button onClick={() => navigate('/editor')} className="mt-4 sm:mt-0 px-8 py-4 bg-white text-primary font-bold rounded-xl shadow-md hover:scale-105 transition-transform whitespace-nowrap cursor-pointer">
-                                        Abrir Estúdio
+                                    <p className="text-[11px] font-bold text-warm-500 uppercase">Módulos</p>
+                                    <h4 className="text-2xl font-black text-warm-900 mt-0.5">
+                                        {adminMetrics?.total_modules ?? 0}
+                                    </h4>
+                                </div>
+
+                                <div className="p-4 bg-white rounded-3xl border border-warm-200 shadow-xs">
+                                    <div className="p-2 w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center mb-2">
+                                        <Layers size={18} />
+                                    </div>
+                                    <p className="text-[11px] font-bold text-warm-500 uppercase">Atividades</p>
+                                    <h4 className="text-2xl font-black text-warm-900 mt-0.5">
+                                        {adminMetrics?.total_activities ?? 0}
+                                    </h4>
+                                </div>
+
+                                <div className="p-4 bg-white rounded-3xl border border-warm-200 shadow-xs">
+                                    <div className="p-2 w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center mb-2">
+                                        <TrendingUp size={18} />
+                                    </div>
+                                    <p className="text-[11px] font-bold text-warm-500 uppercase">Média Turma</p>
+                                    <h4 className="text-2xl font-black text-warm-900 mt-0.5">
+                                        {adminMetrics?.average_progress_percentage ?? 0}%
+                                    </h4>
+                                </div>
+                            </div>
+
+                            {/* Banner do Estúdio de Criação */}
+                            <div className="bg-gradient-to-r from-primary to-secondary p-7 rounded-3xl text-white flex flex-col sm:flex-row items-center justify-between shadow-xl hover:shadow-2xl transition-all">
+                                <div>
+                                    <h3 className="text-xl font-bold mb-1.5 flex items-center gap-2"><Palette /> Estúdio de Criação</h3>
+                                    <p className="text-white/90 text-xs max-w-md">Construa e edite páginas, quizzes e recursos interativos com Live Preview e Inteligência Artificial.</p>
+                                </div>
+                                <button onClick={() => navigate('/editor')} className="mt-4 sm:mt-0 px-6 py-3 bg-white text-primary font-bold rounded-2xl shadow-md hover:scale-105 transition-transform text-xs cursor-pointer whitespace-nowrap">
+                                    Abrir Estúdio
+                                </button>
+                            </div>
+
+                            {/* Tabela de Alunos & Gestão */}
+                            <div className="glassmorphism p-6 rounded-3xl border border-warm-200 shadow-sm bg-white">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+                                    <div>
+                                        <h3 className="text-lg font-bold text-warm-900 flex items-center gap-2">
+                                            <Users size={20} className="text-primary" /> Gestão de Alunos da Turma
+                                        </h3>
+                                        <p className="text-xs text-warm-500">Acompanhe o progresso real de cada aluno em tempo real</p>
+                                    </div>
+
+                                    <button
+                                        onClick={handleExportCSV}
+                                        className="flex items-center gap-1.5 px-4 py-2 bg-sage-100 hover:bg-sage-200 text-sage-800 rounded-xl font-bold text-xs border border-sage-300 transition-all cursor-pointer shadow-xs self-start sm:self-auto"
+                                    >
+                                        <Download size={14} /> Exportar Planilha (CSV/Excel)
                                     </button>
                                 </div>
-                            </div>
-                        )}
 
-                        {user.cargo === 'desenvolvedor' && (
-                            <div className="space-y-8">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="p-6 bg-purple-50 rounded-2xl border border-purple-100">
-                                        <Activity size={32} className="text-purple-600 mb-4" />
-                                        <h4 className="font-semibold text-warm-900 mb-2">Logs do Sistema</h4>
-                                        <p className="text-sm text-warm-600">Verifique a saúde do servidor, chamadas de API e performance.</p>
-                                    </div>
-                                    <div className="p-6 bg-gray-50 rounded-2xl border border-gray-200">
-                                        <Settings size={32} className="text-gray-600 mb-4" />
-                                        <h4 className="font-semibold text-warm-900 mb-2">Variáveis de Ambiente</h4>
-                                        <p className="text-sm text-warm-600">Configure integrações como OAuth do Google e API do Groq.</p>
-                                    </div>
+                                {/* Busca de Alunos */}
+                                <div className="relative mb-4">
+                                    <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warm-400" />
+                                    <input 
+                                        type="text"
+                                        value={studentSearch}
+                                        onChange={(e) => setStudentSearch(e.target.value)}
+                                        placeholder="Buscar aluno por nome ou e-mail..."
+                                        className="w-full pl-9 pr-4 py-2.5 bg-warm-50 border border-warm-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-primary"
+                                    />
                                 </div>
-                                <div className="mt-8 bg-gradient-to-r from-primary to-secondary p-8 rounded-3xl text-white flex flex-col sm:flex-row items-center justify-between shadow-xl hover:shadow-2xl transition-all">
-                                    <div>
-                                        <h3 className="text-2xl font-bold mb-2 flex items-center gap-2"><Palette /> Estúdio de Criação</h3>
-                                        <p className="text-white/90 max-w-xl text-sm">Acesse o construtor de páginas em tela cheia com Inteligência Artificial e Live Preview.</p>
+
+                                {/* Lista / Tabela */}
+                                {loadingAdminMetrics ? (
+                                    <div className="py-12 flex items-center justify-center">
+                                        <Loader2 size={28} className="animate-spin text-primary" />
                                     </div>
-                                    <button onClick={() => navigate('/editor')} className="mt-4 sm:mt-0 px-8 py-4 bg-white text-primary font-bold rounded-xl shadow-md hover:scale-105 transition-transform whitespace-nowrap cursor-pointer">
-                                        Abrir Estúdio
+                                ) : filteredStudents.length === 0 ? (
+                                    <div className="py-8 text-center text-warm-500 text-xs">
+                                        Nenhum aluno encontrado.
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left text-xs">
+                                            <thead>
+                                                <tr className="border-b border-warm-200 text-warm-500 uppercase font-bold text-[10px]">
+                                                    <th className="pb-2.5">Aluno</th>
+                                                    <th className="pb-2.5">E-mail</th>
+                                                    <th className="pb-2.5">Progresso</th>
+                                                    <th className="pb-2.5 text-center">Certificado</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-warm-100">
+                                                {filteredStudents.map((s: any) => (
+                                                    <tr key={s.id} className="hover:bg-warm-50/60 transition-colors">
+                                                        <td className="py-3 font-semibold text-warm-900 flex items-center gap-2">
+                                                            {s.foto_url ? (
+                                                                <img src={getFullMediaUrl(s.foto_url)} alt="" className="w-7 h-7 rounded-full object-cover" />
+                                                            ) : (
+                                                                <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                                                                    {s.nome[0]}
+                                                                </div>
+                                                            )}
+                                                            <span>{s.nome}</span>
+                                                        </td>
+                                                        <td className="py-3 text-warm-600">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span>{s.email}</span>
+                                                                {s.email_verified && (
+                                                                    <span title="E-mail Verificado">
+                                                                        <CheckCheck size={14} className="text-emerald-600 shrink-0" />
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-3">
+                                                            <div className="flex items-center gap-2 min-w-[120px]">
+                                                                <div className="flex-1 bg-warm-200 rounded-full h-2 overflow-hidden">
+                                                                    <div 
+                                                                        className="bg-primary h-2 rounded-full transition-all" 
+                                                                        style={{ width: `${s.progress_percentage}%` }}
+                                                                    />
+                                                                </div>
+                                                                <span className="font-bold text-[11px] text-warm-700">{s.progress_percentage}%</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-3 text-center">
+                                                            {s.is_certificate_eligible ? (
+                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                                                                    <Award size={11} /> Apto
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-warm-400 text-[11px] font-medium">
+                                                                    {s.completed_activities_count}/{s.total_activities_count}
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Central de Segurança e Backup em 1 Clique */}
+                            <div className="glassmorphism p-6 rounded-3xl border border-warm-200 shadow-sm bg-white">
+                                <h3 className="text-base font-bold text-warm-900 mb-2 flex items-center gap-2">
+                                    <Database size={18} className="text-primary" /> Central de Backup & Segurança
+                                </h3>
+                                <p className="text-xs text-warm-500 mb-4">
+                                    Faça o download de todos os conteúdos e páginas para o seu computador com 1 clique para segurança total.
+                                </p>
+
+                                {backupMessage && (
+                                    <div className="p-3 rounded-2xl bg-sage-50 text-sage-800 text-xs font-semibold border border-sage-200 mb-4 flex items-center gap-2">
+                                        <CheckCircle2 size={16} /> {backupMessage}
+                                    </div>
+                                )}
+
+                                <div className="flex flex-wrap gap-3">
+                                    <button
+                                        onClick={handleExportBackup}
+                                        disabled={backupLoading}
+                                        className="flex items-center gap-2 px-4 py-2.5 bg-warm-800 hover:bg-warm-900 text-white rounded-2xl font-bold text-xs shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                                    >
+                                        {backupLoading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                                        <span>Fazer Backup Completo (JSON)</span>
                                     </button>
-                                </div>
-                            </div>
-                        )}
 
-                        {user.cargo === 'aluno' && (
-                            <div className="grid grid-cols-1 gap-4">
-                                <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10">
-                                    <BookOpen size={32} className="text-primary mb-4" />
-                                    <h4 className="font-semibold text-warm-900 mb-2">Meu Progresso</h4>
-                                    <p className="text-sm text-warm-600 mb-4">Você completou 0% dos módulos de Cuidados Paliativos.</p>
-                                    <div className="w-full bg-warm-200 rounded-full h-2.5">
-                                        <div className="bg-primary h-2.5 rounded-full w-0"></div>
-                                    </div>
+                                    <button
+                                        onClick={() => backupFileRef.current?.click()}
+                                        disabled={backupLoading}
+                                        className="flex items-center gap-2 px-4 py-2.5 bg-warm-100 hover:bg-warm-200 text-warm-800 rounded-2xl font-bold text-xs border border-warm-300 transition-all cursor-pointer disabled:opacity-50"
+                                    >
+                                        <RefreshCw size={14} />
+                                        <span>Restaurar Backup</span>
+                                    </button>
+                                    <input 
+                                        type="file" 
+                                        ref={backupFileRef} 
+                                        accept=".json" 
+                                        className="hidden" 
+                                        onChange={handleRestoreBackup} 
+                                    />
                                 </div>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
+
+                    {/* ======================================================== */}
+                    {/* PAINEL DO ALUNO                                          */}
+                    {/* ======================================================== */}
+                    {user.cargo === 'aluno' && (
+                        <div className="glassmorphism p-8 rounded-3xl border border-warm-200 shadow-sm bg-white space-y-6">
+                            
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-warm-100">
+                                <div>
+                                    <h3 className="text-xl font-bold text-warm-900 flex items-center gap-2">
+                                        <BookOpen className="text-primary" /> Meu Progresso nos Cuidados Paliativos
+                                    </h3>
+                                    <p className="text-xs text-warm-500 mt-1">
+                                        Complete todas as atividades e quizzes para emitir seu Certificado Oficial da UFPB.
+                                    </p>
+                                </div>
+
+                                {isCertUnlocked && (
+                                    <button
+                                        onClick={() => setIsCertModalOpen(true)}
+                                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-2xl font-bold text-xs shadow-md hover:scale-105 transition-all cursor-pointer shrink-0"
+                                    >
+                                        <Award size={18} />
+                                        <span>Emitir Certificado (40h)</span>
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Barra de Progresso Geral */}
+                            <div className="p-6 bg-warm-50/70 rounded-3xl border border-warm-200">
+                                <div className="flex justify-between items-center mb-2.5 text-xs font-bold">
+                                    <span className="text-warm-700">Progresso Geral do Curso</span>
+                                    <span className="text-primary text-sm font-black">{overallStudentProgress}%</span>
+                                </div>
+                                <div className="w-full bg-warm-200 rounded-full h-3.5 overflow-hidden">
+                                    <div 
+                                        className="bg-gradient-to-r from-primary to-secondary h-3.5 rounded-full transition-all duration-500"
+                                        style={{ width: `${overallStudentProgress}%` }}
+                                    />
+                                </div>
+                                <div className="flex justify-between items-center mt-3 text-[11px] text-warm-500 font-medium">
+                                    <span>{studentProgress?.total_completed ?? 0} de {studentProgress?.total_activities ?? 0} atividades concluídas</span>
+                                    {isCertUnlocked ? (
+                                        <span className="text-emerald-700 font-bold flex items-center gap-1">
+                                            <CheckCircle2 size={13} /> 100% Concluído!
+                                        </span>
+                                    ) : (
+                                        <span>Faltam {(studentProgress?.total_activities ?? 0) - (studentProgress?.total_completed ?? 0)} para o Certificado</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Botão de Continuar Estudos */}
+                            <div className="pt-2">
+                                <button
+                                    onClick={() => navigate('/modulos')}
+                                    className="w-full py-3.5 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                                >
+                                    <span>Ir para as Trilhas de Aprendizagem</span>
+                                    <ChevronRight size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
+
+            {/* Modal do Certificado Oficial */}
+            <CertificateModal 
+                isOpen={isCertModalOpen} 
+                onClose={() => setIsCertModalOpen(false)} 
+            />
 
             {/* Modal de Foto de Perfil */}
             {isPhotoModalOpen && (
@@ -403,7 +727,7 @@ const Perfil: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Tabs de Envio: Computador ou Link */}
+                        {/* Tabs de Envio */}
                         <div className="flex bg-warm-100 p-1 rounded-2xl mb-5 text-xs font-semibold">
                             <button
                                 type="button"

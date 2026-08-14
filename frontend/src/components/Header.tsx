@@ -30,6 +30,15 @@ const Header: React.FC = () => {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
+    const getDisplayName = (fullName: string) => {
+        if (!fullName) return 'Perfil';
+        const parts = fullName.trim().split(/\s+/);
+        if (parts[0].toLowerCase().startsWith('prof') || parts[0].toLowerCase().startsWith('dr')) {
+            return parts.length > 1 ? `${parts[0]} ${parts[1]}` : parts[0];
+        }
+        return parts[0];
+    };
+
     return (
         <header className={`fixed top-0 w-full z-50 glassmorphism transition-all duration-300 ${scrolled ? 'shadow-lg' : ''}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,10 +48,12 @@ const Header: React.FC = () => {
                         <div className="bg-gradient-to-tr from-primary to-secondary p-2 rounded-xl text-white shadow-lg transform group-hover:scale-105 transition-transform">
                             <HeartPulse size={28} strokeWidth={2.5} />
                         </div>
-                        <span className="text-2xl font-bold gradient-text tracking-tight">Palieduca</span>
+                        <span className="font-bold text-2xl tracking-tight text-warm-900 group-hover:text-primary transition-colors">
+                            Pali<span className="text-primary">educa</span>
+                        </span>
                     </Link>
 
-                    <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
+                    <nav className="hidden md:flex items-center gap-1">
                         {NAV_ITEMS.map((item) => {
                             const isActive = location.pathname === item.to;
                             return (
@@ -64,17 +75,23 @@ const Header: React.FC = () => {
                     <div className="hidden md:flex items-center gap-4">
                         <SearchBar />
                         {user ? (
-                            <button onClick={() => navigate('/perfil')} className="flex items-center gap-2.5 px-4 py-2 bg-sage-100/80 text-sage-800 rounded-full font-semibold shadow-xs hover:bg-sage-200 transition-all border border-sage-200 text-xs cursor-pointer">
+                            <button 
+                                onClick={() => navigate('/perfil')} 
+                                className="flex items-center gap-2.5 pl-1.5 pr-4 py-1 bg-sage-100/90 text-sage-900 hover:bg-sage-200 rounded-full font-bold shadow-xs hover:shadow-sm transition-all border border-sage-300/90 text-xs cursor-pointer shrink-0"
+                                title={`Ver perfil de ${user.nome}`}
+                            >
                                 {user.foto_url ? (
                                     <img 
                                         src={getFullMediaUrl(user.foto_url)} 
                                         alt={user.nome} 
-                                        className="w-6 h-6 rounded-full object-cover border border-primary/30"
+                                        className="w-7 h-7 rounded-full object-cover object-center aspect-square shrink-0 border border-primary/30 shadow-2xs"
                                     />
                                 ) : (
-                                    <User size={16} />
+                                    <div className="w-7 h-7 rounded-full bg-sage-200/90 text-sage-800 flex items-center justify-center shrink-0 border border-sage-300">
+                                        <User size={15} />
+                                    </div>
                                 )}
-                                <span>{user.nome.split(' ')[0]}</span>
+                                <span className="whitespace-nowrap">{getDisplayName(user.nome)}</span>
                             </button>
                         ) : (
                             <button onClick={() => navigate('/login')} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-medium shadow-md hover:shadow-lg interactive-btn text-xs">
@@ -118,17 +135,17 @@ const Header: React.FC = () => {
 
                     <div className="pt-3 border-t border-warm-100 flex gap-2">
                         {user ? (
-                            <button onClick={() => navigate('/perfil')} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-sage-100 text-sage-700 rounded-full font-medium shadow-sm text-sm">
+                            <button onClick={() => navigate('/perfil')} className="flex-1 flex items-center justify-center gap-2.5 py-2.5 px-4 bg-sage-100 text-sage-800 rounded-full font-bold shadow-sm text-xs border border-sage-300">
                                 {user.foto_url ? (
                                     <img 
                                         src={getFullMediaUrl(user.foto_url)} 
                                         alt={user.nome} 
-                                        className="w-5 h-5 rounded-full object-cover"
+                                        className="w-6 h-6 rounded-full object-cover object-center aspect-square shrink-0"
                                     />
                                 ) : (
                                     <User size={16} />
                                 )}
-                                <span>{user.nome.split(' ')[0]}</span>
+                                <span className="whitespace-nowrap">{getDisplayName(user.nome)}</span>
                             </button>
                         ) : (
                             <button onClick={() => navigate('/login')} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-medium shadow-md text-sm">

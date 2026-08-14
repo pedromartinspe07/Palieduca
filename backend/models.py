@@ -65,3 +65,13 @@ class InteractiveResource(Base):
     type = Column(String) # 'quiz', 'flashcard', 'video', 'podcast'
     title = Column(String)
     content_json = Column(String) # Dados estruturados em JSON
+
+class UserActivityProgress(Base):
+    __tablename__ = "user_activity_progress"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True)
+    module_slug = Column(String, index=True)
+    activity_id = Column(String, index=True) # ID do bloco ou quiz
+    completed = Column(Boolean, default=False)
+    completed_at = Column(String, nullable=True) # Data ISO de conclusão

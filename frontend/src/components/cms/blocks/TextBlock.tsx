@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import type { BlockProps } from './types';
 
 const TextBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdate, onSelect }) => {
@@ -17,8 +17,25 @@ const TextBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
         textShadow = 'none'
     } = block.styles || {};
 
-    const handleTextChange = (text: string) => {
-        onUpdate(block.id, { data: { ...block.data, content: text } });
+    const textRef = useRef<HTMLDivElement>(null);
+    const isFocusedRef = useRef(false);
+
+    // Sincroniza o HTML inicial APENAS se o elemento não estiver com o foco ativo do usuário.
+    // Isso impede que o React recrie o innerHTML a cada Enter ou letra digitada, mantendo o cursor perfeitamente no lugar!
+    useEffect(() => {
+        if (textRef.current && !isFocusedRef.current) {
+            const fallbackHtml = '<p>Clique para editar este bloco de texto. Você pode usar <strong>negrito</strong>, <em>itálico</em>, listas e muito mais.</p>';
+            const targetHtml = content !== undefined && content !== null && content !== '' ? content : fallbackHtml;
+            if (textRef.current.innerHTML !== targetHtml) {
+                textRef.current.innerHTML = targetHtml;
+            }
+        }
+    }, [content]);
+
+    const handleTextChange = () => {
+        if (textRef.current) {
+            onUpdate(block.id, { data: { ...block.data, content: textRef.current.innerHTML } });
+        }
     };
 
     return (
@@ -34,11 +51,15 @@ const TextBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
         >
             <div className="max-w-[85rem] mx-auto px-6 py-6">
                 <div
+                    ref={textRef}
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}
-                    onInput={(e) => handleTextChange(e.currentTarget.innerHTML)}
-                    onBlur={(e) => handleTextChange(e.currentTarget.innerHTML)}
-                    dangerouslySetInnerHTML={{ __html: content || '<p>Clique para editar este bloco de texto. Você pode usar <strong>negrito</strong>, <em>itálico</em>, listas e muito mais.</p>' }}
+                    onFocus={() => { isFocusedRef.current = true; }}
+                    onBlur={() => { 
+                        isFocusedRef.current = false; 
+                        handleTextChange(); 
+                    }}
+                    onInput={handleTextChange}
                     className="prose prose-warm rich-text-content max-w-none outline-none transition-all duration-150"
                     style={{ 
                         fontSize: `${fontSize}px`, 
@@ -71,3 +92,4 @@ const TextBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
 };
 
 export default TextBlock;
+

@@ -121,3 +121,35 @@ class InteractiveResourceResponse(InteractiveResourceBase):
 
     class Config:
         from_attributes = True
+
+# Schemas de Progresso Granular
+class ActivityToggleRequest(BaseModel):
+    module_slug: str
+    activity_id: str
+    completed: bool
+
+class ActivityProgressResponse(BaseModel):
+    completed_activities: list[str] # Lista de IDs concluídos
+    module_progress: dict[str, dict] # { "fundamentos": { "completed": 2, "total": 4, "percentage": 50 } }
+    overall_percentage: int # Porcentagem global do curso
+    total_completed: int
+    total_activities: int
+
+# Schemas de Gestão da Dona / Admin
+class StudentMetricItem(BaseModel):
+    id: int
+    nome: str
+    email: str
+    email_verified: bool
+    foto_url: Optional[str] = None
+    completed_activities_count: int
+    total_activities_count: int
+    progress_percentage: int
+    is_certificate_eligible: bool
+
+class AdminDashboardMetrics(BaseModel):
+    total_students: int
+    total_modules: int
+    total_activities: int
+    average_progress_percentage: int
+    students: list[StudentMetricItem]

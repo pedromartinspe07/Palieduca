@@ -6,6 +6,8 @@ import { Stethoscope, Users, HeartPulse, Brain, HeartHandshake, Scale } from 'lu
 import BlockRenderer from '../components/cms/blocks/BlockRenderer';
 import type { BlockData } from '../components/cms/blocks/types';
 
+import { useAuth } from '../context/AuthContext';
+
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://127.0.0.1:8000'
   : 'https://palieduca.onrender.com';
@@ -38,12 +40,14 @@ interface ModulosProps {
 }
 
 const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentChange }) => {
+    const { token } = useAuth();
     const [content, setContent] = useState<any>(initialContent || { 
         title: 'Módulos de Aprendizagem',
         intro: 'Bem-vindo à área de módulos. Escolha um módulo abaixo para começar a aprender.'
     });
     const [blocks, setBlocks] = useState<BlockData[] | null>(null);
     const [modules, setModules] = useState<ModuleData[]>([]);
+    const [moduleProgressMap, setModuleProgressMap] = useState<Record<string, { completed: number; total: number; percentage: number }>>({});
     const [loadingContent, setLoadingContent] = useState(!initialContent);
     const [loadingModules, setLoadingModules] = useState(true);
 
@@ -84,7 +88,21 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
             .then(data => setModules(data))
             .catch(err => console.error(err))
             .finally(() => setLoadingModules(false));
-    }, [isEditing, initialContent]);
+
+        // Fetch Real User Progress
+        if (token) {
+            fetch(`${API_URL}/api/progress`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.module_progress) {
+                    setModuleProgressMap(data.module_progress);
+                }
+            })
+            .catch(err => console.error('Erro ao buscar progresso:', err));
+        }
+    }, [isEditing, initialContent, token]);
 
     const handleTextChange = (field: string, text: string) => {
         const newContent = { ...content, [field]: text };
@@ -141,20 +159,23 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
                 <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 ${isEditing ? 'pointer-events-none opacity-80' : ''}`}>
                     {loadingModules
                         ? Array.from({ length: 6 }).map((_, i) => <ModuleCardSkeleton key={i} />)
-                        : modules.map(module => (
-                            <div id={module.slug_id} key={module.id}>
-                                <ModuleCard 
-                                    id={module.slug_id}
-                                    title={module.title}
-                                    description={module.description}
-                                    icon={iconMap[module.icon_name] || <Stethoscope size={24} />}
-                                    progress={module.progress}
-                                    resources={module.resources.split(',').map(s => s.trim())}
-                                    image={module.image_url}
-                                    delay={module.delay / 10}
-                                />
-                            </div>
-                        ))
+                        : modules.map(module => {
+                            const realProgress = moduleProgressMap[module.slug_id]?.percentage ?? 0;
+                            return (
+                                <div id={module.slug_id} key={module.id}>
+                                    <ModuleCard 
+                                        id={module.slug_id}
+                                        title={module.title}
+                                        description={module.description}
+                                        icon={iconMap[module.icon_name] || <Stethoscope size={24} />}
+                                        progress={realProgress}
+                                        resources={module.resources.split(',').map(s => s.trim())}
+                                        image={module.image_url}
+                                        delay={module.delay / 10}
+                                    />
+                                </div>
+                            );
+                        })
                     }
                 </div>
             </div>
