@@ -1,3 +1,4 @@
+import os
 from database import SessionLocal, engine
 import models
 from auth import get_password_hash
@@ -13,28 +14,30 @@ def seed_users():
             db.commit()
             print("Cargo da Dona Patrícia atualizado para 'dona'.")
 
-        # Verifica se já existem usuários
+        # Verifica se já existem usuários no banco de dados
         if db.query(models.User).count() > 0:
             print("Usuários já foram criados no banco de dados.")
             return
             
+        initial_pwd = os.getenv("INITIAL_ADMIN_PASSWORD", "palieduca_admin_init")
+
         usuarios_iniciais = [
             {
                 "nome": "Prof.ª Patrícia Maria de Oliveira Andrade",
                 "email": "patriciaandrade@palieduca.com.br",
-                "senha": "senha_temporaria123" if not "051819pA@" else "051819pA@",
+                "senha": initial_pwd,
                 "cargo": "dona"
             },
             {
                 "nome": "Pedro Martins",
                 "email": "pedro@palieduca.com.br",
-                "senha": "senha_temporaria123",
+                "senha": initial_pwd,
                 "cargo": "desenvolvedor"
             },
             {
                 "nome": "Carlos Eduardo",
                 "email": "eduardo@palieduca.com.br",
-                "senha": "senha_temporaria123",
+                "senha": initial_pwd,
                 "cargo": "desenvolvedor"
             }
         ]
