@@ -7,12 +7,34 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
   ? 'http://127.0.0.1:8000'
   : 'https://palieduca.onrender.com';
 
+const roundedMap: Record<string, string> = {
+    'none': 'rounded-none',
+    'sm': 'rounded-sm',
+    'md': 'rounded-md',
+    'lg': 'rounded-lg',
+    'xl': 'rounded-xl',
+    '2xl': 'rounded-2xl',
+    '3xl': 'rounded-3xl',
+    'full': 'rounded-full',
+};
+
 const ImageBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdate, onSelect }) => {
-    const { src, alt, caption } = block.data;
-    const { objectFit = 'cover', rounded = 'xl', height = 400, containerWidth = 'max-w-4xl' } = block.styles || {};
+    const { src, alt, caption } = block.data || {};
+    const { 
+        objectFit = 'contain', 
+        rounded = 'xl', 
+        height, 
+        heightMode = (height && height !== 'auto' && objectFit === 'cover' ? 'fixed' : 'auto'),
+        containerWidth = 'max-w-4xl',
+        alignment = 'center'
+    } = block.styles || {};
     
     const [isDragging, setIsDragging] = useState(false);
     const [uploading, setUploading] = useState(false);
+
+    const roundedClass = roundedMap[rounded] || 'rounded-xl';
+    const alignmentClass = alignment === 'left' ? 'items-start text-left' : alignment === 'right' ? 'items-end text-right' : 'items-center text-center';
+    const alignSelfClass = alignment === 'left' ? 'mr-auto' : alignment === 'right' ? 'ml-auto' : 'mx-auto';
 
     const handleDragOver = (e: React.DragEvent) => {
         if (!isEditing) return;
@@ -45,20 +67,23 @@ const ImageBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpda
 
     const uploadImage = async (file: File) => {
         setUploading(true);
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('palieduca_token') || localStorage.getItem('token');
         const formData = new FormData();
         formData.append('file', file);
 
         try {
             const res = await fetch(`${API_URL}/api/media/upload`, {
                 method: 'POST',
-                headers: { Authorization: `Bearer ${token}` },
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
                 body: formData
             });
 
             if (res.ok) {
                 const data = await res.json();
-                onUpdate(block.id, { data: { ...block.data, src: data.file_url } });
+                onUpdate(block.id, { 
+                    data: { ...block.data, src: data.file_url, originalSrc: data.file_url },
+                    styles: { ...block.styles, objectFit: 'contain', heightMode: 'auto' }
+                });
             } else {
                 alert('Falha ao fazer upload da imagem.');
             }
@@ -70,6 +95,8 @@ const ImageBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpda
         }
     };
 
+    const isFixed = heightMode === 'fixed' && typeof height === 'number';
+
     return (
         <div 
             onClick={(e) => {
@@ -79,19 +106,19 @@ const ImageBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpda
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`relative w-full py-6 px-4 transition-all duration-200 flex flex-col items-center justify-center ${
+            className={`relative w-full py-6 px-4 transition-all duration-200 flex flex-col ${alignmentClass} justify-center ${
                 isEditing ? 'cursor-pointer' : ''
             } ${
-                isSelected ? 'ring-4 ring-primary ring-inset z-10 rounded-xl' : 'hover:ring-2 hover:ring-blue-400/50 hover:ring-inset rounded-xl'
+                isSelected ? 'ring-4 ring-primary ring-inset z-10 rounded-2xl' : 'hover:ring-2 hover:ring-blue-400/50 hover:ring-inset rounded-2xl'
             } ${isDragging ? 'bg-primary/5 ring-4 ring-primary ring-inset' : ''}`}
         >
-            <div className={`w-full ${containerWidth} mx-auto relative group`}>
+            <div className={`w-full ${containerWidth} ${alignSelfClass} relative group`}>
                 {!src ? (
                     <div 
-                        className={`w-full bg-warm-100 border-2 border-dashed flex flex-col items-center justify-center rounded-${rounded} transition-colors ${
+                        className={`w-full bg-warm-100 border-2 border-dashed flex flex-col items-center justify-center ${roundedClass} transition-colors ${
                             isDragging ? 'border-primary bg-primary/10' : 'border-warm-300'
                         }`}
-                        style={{ height: `${height}px` }}
+                        style={{ minHeight: isFixed ? `${height}px` : '300px' }}
                     >
                         {uploading ? (
                             <Loader2 className="animate-spin text-primary" size={40} />
@@ -105,22 +132,28 @@ const ImageBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpda
                     </div>
                 ) : (
                     <div 
-                        className={`relative w-full overflow-hidden rounded-${rounded}`}
-                        style={{ height: `${height}px` }}
+                        className={`relative w-full ${roundedClass} ${isFixed ? 'overflow-hidden' : 'flex justify-center'}`}
+                        style={isFixed ? { height: `${height}px` } : undefined}
                     >
                         {uploading && (
-                            <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                            <div className={`absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center ${roundedClass}`}>
                                 <Loader2 className="animate-spin text-primary" size={40} />
                             </div>
                         )}
                         <img 
                             src={getFullMediaUrl(src)} 
                             alt={alt || "Imagem"} 
-                            className="w-full h-full transition-transform duration-500 hover:scale-105"
-                            style={{ objectFit: objectFit as React.CSSProperties['objectFit'] }}
+                            className={`transition-all duration-300 ${
+                                isFixed 
+                                    ? `w-full h-full ${roundedClass}` 
+                                    : `w-auto max-w-full h-auto max-h-[85vh] block ${roundedClass} shadow-sm`
+                            }`}
+                            style={{ 
+                                objectFit: (isFixed ? objectFit : 'contain') as React.CSSProperties['objectFit'] 
+                            }}
                         />
                         {isEditing && isDragging && (
-                            <div className="absolute inset-0 bg-primary/20 backdrop-blur-[2px] z-20 flex items-center justify-center border-4 border-primary rounded-xl">
+                            <div className={`absolute inset-0 bg-primary/20 backdrop-blur-[2px] z-20 flex items-center justify-center border-4 border-primary ${roundedClass}`}>
                                 <span className="bg-white px-4 py-2 rounded-full font-bold text-primary shadow-lg">Soltar Imagem</span>
                             </div>
                         )}
@@ -143,7 +176,7 @@ const ImageBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpda
             </div>
 
             {isSelected && (
-                <div className="absolute top-3 right-3 bg-primary text-white text-xs px-2 py-1 rounded-md font-bold shadow z-30">
+                <div className="absolute top-3 right-3 bg-primary text-white text-xs px-2.5 py-1 rounded-lg font-bold shadow-md z-30">
                     Bloco de Imagem
                 </div>
             )}

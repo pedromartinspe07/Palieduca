@@ -6,12 +6,13 @@ import {
     Crop, RotateCcw, RotateCw, Monitor, Tablet, Smartphone,
     Globe, Share2, AlertCircle, RefreshCw, AlignLeft, AlignCenter, AlignRight, AlignJustify,
     Underline, Strikethrough, Pipette, Wand2, Search, Check, Plus, CheckCheck,
-    ExternalLink, Link as LinkIcon
+    ExternalLink, Link as LinkIcon, History
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BlockRenderer from './blocks/BlockRenderer';
 import MediaLibrary from './MediaLibrary';
 import ImageCropperModal from './ImageCropperModal';
+import VersionHistoryPanel from './VersionHistoryPanel';
 import ModuleEditor from './ModuleEditor';
 import WixFloatingToolbar from './WixFloatingToolbar';
 import type { BlockData } from './blocks/types';
@@ -96,7 +97,7 @@ const [showPublishModal, setShowPublishModal] = useState(false);
 const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 // Canva Sidebar State
-const [leftSidebarTab, setLeftSidebarTab] = useState<'blocos' | 'midia' | 'configs' | null>('blocos');
+const [leftSidebarTab, setLeftSidebarTab] = useState<'blocos' | 'midia' | 'historico' | 'configs' | null>('blocos');
 
 // AI Copilot & Agent States
 const [rightSidebarTab, setRightSidebarTab] = useState<'properties' | 'ai' | 'images'>('properties');
@@ -714,9 +715,21 @@ className="px-3 sm:px-4 py-1.5 text-xs font-bold text-white bg-primary hover:bg-
             className={`flex flex-col items-center gap-1.5 w-14 py-2.5 rounded-xl transition-all ${
                 leftSidebarTab === 'midia' ? 'text-white bg-white/10' : 'text-warm-400 hover:text-white hover:bg-white/5'
             }`}
+            title="Biblioteca de Mídia"
         >
             <ImageIcon size={22} className={leftSidebarTab === 'midia' ? 'drop-shadow-md' : ''} />
             <span className="text-[10px] font-medium tracking-wide">Uploads</span>
+        </button>
+
+        <button
+            onClick={() => setLeftSidebarTab(leftSidebarTab === 'historico' ? null : 'historico')}
+            className={`flex flex-col items-center gap-1.5 w-14 py-2.5 rounded-xl transition-all ${
+                leftSidebarTab === 'historico' ? 'text-white bg-white/10' : 'text-warm-400 hover:text-white hover:bg-white/5'
+            }`}
+            title="Histórico de Versões / Snapshots"
+        >
+            <History size={22} className={leftSidebarTab === 'historico' ? 'drop-shadow-md' : ''} />
+            <span className="text-[10px] font-medium tracking-wide">Histórico</span>
         </button>
 
         <button
@@ -724,6 +737,7 @@ className="px-3 sm:px-4 py-1.5 text-xs font-bold text-white bg-primary hover:bg-
             className={`flex flex-col items-center gap-1.5 w-14 py-2.5 rounded-xl transition-all ${
                 leftSidebarTab === 'configs' ? 'text-white bg-white/10' : 'text-warm-400 hover:text-white hover:bg-white/5'
             }`}
+            title="SEO e Configurações"
         >
             <Globe size={22} className={leftSidebarTab === 'configs' ? 'drop-shadow-md' : ''} />
             <span className="text-[10px] font-medium tracking-wide">SEO</span>
@@ -732,7 +746,7 @@ className="px-3 sm:px-4 py-1.5 text-xs font-bold text-white bg-primary hover:bg-
 
     {/* Secondary Expanding Panel */}
     <div className={`bg-white border-r border-warm-200 flex flex-col z-40 overflow-hidden shadow-lg transition-all duration-300 ease-in-out ${
-        leftSidebarTab !== null ? 'w-[340px] opacity-100' : 'w-0 opacity-0 border-r-0'
+        leftSidebarTab === 'midia' || leftSidebarTab === 'historico' ? 'w-[360px] sm:w-[380px] opacity-100' : leftSidebarTab !== null ? 'w-[340px] opacity-100' : 'w-0 opacity-0 border-r-0'
     }`}>
         {leftSidebarTab === 'blocos' && (
             <>
@@ -773,7 +787,7 @@ className="px-3 sm:px-4 py-1.5 text-xs font-bold text-white bg-primary hover:bg-
                             updateBlock(selectedBlockId, { data: { ...block.data, bgImage: url } });
                             showToast('Imagem selecionada para o bloco!');
                         } else if (block && block.type === 'ImageBlock') {
-                            updateBlock(selectedBlockId, { data: { ...block.data, src: url } });
+                            updateBlock(selectedBlockId, { data: { ...block.data, src: url, originalSrc: url } });
                             showToast('Imagem selecionada para o bloco!');
                         } else {
                             showToast('O bloco selecionado não suporta imagem.');
@@ -782,6 +796,21 @@ className="px-3 sm:px-4 py-1.5 text-xs font-bold text-white bg-primary hover:bg-
                         showToast('Nenhum bloco selecionado para receber a imagem.');
                     }
                 }} />
+            </div>
+        )}
+
+        {leftSidebarTab === 'historico' && (
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
+                <VersionHistoryPanel
+                    pageIdentifier={`page_${selectedPage}`}
+                    pageTitle={PAGES_AVAILABLE.find(p => p.id === selectedPage)?.label || 'Página do Site'}
+                    currentBlocks={blocks}
+                    onRestoreVersion={(restoredBlocks) => {
+                        setBlocksWithHistory(restoredBlocks);
+                        setIsDirty(true);
+                    }}
+                    showToast={showToast}
+                />
             </div>
         )}
 
@@ -1724,23 +1753,37 @@ onSelect={setSelectedBlockId}
                                 </div>
                             </div>
 
-                            {/* 6. Entrelinha (Line Height) e Tracking (Letter Spacing) */}
-                            <div className="grid grid-cols-2 gap-3">
+                            {/* 6. Entrelinha (Line Height), Espaço Parágrafo e Tracking (Letter Spacing) */}
+                            <div className="grid grid-cols-3 gap-2">
                                 <div>
-                                    <label className="block text-[11px] font-bold text-warm-700 mb-1">Entrelinha (Leading)</label>
+                                    <label className="block text-[10px] font-bold text-warm-700 mb-1">Entrelinha</label>
                                     <select
-                                        value={selectedBlock.styles?.lineHeight || '1.6'}
+                                        value={selectedBlock.styles?.lineHeight || '1.4'}
                                         onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, lineHeight: e.target.value } })}
                                         className="w-full bg-warm-50 border border-warm-200 rounded-xl px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary outline-none"
                                     >
-                                        <option value="1.2">Compacto (1.2)</option>
-                                        <option value="1.5">Padrão (1.5)</option>
-                                        <option value="1.8">Confortável (1.8)</option>
-                                        <option value="2.2">Espaçoso (2.2)</option>
+                                        <option value="1.15">Compacto (1.15)</option>
+                                        <option value="1.4">Padrão (1.4)</option>
+                                        <option value="1.7">Confortável (1.7)</option>
+                                        <option value="2.0">Espaçoso (2.0)</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-[11px] font-bold text-warm-700 mb-1">Letras (Tracking)</label>
+                                    <label className="block text-[10px] font-bold text-warm-700 mb-1">Espaço Parágrafo</label>
+                                    <select
+                                        value={selectedBlock.styles?.paragraphSpacing || '0px'}
+                                        onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, paragraphSpacing: e.target.value } })}
+                                        className="w-full bg-warm-50 border border-warm-200 rounded-xl px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary outline-none"
+                                    >
+                                        <option value="0px">Nenhum (0px)</option>
+                                        <option value="4px">Pequeno (4px)</option>
+                                        <option value="8px">Suave (8px)</option>
+                                        <option value="16px">Médio (16px)</option>
+                                        <option value="24px">Grande (24px)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-warm-700 mb-1">Letras (Tracking)</label>
                                     <select
                                         value={selectedBlock.styles?.letterSpacing || 'normal'}
                                         onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, letterSpacing: e.target.value } })}
@@ -1871,61 +1914,147 @@ onSelect={setSelectedBlockId}
                         <div className="space-y-4">
                             <h4 className="text-xs font-bold text-warm-500 uppercase tracking-wider">Estilo da Imagem</h4>
                             {selectedBlock.data.src && (
-                                <button 
-                                    onClick={() => setCroppingImage(selectedBlock.data.src)}
-                                    className="w-full mb-4 px-4 py-2.5 bg-primary/10 text-primary font-bold rounded-xl hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
-                                >
-                                    <Crop size={16} /> Recortar Imagem
-                                </button>
+                                <div className="space-y-2">
+                                    <button 
+                                        onClick={() => setCroppingImage(selectedBlock.data.originalSrc || selectedBlock.data.src)}
+                                        className="w-full px-4 py-2.5 bg-primary/10 text-primary font-bold rounded-xl hover:bg-primary/20 transition-colors flex items-center justify-center gap-2 text-sm shadow-sm"
+                                    >
+                                        <Crop size={16} /> Recortar / Ajustar Imagem
+                                    </button>
+                                    {selectedBlock.data.originalSrc && (
+                                        <button 
+                                            type="button"
+                                            onClick={() => {
+                                                updateBlock(selectedBlock.id, { 
+                                                    data: { ...selectedBlock.data, src: selectedBlock.data.originalSrc },
+                                                    styles: { ...selectedBlock.styles, objectFit: 'contain', heightMode: 'auto' }
+                                                });
+                                                showToast('Imagem original restaurada!');
+                                            }}
+                                            className="w-full px-3 py-2 bg-warm-100 hover:bg-warm-200 text-warm-700 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 text-xs border border-warm-200"
+                                        >
+                                            <RotateCcw size={14} /> Restaurar Imagem Original
+                                        </button>
+                                    )}
+                                </div>
                             )}
+
                             <div>
-                                <label className="block text-xs font-medium text-warm-600 mb-1">Preenchimento (Object Fit)</label>
-                                <select
-                                    value={selectedBlock.styles?.objectFit || 'cover'}
-                                    onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, objectFit: e.target.value } })}
-                                    className="w-full bg-warm-50 border border-warm-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-                                >
-                                    <option value="cover">Preencher (Corta bordas)</option>
-                                    <option value="contain">Conter (Mostra inteira)</option>
-                                    <option value="fill">Esticar</option>
-                                </select>
+                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Enquadramento da Imagem</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => updateBlock(selectedBlock.id, { 
+                                            styles: { 
+                                                ...selectedBlock.styles, 
+                                                objectFit: 'contain',
+                                                heightMode: 'auto'
+                                            } 
+                                        })}
+                                        className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all ${
+                                            (selectedBlock.styles?.objectFit || 'contain') === 'contain' && selectedBlock.styles?.heightMode !== 'fixed'
+                                                ? 'bg-primary text-white border-primary shadow-sm'
+                                                : 'bg-white text-warm-700 border-warm-200 hover:bg-warm-50'
+                                        }`}
+                                    >
+                                        Imagem Inteira (Sem corte)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => updateBlock(selectedBlock.id, { 
+                                            styles: { 
+                                                ...selectedBlock.styles, 
+                                                objectFit: 'cover',
+                                                heightMode: 'fixed',
+                                                height: selectedBlock.styles?.height || 400
+                                            } 
+                                        })}
+                                        className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all ${
+                                            selectedBlock.styles?.objectFit === 'cover' || selectedBlock.styles?.heightMode === 'fixed'
+                                                ? 'bg-primary text-white border-primary shadow-sm'
+                                                : 'bg-white text-warm-700 border-warm-200 hover:bg-warm-50'
+                                        }`}
+                                    >
+                                        Preencher / Altura Fixa
+                                    </button>
+                                </div>
                             </div>
+
+                            {selectedBlock.styles?.heightMode === 'fixed' && (
+                                <div>
+                                    <div className="flex items-center justify-between text-xs font-medium text-warm-600 mb-1">
+                                        <span>Altura Fixa</span>
+                                        <span className="font-bold text-primary">{selectedBlock.styles?.height || 400}px</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="150"
+                                        max="800"
+                                        step="25"
+                                        value={selectedBlock.styles?.height || 400}
+                                        onChange={(e) => updateBlock(selectedBlock.id, { 
+                                            styles: { 
+                                                ...selectedBlock.styles, 
+                                                height: parseInt(e.target.value),
+                                                heightMode: 'fixed'
+                                            } 
+                                        })}
+                                        className="w-full accent-primary"
+                                    />
+                                </div>
+                            )}
+
                             <div>
-                                <label className="block text-xs font-medium text-warm-600 mb-1">Bordas Arredondadas</label>
-                                <select
-                                    value={selectedBlock.styles?.rounded || 'xl'}
-                                    onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, rounded: e.target.value } })}
-                                    className="w-full bg-warm-50 border border-warm-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-                                >
-                                    <option value="none">Quadrado</option>
-                                    <option value="md">Suave</option>
-                                    <option value="xl">Médio</option>
-                                    <option value="2xl">Grande</option>
-                                    <option value="full">Círculo</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-warm-600 mb-1">Altura Máxima</label>
-                                <input
-                                    type="range" min="100" max="800" step="50"
-                                    value={selectedBlock.styles?.height ?? 400}
-                                    onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, height: parseInt(e.target.value) } })}
-                                    className="w-full accent-primary"
-                                />
-                                <div className="text-[10px] text-right text-warm-400">{selectedBlock.styles?.height ?? 400}px</div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-warm-600 mb-1">Largura</label>
+                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Largura Máxima do Bloco</label>
                                 <select
                                     value={selectedBlock.styles?.containerWidth || 'max-w-4xl'}
                                     onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, containerWidth: e.target.value } })}
-                                    className="w-full bg-warm-50 border border-warm-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                    className="w-full bg-white border border-warm-200 rounded-xl px-3 py-2 text-xs font-medium text-warm-800 focus:ring-2 focus:ring-primary outline-none"
                                 >
-                                    <option value="max-w-md">Estreita</option>
-                                    <option value="max-w-2xl">Média</option>
-                                    <option value="max-w-4xl">Larga</option>
-                                    <option value="max-w-6xl">Super Larga</option>
-                                    <option value="w-full">Tela Inteira</option>
+                                    <option value="max-w-md">Pequena (500px)</option>
+                                    <option value="max-w-2xl">Média (700px)</option>
+                                    <option value="max-w-4xl">Padrão (900px)</option>
+                                    <option value="max-w-6xl">Larga (1200px)</option>
+                                    <option value="w-full">100% da Tela</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Alinhamento</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[
+                                        { label: 'Esquerda', value: 'left' },
+                                        { label: 'Centro', value: 'center' },
+                                        { label: 'Direita', value: 'right' }
+                                    ].map((align) => (
+                                        <button
+                                            key={align.value}
+                                            type="button"
+                                            onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, alignment: align.value } })}
+                                            className={`py-1.5 text-xs font-bold rounded-lg border transition-all ${
+                                                (selectedBlock.styles?.alignment || 'center') === align.value
+                                                    ? 'bg-primary text-white border-primary shadow-sm'
+                                                    : 'bg-white text-warm-700 border-warm-200 hover:bg-warm-50'
+                                            }`}
+                                        >
+                                            {align.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Bordas Arredondadas</label>
+                                <select
+                                    value={selectedBlock.styles?.rounded || 'xl'}
+                                    onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, rounded: e.target.value } })}
+                                    className="w-full bg-white border border-warm-200 rounded-xl px-3 py-2 text-xs font-medium text-warm-800 focus:ring-2 focus:ring-primary outline-none"
+                                >
+                                    <option value="none">Nenhum (Reto)</option>
+                                    <option value="md">Suave</option>
+                                    <option value="xl">Médio (Padrão)</option>
+                                    <option value="2xl">Grande</option>
+                                    <option value="full">Círculo / Oval</option>
                                 </select>
                             </div>
                         </div>
@@ -2059,16 +2188,22 @@ Confirmar
 {croppingImage && (
     <ImageCropperModal
         imageUrl={croppingImage}
+        originalUrl={selectedBlock?.data?.originalSrc || croppingImage}
         onClose={() => setCroppingImage(null)}
         onCropComplete={(newUrl) => {
             if (selectedBlockId) {
                 const block = blocks.find(b => b.id === selectedBlockId);
+                const orig = block?.data?.originalSrc || croppingImage;
+                const isRestoring = newUrl === orig;
                 if (block && block.type === 'HeroBlock') {
-                    updateBlock(selectedBlockId, { data: { ...block.data, bgImage: newUrl } });
+                    updateBlock(selectedBlockId, { data: { ...block.data, bgImage: newUrl, originalBgImage: orig } });
                 } else if (block && block.type === 'ImageBlock') {
-                    updateBlock(selectedBlockId, { data: { ...block.data, src: newUrl } });
+                    updateBlock(selectedBlockId, { 
+                        data: { ...block.data, src: newUrl, originalSrc: orig },
+                        styles: { ...block.styles, objectFit: 'contain', heightMode: 'auto' }
+                    });
                 }
-                showToast('Imagem recortada com sucesso!');
+                showToast(isRestoring ? 'Imagem original mantida!' : 'Imagem recortada com sucesso!');
             }
             setCroppingImage(null);
         }}

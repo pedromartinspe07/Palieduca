@@ -83,6 +83,11 @@ class PageContentResponse(PageContentBase):
     class Config:
         from_attributes = True
 
+class PageRevisionCreate(BaseModel):
+    content: str
+    description: Optional[str] = "Ponto de restauração manual"
+    author_name: Optional[str] = None
+
 class PageRevisionResponse(BaseModel):
     id: int
     page_name: str

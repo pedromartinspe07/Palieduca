@@ -50,10 +50,28 @@
 
   /* Garante espaçamento real de parágrafos e quebras de linha sem parecer duplo */
   .custom-quill .ql-editor p,
-  .rich-text-content p {
-    margin-bottom: 0.75rem !important;
-    line-height: 1.6;
+  .rich-text-content p,
+  .rich-text-content div,
+  [contenteditable="true"] p,
+  [contenteditable="true"] div {
+    margin-top: 0 !important;
+    margin-bottom: var(--p-spacing, 0px) !important;
+    line-height: inherit !important;
     display: block;
+  }
+
+  .prose.rich-text-content :where(p):not(:where([class~="not-prose"] *)),
+  .prose.rich-text-content :where(div):not(:where([class~="not-prose"] *)) {
+    margin-top: 0 !important;
+    margin-bottom: var(--p-spacing, 0px) !important;
+    line-height: inherit !important;
+  }
+
+  .rich-text-content p:last-child,
+  .rich-text-content div:last-child,
+  [contenteditable="true"] p:last-child,
+  [contenteditable="true"] div:last-child {
+    margin-bottom: 0 !important;
   }
 
   .custom-quill .ql-editor h1,

@@ -38,7 +38,7 @@ const HeroBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
         const file = e.dataTransfer.files[0];
         if (file && file.type.startsWith('image/')) {
             setUploading(true);
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('palieduca_token') || localStorage.getItem('token');
             const formData = new FormData();
             formData.append('file', file);
 

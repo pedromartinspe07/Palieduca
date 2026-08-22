@@ -330,44 +330,62 @@ const MediaLibrary: React.FC<MediaLibraryProps> = ({ onSelect, onClose, isModal 
                         Nenhuma mídia adicionada ainda. Envie do computador ou importe do Google Drive / Zoho WorkDrive!
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3">
                         {mediaFiles.map((file) => (
-                            <div key={file.id} className="group border border-warm-200 rounded-2xl overflow-hidden bg-white shadow-xs hover:shadow-md transition-all relative flex flex-col">
-                                <div className="aspect-square bg-warm-100 flex items-center justify-center overflow-hidden relative">
+                            <div key={file.id} className="group border border-warm-200 hover:border-primary/50 rounded-2xl overflow-hidden bg-white shadow-xs hover:shadow-md transition-all flex flex-col relative">
+                                {/* Thumbnail */}
+                                <div 
+                                    onClick={() => {
+                                        if (onSelect) {
+                                            onSelect(getFullMediaUrl(file.file_url));
+                                            if (onClose) onClose();
+                                        }
+                                    }}
+                                    className="h-32 bg-warm-100 flex items-center justify-center overflow-hidden relative cursor-pointer group-hover:brightness-95 transition-all"
+                                    title="Clique para selecionar esta imagem"
+                                >
                                     {isImage(file.filename, file.file_url) ? (
                                         <img 
                                             src={getFullMediaUrl(file.file_url)} 
                                             alt={file.filename} 
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                             loading="lazy"
                                         />
                                     ) : (
-                                        <FileIcon className="text-warm-400" size={40} />
+                                        <FileIcon className="text-warm-400" size={36} />
                                     )}
-                                    {/* Overlay Hover */}
-                                    <div className="absolute inset-0 bg-warm-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                        {onSelect && (
-                                            <button 
-                                                onClick={() => {
-                                                    onSelect(getFullMediaUrl(file.file_url));
-                                                    if (onClose) onClose();
-                                                }}
-                                                className="px-3.5 py-1.5 bg-primary hover:bg-primary-dark text-white text-xs font-bold rounded-xl shadow-md transition-transform hover:scale-105"
-                                            >
-                                                Selecionar
-                                            </button>
-                                        )}
-                                    </div>
+
+                                    {/* Botão de Excluir */}
                                     <button 
-                                        onClick={() => handleDelete(file.id)}
-                                        className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 hover:text-red-700 hover:bg-white rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-all"
-                                        title="Apagar arquivo"
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDelete(file.id);
+                                        }}
+                                        className="absolute top-2 right-2 p-1.5 bg-white/95 hover:bg-red-50 text-warm-500 hover:text-red-600 rounded-lg shadow-md border border-warm-200/80 transition-all z-10"
+                                        title="Excluir arquivo permanentemente"
                                     >
-                                        <Trash2 size={13} />
+                                        <Trash2 size={14} />
                                     </button>
                                 </div>
-                                <div className="p-2.5 border-t border-warm-100 truncate text-[11px] text-warm-700 font-semibold bg-warm-50/30">
-                                    {file.filename}
+
+                                {/* Informações e Ação */}
+                                <div className="p-2.5 bg-warm-50/60 border-t border-warm-100 flex flex-col gap-2">
+                                    <p className="text-[11px] font-bold text-warm-800 truncate" title={file.filename}>
+                                        {file.filename}
+                                    </p>
+                                    {onSelect && (
+                                        <button 
+                                            type="button"
+                                            onClick={() => {
+                                                onSelect(getFullMediaUrl(file.file_url));
+                                                if (onClose) onClose();
+                                            }}
+                                            className="w-full py-1.5 px-2 bg-primary hover:bg-primary-dark text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 hover:scale-[1.02]"
+                                        >
+                                            <CheckCircle2 size={13} /> Selecionar
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}

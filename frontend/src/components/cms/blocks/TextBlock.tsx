@@ -9,12 +9,13 @@ const TextBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
         fontFamily = 'sans-serif',
         fontWeight = '400',
         textAlign = 'left',
-        lineHeight = '1.6',
+        lineHeight = '1.3',
         letterSpacing = 'normal',
         textTransform = 'none',
         textDecoration = 'none',
         backgroundColor = 'transparent',
-        textShadow = 'none'
+        textShadow = 'none',
+        paragraphSpacing = '0px'
     } = block.styles || {};
 
     const textRef = useRef<HTMLDivElement>(null);
@@ -77,7 +78,8 @@ const TextBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
                         backgroundColor: backgroundColor !== 'transparent' ? backgroundColor : undefined,
                         textShadow: textShadow !== 'none' ? textShadow : undefined,
                         padding: backgroundColor !== 'transparent' ? '1.5rem' : undefined,
-                        borderRadius: backgroundColor !== 'transparent' ? '1rem' : undefined
+                        borderRadius: backgroundColor !== 'transparent' ? '1rem' : undefined,
+                        ['--p-spacing' as any]: paragraphSpacing || '0px'
                     }}
                 />
             </div>

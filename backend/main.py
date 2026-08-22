@@ -546,6 +546,50 @@ def get_page_revisions(page_name: str, db: Session = Depends(get_db), current_us
         raise HTTPException(status_code=403, detail="Sem permissão")
     return db.query(models.PageRevision).filter(models.PageRevision.page_name == page_name).order_by(models.PageRevision.id.desc()).all()
 
+@app.post("/api/pages/{page_name}/revisions", response_model=schemas.PageRevisionResponse)
+def create_page_revision(
+    page_name: str,
+    revision_data: schemas.PageRevisionCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    author = revision_data.author_name or current_user.nome or "Editor"
+    revision = models.PageRevision(
+        page_name=page_name,
+        content=revision_data.content,
+        author_name=author,
+        created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        description=revision_data.description or "Ponto de restauração manual"
+    )
+    db.add(revision)
+    db.commit()
+    db.refresh(revision)
+    return revision
+
+@app.delete("/api/pages/{page_name}/revisions/{revision_id}")
+def delete_page_revision(
+    page_name: str,
+    revision_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    revision = db.query(models.PageRevision).filter(
+        models.PageRevision.id == revision_id, 
+        models.PageRevision.page_name == page_name
+    ).first()
+    if not revision:
+        raise HTTPException(status_code=404, detail="Revisão não encontrada")
+    
+    db.delete(revision)
+    db.commit()
+    return {"message": "Revisão removida com sucesso"}
+
 @app.post("/api/pages/{page_name}/revisions/{revision_id}/restore", response_model=schemas.PageContentResponse)
 def restore_page_revision(
     page_name: str, 
@@ -1158,6 +1202,15 @@ def delete_interactive_resource(
 # Biblioteca de Mídia
 # ================================
 
+@app.get("/api/media", response_model=list[schemas.MediaFileResponse])
+def list_media_files(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    return db.query(models.MediaFile).order_by(models.MediaFile.id.desc()).all()
+
 @app.post("/api/media/upload", response_model=schemas.MediaFileResponse)
 async def upload_media_file(
     file: UploadFile = File(...),
@@ -1167,6 +1220,7 @@ async def upload_media_file(
     if current_user.cargo not in ["dona", "desenvolvedor"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
         
+    os.makedirs("static/uploads", exist_ok=True)
     # Salvar arquivo no disco
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     safe_filename = f"{timestamp}_{file.filename}"
@@ -1187,6 +1241,8 @@ async def upload_media_file(
     db.add(media)
     db.commit()
     db.refresh(media)
+    return media
+
 class DriveLinkRequest(BaseModel):
     url: str
     filename: str | None = None
@@ -1258,6 +1314,31 @@ def add_zoho_workdrive_link(
     db.commit()
     db.refresh(media)
     return media
+
+@app.delete("/api/media/{media_id}")
+def delete_media_file(
+    media_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.cargo not in ["dona", "desenvolvedor"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    media = db.query(models.MediaFile).filter(models.MediaFile.id == media_id).first()
+    if not media:
+        raise HTTPException(status_code=404, detail="Arquivo de mídia não encontrado")
+    
+    if media.file_url and media.file_url.startswith("/static/uploads/"):
+        disk_path = media.file_url.lstrip("/")
+        if os.path.exists(disk_path):
+            try:
+                os.remove(disk_path)
+            except Exception:
+                pass
+
+    db.delete(media)
+    db.commit()
+    return {"message": "Arquivo removido com sucesso"}
 
 # ================================
 # Progresso Granular & Atividades
