@@ -6,7 +6,7 @@ import {
     LayoutList, Play, Crop, RotateCcw, RotateCw, Monitor, Tablet, Smartphone,
     AlertCircle, RefreshCw, AlignLeft, AlignCenter, AlignRight, AlignJustify,
     Underline, Strikethrough, Pipette, Sparkles, Wand2, Search, Check, Plus,
-    CheckCheck, ExternalLink, Link as LinkIcon, History
+    CheckCheck, ExternalLink, Link as LinkIcon, History, BookOpen
 } from 'lucide-react';
 import BlockRenderer from './blocks/BlockRenderer';
 import MediaLibrary from './MediaLibrary';
@@ -14,9 +14,10 @@ import ImageCropperModal from './ImageCropperModal';
 import VersionHistoryPanel from './VersionHistoryPanel';
 import WixFloatingToolbar from './WixFloatingToolbar';
 import type { BlockData } from './blocks/types';
+import { getModuleIcon } from '../../utils/iconUtils';
 
-const API_URL = import.meta.env.VITE_API_URL || 
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+const API_URL = import.meta.env.VITE_API_URL ||
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://127.0.0.1:8000' : 'https://palieduca.onrender.com');
 
 const BLOCK_TEMPLATES: { type: BlockData['type']; label: string; icon: React.ReactNode; description: string; defaultData: any }[] = [
@@ -26,23 +27,23 @@ const BLOCK_TEMPLATES: { type: BlockData['type']; label: string; icon: React.Rea
     { type: 'QuizBlock', label: 'Quiz Interativo', icon: <LayoutList size={20} />, description: 'Teste os conhecimentos', defaultData: { title: 'Quiz de Fixação', questions: [{ text: 'Nova pergunta', options: ['Opção A', 'Opção B', 'Opção C', 'Opção D'], correct_index: 0 }] } },
     { type: 'FlashcardBlock', label: 'Flashcards', icon: <Layers size={20} />, description: 'Cartões de memorização', defaultData: { cards: [{ front: 'Termo', back: 'Definição' }] } },
     { type: 'MediaBlock', label: 'Vídeo/Podcast', icon: <Play size={20} />, description: 'Embed YouTube/Vimeo', defaultData: { title: 'Assista ao Vídeo', url: '' } },
-    { 
-        type: 'FeatureCardsBlock', 
-        label: 'Cards com Ícones', 
-        icon: <Sparkles size={20} className="text-emerald-500" />, 
-        description: 'Tópicos ou resumos em cards com ícones', 
+    {
+        type: 'FeatureCardsBlock',
+        label: 'Cards com Ícones',
+        icon: <Sparkles size={20} className="text-emerald-500" />,
+        description: 'Tópicos ou resumos em cards com ícones',
         defaultData: {
             cards: [
                 { id: '1', icon_name: 'HeartHandshake', iconColor: '#059669', iconBg: '#ecfdf5', badge: 'Conceito 1', title: 'Acolhimento', description: 'Princípios do cuidado paliativo e acolhimento humanizado.' },
                 { id: '2', icon_name: 'MessageSquare', iconColor: '#d97706', iconBg: '#fef3c7', badge: 'Conceito 2', title: 'Comunicação', description: 'Técnicas de escuta ativa e diálogo empático.' }
             ]
-        } 
+        }
     }
 ];
 
 const ModuleContentEditor: React.FC = () => {
     const { token } = useAuth();
-    
+
     const [modules, setModules] = useState<any[]>([]);
     const [selectedModuleSlug, setSelectedModuleSlug] = useState<string>('');
     const [blocks, setBlocks] = useState<BlockData[]>([]);
@@ -65,7 +66,7 @@ const ModuleContentEditor: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [croppingImage, setCroppingImage] = useState<string | null>(null);
-    
+
     const [showPublishModal, setShowPublishModal] = useState(false);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -124,7 +125,7 @@ const ModuleContentEditor: React.FC = () => {
         const handleKeyDown = (e: KeyboardEvent) => {
             const target = e.target as HTMLElement;
             const isEditingInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
-            
+
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
                 if (!isEditingInput) {
                     e.preventDefault();
@@ -214,7 +215,7 @@ const ModuleContentEditor: React.FC = () => {
             if (!res.ok) throw new Error();
             const data = await res.json();
             const contentToParse = data.draft_content || data.content || '';
-            
+
             let parsed = [];
             try {
                 parsed = JSON.parse(contentToParse);
@@ -342,7 +343,7 @@ const ModuleContentEditor: React.FC = () => {
             const url = new URL(`${API_URL}/api/ai/search-images`);
             if (query.trim()) url.searchParams.append('q', query.trim());
             if (cat && cat !== 'Todas') url.searchParams.append('category', cat);
-            
+
             const res = await fetch(url.toString());
             if (res.ok) {
                 const data = await res.json();
@@ -479,6 +480,9 @@ const ModuleContentEditor: React.FC = () => {
             {/* ═══ HEADER ═══ */}
             <div className="h-14 bg-white border-b border-warm-200 flex items-center justify-between px-3 sm:px-6 shrink-0 z-50 gap-2">
                 <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="bg-primary/10 p-1.5 rounded-lg text-primary shrink-0 flex items-center justify-center">
+                        {getModuleIcon(modules.find(m => m.slug_id === selectedModuleSlug)?.icon_name, 20)}
+                    </div>
                     <select
                         value={selectedModuleSlug}
                         onChange={(e) => setSelectedModuleSlug(e.target.value)}
@@ -520,27 +524,24 @@ const ModuleContentEditor: React.FC = () => {
                         <button
                             onClick={() => setDeviceView('desktop')}
                             title="Desktop (Largura total)"
-                            className={`p-1.5 rounded-lg text-xs transition-all ${
-                                deviceView === 'desktop' ? 'bg-white text-primary shadow-sm font-bold' : 'text-warm-400 hover:text-warm-700'
-                            }`}
+                            className={`p-1.5 rounded-lg text-xs transition-all ${deviceView === 'desktop' ? 'bg-white text-primary shadow-sm font-bold' : 'text-warm-400 hover:text-warm-700'
+                                }`}
                         >
                             <Monitor size={15} />
                         </button>
                         <button
                             onClick={() => setDeviceView('tablet')}
                             title="Tablet (768px)"
-                            className={`p-1.5 rounded-lg text-xs transition-all ${
-                                deviceView === 'tablet' ? 'bg-white text-primary shadow-sm font-bold' : 'text-warm-400 hover:text-warm-700'
-                            }`}
+                            className={`p-1.5 rounded-lg text-xs transition-all ${deviceView === 'tablet' ? 'bg-white text-primary shadow-sm font-bold' : 'text-warm-400 hover:text-warm-700'
+                                }`}
                         >
                             <Tablet size={15} />
                         </button>
                         <button
                             onClick={() => setDeviceView('mobile')}
                             title="Celular (390px)"
-                            className={`p-1.5 rounded-lg text-xs transition-all ${
-                                deviceView === 'mobile' ? 'bg-white text-primary shadow-sm font-bold' : 'text-warm-400 hover:text-warm-700'
-                            }`}
+                            className={`p-1.5 rounded-lg text-xs transition-all ${deviceView === 'mobile' ? 'bg-white text-primary shadow-sm font-bold' : 'text-warm-400 hover:text-warm-700'
+                                }`}
                         >
                             <Smartphone size={15} />
                         </button>
@@ -551,11 +552,10 @@ const ModuleContentEditor: React.FC = () => {
                     <button
                         type="button"
                         onClick={() => setRightSidebarTab('ai')}
-                        className={`px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
-                            rightSidebarTab === 'ai' 
-                                ? 'bg-purple-600 text-white shadow-sm' 
+                        className={`px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${rightSidebarTab === 'ai'
+                                ? 'bg-purple-600 text-white shadow-sm'
                                 : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'
-                        }`}
+                            }`}
                         title="Abrir Agente Construtor com IA (Qwen 3.6)"
                     >
                         <Wand2 size={14} className={rightSidebarTab === 'ai' ? 'animate-spin' : 'text-purple-600'} />
@@ -564,11 +564,10 @@ const ModuleContentEditor: React.FC = () => {
                     <button
                         type="button"
                         onClick={() => setRightSidebarTab('images')}
-                        className={`px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
-                            rightSidebarTab === 'images' 
-                                ? 'bg-emerald-600 text-white shadow-sm' 
+                        className={`px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${rightSidebarTab === 'images'
+                                ? 'bg-emerald-600 text-white shadow-sm'
                                 : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
-                        }`}
+                            }`}
                         title="Abrir Banco de Imagens (Unsplash & Web)"
                     >
                         <ImageIcon size={14} className={rightSidebarTab === 'images' ? '' : 'text-emerald-600'} />
@@ -618,7 +617,7 @@ const ModuleContentEditor: React.FC = () => {
 
             {/* ═══ TRIPLE LAYOUT ═══ */}
             <div className="flex-1 flex overflow-hidden min-h-0">
-                
+
                 {/* ─── LEFT SIDEBAR (CANVA STYLE) ─── */}
                 <div className="flex shrink-0 h-full">
                     <div className="w-[72px] bg-warm-900 flex flex-col items-center py-4 gap-4 z-50 shadow-md">
@@ -647,13 +646,12 @@ const ModuleContentEditor: React.FC = () => {
                         </button>
                     </div>
 
-                    <div className={`bg-white border-r border-warm-200 flex flex-col z-40 overflow-hidden shadow-lg transition-all duration-300 ${
-                        leftSidebarTab === 'midia' || leftSidebarTab === 'historico'
+                    <div className={`bg-white border-r border-warm-200 flex flex-col z-40 overflow-hidden shadow-lg transition-all duration-300 ${leftSidebarTab === 'midia' || leftSidebarTab === 'historico'
                             ? 'w-[360px] sm:w-[380px] opacity-100'
                             : leftSidebarTab !== null
                                 ? 'w-[280px] opacity-100'
                                 : 'w-0 opacity-0 border-r-0'
-                    }`}>
+                        }`}>
                         {leftSidebarTab === 'blocos' && (
                             <>
                                 <div className="p-4 border-b border-warm-100 flex justify-between bg-white shrink-0">
@@ -717,8 +715,8 @@ const ModuleContentEditor: React.FC = () => {
                 </div>
 
                 {/* ─── CENTER CANVAS ─── */}
-                <div 
-                    className="flex-1 overflow-y-auto relative flex justify-center p-3 sm:p-6" 
+                <div
+                    className="flex-1 overflow-y-auto relative flex justify-center p-3 sm:p-6"
                     style={{ background: 'radial-gradient(circle, #e5e7eb 1px, transparent 1px)', backgroundSize: '20px 20px' }}
                     onClick={() => setSelectedBlockId(null)}
                 >
@@ -728,16 +726,36 @@ const ModuleContentEditor: React.FC = () => {
                             <p className="font-medium text-sm">Carregando aula...</p>
                         </div>
                     ) : (
-                        <div className={`transition-all duration-300 ${
-                            deviceView === 'desktop'
+                        <div className={`transition-all duration-300 ${deviceView === 'desktop'
                                 ? 'max-w-5xl w-full flex flex-col gap-3 pb-32'
                                 : deviceView === 'tablet'
-                                ? 'w-[768px] max-w-full bg-white rounded-3xl shadow-2xl border-4 border-warm-300 p-4 sm:p-6 min-h-[850px] my-auto flex flex-col gap-3 pb-32'
-                                : 'w-[390px] max-w-full bg-white rounded-[40px] shadow-2xl border-[10px] border-warm-900 p-3 sm:p-4 min-h-[750px] my-auto relative flex flex-col gap-3 pb-32 overflow-hidden'
-                        }`}>
+                                    ? 'w-[768px] max-w-full bg-white rounded-3xl shadow-2xl border-4 border-warm-300 p-4 sm:p-6 min-h-[850px] my-auto flex flex-col gap-3 pb-32'
+                                    : 'w-[390px] max-w-full bg-white rounded-[40px] shadow-2xl border-[10px] border-warm-900 p-3 sm:p-4 min-h-[750px] my-auto relative flex flex-col gap-3 pb-32 overflow-hidden'
+                            }`}>
                             {/* Smartphone Notch */}
                             {deviceView === 'mobile' && (
                                 <div className="w-28 h-4 bg-warm-900 mx-auto rounded-b-xl mb-2 shrink-0 z-30 shadow-inner" />
+                            )}
+
+                            {/* Banner do Cabeçalho do Módulo (Visualizado pelos alunos) */}
+                            {selectedModuleSlug && (
+                                <div className="glassmorphism p-5 sm:p-7 rounded-3xl border border-warm-200 shadow-sm bg-white/95 mb-2">
+                                    <div className="flex items-center gap-4">
+                                        <div className="bg-primary/10 p-3.5 sm:p-4 rounded-2xl text-primary shrink-0 shadow-xs">
+                                            {getModuleIcon(modules.find(m => m.slug_id === selectedModuleSlug)?.icon_name, 32)}
+                                        </div>
+                                        <div>
+                                            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-warm-900">
+                                                {modules.find(m => m.slug_id === selectedModuleSlug)?.title || 'Conteúdo do Módulo'}
+                                            </h1>
+                                            {modules.find(m => m.slug_id === selectedModuleSlug)?.description && (
+                                                <p className="text-warm-600 mt-1 text-xs sm:text-sm leading-relaxed">
+                                                    {modules.find(m => m.slug_id === selectedModuleSlug)?.description}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                             )}
 
                             {blocks.map((block) => (
@@ -761,11 +779,10 @@ const ModuleContentEditor: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setRightSidebarTab('properties')}
-                            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-                                rightSidebarTab === 'properties'
+                            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${rightSidebarTab === 'properties'
                                     ? 'bg-white text-warm-900 shadow-xs border border-warm-200/60'
                                     : 'text-warm-500 hover:text-warm-800 hover:bg-white/50'
-                            }`}
+                                }`}
                         >
                             <Settings size={14} className={rightSidebarTab === 'properties' ? 'text-primary' : ''} />
                             <span>Propriedades</span>
@@ -774,11 +791,10 @@ const ModuleContentEditor: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setRightSidebarTab('ai')}
-                            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-                                rightSidebarTab === 'ai'
+                            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${rightSidebarTab === 'ai'
                                     ? 'bg-purple-600 text-white shadow-xs'
                                     : 'text-purple-700 bg-purple-50/50 hover:bg-purple-100/70 border border-purple-200/50'
-                            }`}
+                                }`}
                         >
                             <Wand2 size={14} className={rightSidebarTab === 'ai' ? 'animate-spin' : 'text-purple-600'} />
                             <span>Agente IA</span>
@@ -787,11 +803,10 @@ const ModuleContentEditor: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setRightSidebarTab('images')}
-                            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-                                rightSidebarTab === 'images'
+                            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${rightSidebarTab === 'images'
                                     ? 'bg-emerald-600 text-white shadow-xs'
                                     : 'text-emerald-700 bg-emerald-50/50 hover:bg-emerald-100/70 border border-emerald-200/50'
-                            }`}
+                                }`}
                         >
                             <ImageIcon size={14} className={rightSidebarTab === 'images' ? '' : 'text-emerald-600'} />
                             <span>Imagens</span>
@@ -842,11 +857,10 @@ const ModuleContentEditor: React.FC = () => {
                                                 key={t.id}
                                                 type="button"
                                                 onClick={() => setAiTargetType(t.id)}
-                                                className={`text-[11px] py-1.5 px-2 rounded-lg border font-medium transition-all text-left ${
-                                                    aiTargetType === t.id
+                                                className={`text-[11px] py-1.5 px-2 rounded-lg border font-medium transition-all text-left ${aiTargetType === t.id
                                                         ? 'bg-purple-50 text-purple-700 border-purple-300 font-bold shadow-2xs'
                                                         : 'bg-white text-warm-600 border-warm-200 hover:bg-warm-50'
-                                                }`}
+                                                    }`}
                                             >
                                                 {t.label}
                                             </button>
@@ -914,8 +928,8 @@ const ModuleContentEditor: React.FC = () => {
                                                 {generatedBlocksResult.summary}
                                             </p>
                                         </div>
-                                        <button 
-                                            onClick={() => setGeneratedBlocksResult(null)} 
+                                        <button
+                                            onClick={() => setGeneratedBlocksResult(null)}
                                             className="text-warm-400 hover:text-warm-700 p-1 rounded-md"
                                             title="Limpar sugestão"
                                         >
@@ -1010,7 +1024,7 @@ const ModuleContentEditor: React.FC = () => {
                                         </button>
                                     </div>
                                 </div>
-                                
+
                                 {/* Search Bar */}
                                 <div className="space-y-1.5 pt-1">
                                     <label className="block text-[11px] font-bold text-warm-700">
@@ -1029,7 +1043,7 @@ const ModuleContentEditor: React.FC = () => {
                                             className="w-full bg-warm-50 border border-warm-200 rounded-lg pl-8 pr-7 py-1.5 text-xs text-warm-800 focus:ring-2 focus:ring-emerald-400 outline-none"
                                         />
                                         {imageSearchQuery && (
-                                            <button 
+                                            <button
                                                 onClick={() => {
                                                     setImageSearchQuery('');
                                                     fetchHealthcareImages('', imageCategory);
@@ -1060,11 +1074,10 @@ const ModuleContentEditor: React.FC = () => {
                                                 setImageCategory(cat);
                                                 fetchHealthcareImages(imageSearchQuery, cat);
                                             }}
-                                            className={`text-[10px] px-2 py-0.5 rounded-full font-medium transition-all ${
-                                                imageCategory === cat
+                                            className={`text-[10px] px-2 py-0.5 rounded-full font-medium transition-all ${imageCategory === cat
                                                     ? 'bg-emerald-600 text-white font-bold shadow-2xs'
                                                     : 'bg-warm-100 text-warm-700 hover:bg-warm-200'
-                                            }`}
+                                                }`}
                                         >
                                             {cat}
                                         </button>
@@ -1090,14 +1103,14 @@ const ModuleContentEditor: React.FC = () => {
                                     </span>
                                     <div className="grid grid-cols-1 gap-3">
                                         {imageResults.map((img) => (
-                                            <div 
+                                            <div
                                                 key={img.id}
                                                 className="group relative bg-white border border-warm-200 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all"
                                             >
                                                 <div className="aspect-video w-full overflow-hidden bg-warm-100 relative">
-                                                    <img 
-                                                        src={img.thumb_url || img.url} 
-                                                        alt={img.title} 
+                                                    <img
+                                                        src={img.thumb_url || img.url}
+                                                        alt={img.title}
                                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                         loading="lazy"
                                                     />
@@ -1173,635 +1186,792 @@ const ModuleContentEditor: React.FC = () => {
 
                                     <hr className="border-warm-100" />
 
-                            {/* TextBlock Typography Studio */}
-                            {selectedBlock.type === 'TextBlock' && (
-                                <div className="space-y-5 text-left">
-                                    <div className="flex items-center justify-between border-b border-warm-100 pb-2">
-                                        <h4 className="text-xs font-bold text-warm-900 uppercase tracking-wider flex items-center gap-1.5">
-                                            <Type size={15} className="text-primary" /> Estúdio de Tipografia
-                                        </h4>
-                                        <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">Photoshop FX</span>
-                                    </div>
-
-                                    {/* 1. Família da Fonte */}
-                                    <div>
-                                        <label className="block text-xs font-bold text-warm-700 mb-1">Família da Fonte</label>
-                                        <select
-                                            value={selectedBlock.styles?.fontFamily || 'sans-serif'}
-                                            onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, fontFamily: e.target.value } })}
-                                            className="w-full bg-warm-50 border border-warm-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-primary outline-none"
-                                        >
-                                            <option value="sans-serif">Padrão / Moderna (Inter Sans)</option>
-                                            <option value="serif">Elegante / Editorial (Playfair Serif)</option>
-                                            <option value="rounded">Amigável / Arredondada (Outfit)</option>
-                                            <option value="mono">Técnica / Monospaçada (Code Mono)</option>
-                                        </select>
-                                    </div>
-
-                                    {/* 2. Tamanho da Fonte com Atalhos Rápidos */}
-                                    <div>
-                                        <div className="flex justify-between items-center mb-1">
-                                            <label className="text-xs font-bold text-warm-700">Tamanho da Fonte</label>
-                                            <span className="text-xs font-bold text-primary bg-primary/5 px-2 py-0.5 rounded-md">
-                                                {selectedBlock.styles?.fontSize ?? 16}px
-                                            </span>
-                                        </div>
-                                        <input
-                                            type="range" min="12" max="56"
-                                            value={selectedBlock.styles?.fontSize ?? 16}
-                                            onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, fontSize: parseInt(e.target.value) } })}
-                                            className="w-full accent-primary h-2 bg-warm-200 rounded-lg cursor-pointer"
-                                        />
-                                        <div className="flex gap-1.5 mt-2">
-                                            {[
-                                                { label: 'P (14px)', size: 14 },
-                                                { label: 'Normal (16px)', size: 16 },
-                                                { label: 'H3 (22px)', size: 22 },
-                                                { label: 'H2 (28px)', size: 28 },
-                                                { label: 'H1 (36px)', size: 36 }
-                                            ].map(sz => (
-                                                <button
-                                                    key={sz.size}
-                                                    onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, fontSize: sz.size } })}
-                                                    className={`flex-1 py-1 text-[10px] rounded-lg border font-semibold transition-all ${
-                                                        (selectedBlock.styles?.fontSize ?? 16) === sz.size 
-                                                            ? 'bg-primary text-white border-primary shadow-sm' 
-                                                            : 'bg-warm-50 text-warm-600 border-warm-200 hover:bg-warm-100'
-                                                    }`}
-                                                >
-                                                    {sz.label.split(' ')[0]}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* 3. Espessura da Fonte (Weight) */}
-                                    <div>
-                                        <label className="block text-xs font-bold text-warm-700 mb-1.5">Espessura (Peso)</label>
-                                        <div className="grid grid-cols-4 gap-1">
-                                            {[
-                                                { value: '300', label: 'Fino' },
-                                                { value: '400', label: 'Normal' },
-                                                { value: '600', label: 'Semibold' },
-                                                { value: '800', label: 'Negrito' }
-                                            ].map(w => (
-                                                <button
-                                                    key={w.value}
-                                                    onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, fontWeight: w.value } })}
-                                                    className={`py-1.5 text-xs rounded-lg border transition-all ${
-                                                        (selectedBlock.styles?.fontWeight || '400') === w.value
-                                                            ? 'bg-primary text-white border-primary font-bold shadow-sm'
-                                                            : 'bg-warm-50 text-warm-600 border-warm-200 hover:bg-warm-100'
-                                                    }`}
-                                                >
-                                                    {w.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* 4. Alinhamento */}
-                                    <div>
-                                        <label className="block text-xs font-bold text-warm-700 mb-1.5">Alinhamento</label>
-                                        <div className="flex bg-warm-50 p-1 rounded-xl border border-warm-200 gap-1">
-                                            {[
-                                                { value: 'left', icon: <AlignLeft size={16} />, label: 'Esquerda' },
-                                                { value: 'center', icon: <AlignCenter size={16} />, label: 'Centro' },
-                                                { value: 'right', icon: <AlignRight size={16} />, label: 'Direita' },
-                                                { value: 'justify', icon: <AlignJustify size={16} />, label: 'Justificado' }
-                                            ].map(align => (
-                                                <button
-                                                    key={align.value}
-                                                    title={align.label}
-                                                    onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textAlign: align.value } })}
-                                                    className={`flex-1 py-1.5 rounded-lg flex items-center justify-center transition-all ${
-                                                        (selectedBlock.styles?.textAlign || 'left') === align.value
-                                                            ? 'bg-white text-primary shadow-sm font-bold'
-                                                            : 'text-warm-400 hover:text-warm-700'
-                                                    }`}
-                                                >
-                                                    {align.icon}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* 5. Transformação de Texto (Maiúsculas/Minúsculas) & Decoração */}
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="block text-[11px] font-bold text-warm-700 mb-1">Caixa (Transform)</label>
-                                            <div className="flex bg-warm-50 p-1 rounded-xl border border-warm-200 gap-1">
-                                                {[
-                                                    { value: 'none', label: 'Aa' },
-                                                    { value: 'uppercase', label: 'AA' },
-                                                    { value: 'lowercase', label: 'aa' }
-                                                ].map(t => (
-                                                    <button
-                                                        key={t.value}
-                                                        onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textTransform: t.value } })}
-                                                        className={`flex-1 py-1 text-xs rounded-lg transition-all ${
-                                                            (selectedBlock.styles?.textTransform || 'none') === t.value
-                                                                ? 'bg-white text-primary font-bold shadow-sm'
-                                                                : 'text-warm-400 hover:text-warm-700'
-                                                        }`}
-                                                    >
-                                                        {t.label}
-                                                    </button>
-                                                ))}
+                                    {/* TextBlock Typography Studio */}
+                                    {selectedBlock.type === 'TextBlock' && (
+                                        <div className="space-y-5 text-left">
+                                            <div className="flex items-center justify-between border-b border-warm-100 pb-2">
+                                                <h4 className="text-xs font-bold text-warm-900 uppercase tracking-wider flex items-center gap-1.5">
+                                                    <Type size={15} className="text-primary" /> Estúdio de Tipografia
+                                                </h4>
+                                                <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">Photoshop FX</span>
                                             </div>
-                                        </div>
 
-                                        <div>
-                                            <label className="block text-[11px] font-bold text-warm-700 mb-1">Decoração</label>
-                                            <div className="flex bg-warm-50 p-1 rounded-xl border border-warm-200 gap-1">
-                                                {[
-                                                    { value: 'none', label: '—' },
-                                                    { value: 'underline', icon: <Underline size={14} /> },
-                                                    { value: 'line-through', icon: <Strikethrough size={14} /> }
-                                                ].map(d => (
-                                                    <button
-                                                        key={d.value}
-                                                        onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textDecoration: d.value } })}
-                                                        className={`flex-1 py-1 text-xs rounded-lg flex items-center justify-center transition-all ${
-                                                            (selectedBlock.styles?.textDecoration || 'none') === d.value
-                                                                ? 'bg-white text-primary font-bold shadow-sm'
-                                                                : 'text-warm-400 hover:text-warm-700'
-                                                        }`}
-                                                    >
-                                                        {d.icon || d.label}
-                                                    </button>
-                                                ))}
+                                            {/* 1. Família da Fonte */}
+                                            <div>
+                                                <label className="block text-xs font-bold text-warm-700 mb-1">Família da Fonte</label>
+                                                <select
+                                                    value={selectedBlock.styles?.fontFamily || 'sans-serif'}
+                                                    onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, fontFamily: e.target.value } })}
+                                                    className="w-full bg-warm-50 border border-warm-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-primary outline-none"
+                                                >
+                                                    <option value="sans-serif">Padrão / Moderna (Inter Sans)</option>
+                                                    <option value="serif">Elegante / Editorial (Playfair Serif)</option>
+                                                    <option value="rounded">Amigável / Arredondada (Outfit)</option>
+                                                    <option value="mono">Técnica / Monospaçada (Code Mono)</option>
+                                                </select>
                                             </div>
-                                        </div>
-                                    </div>
 
-                                    {/* 6. Entrelinha (Line Height), Espaço Parágrafo e Tracking (Letter Spacing) */}
-                                    <div className="grid grid-cols-3 gap-2">
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-warm-700 mb-1">Entrelinha</label>
-                                            <select
-                                                value={selectedBlock.styles?.lineHeight || '1.4'}
-                                                onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, lineHeight: e.target.value } })}
-                                                className="w-full bg-warm-50 border border-warm-200 rounded-xl px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary outline-none"
-                                            >
-                                                <option value="1.15">Compacto (1.15)</option>
-                                                <option value="1.4">Padrão (1.4)</option>
-                                                <option value="1.7">Confortável (1.7)</option>
-                                                <option value="2.0">Espaçoso (2.0)</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-warm-700 mb-1">Espaço Parágrafo</label>
-                                            <select
-                                                value={selectedBlock.styles?.paragraphSpacing || '0px'}
-                                                onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, paragraphSpacing: e.target.value } })}
-                                                className="w-full bg-warm-50 border border-warm-200 rounded-xl px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary outline-none"
-                                            >
-                                                <option value="0px">Nenhum (0px)</option>
-                                                <option value="4px">Pequeno (4px)</option>
-                                                <option value="8px">Suave (8px)</option>
-                                                <option value="16px">Médio (16px)</option>
-                                                <option value="24px">Grande (24px)</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-warm-700 mb-1">Letras (Tracking)</label>
-                                            <select
-                                                value={selectedBlock.styles?.letterSpacing || 'normal'}
-                                                onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, letterSpacing: e.target.value } })}
-                                                className="w-full bg-warm-50 border border-warm-200 rounded-xl px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary outline-none"
-                                            >
-                                                <option value="-0.05em">Apertado (-0.05)</option>
-                                                <option value="normal">Normal (0)</option>
-                                                <option value="0.05em">Arejado (+0.05)</option>
-                                                <option value="0.15em">Amplo (+0.15)</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {/* 7. Cor do Texto com Seletor Livre */}
-                                    <div>
-                                        <div className="flex justify-between items-center mb-1.5">
-                                            <label className="text-xs font-bold text-warm-700">Cor do Texto</label>
-                                            <span className="text-[11px] font-mono text-warm-500">{selectedBlock.styles?.textColor || '#374151'}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex flex-wrap gap-1.5 flex-1">
-                                                {['#111827', '#374151', '#4b5563', '#9ca3af', '#1e3a8a', '#2563eb', '#7c3aed', '#059669', '#dc2626', '#d97706'].map(c => (
-                                                    <button
-                                                        key={c}
-                                                        onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textColor: c } })}
-                                                        className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-110 ${
-                                                            (selectedBlock.styles?.textColor || '#374151') === c ? 'border-primary shadow-md scale-110' : 'border-warm-200'
-                                                        }`}
-                                                        style={{ backgroundColor: c }}
-                                                    />
-                                                ))}
-                                            </div>
-                                            <label className="relative p-1.5 bg-warm-100 hover:bg-warm-200 rounded-xl border border-warm-300 cursor-pointer transition-colors shrink-0 flex items-center gap-1 text-[10px] font-bold text-warm-700" title="Escolher qualquer cor (Color Picker)">
-                                                <Pipette size={14} className="text-primary" />
+                                            {/* 2. Tamanho da Fonte com Atalhos Rápidos */}
+                                            <div>
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <label className="text-xs font-bold text-warm-700">Tamanho da Fonte</label>
+                                                    <span className="text-xs font-bold text-primary bg-primary/5 px-2 py-0.5 rounded-md">
+                                                        {selectedBlock.styles?.fontSize ?? 16}px
+                                                    </span>
+                                                </div>
                                                 <input
-                                                    type="color"
-                                                    value={selectedBlock.styles?.textColor || '#374151'}
-                                                    onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textColor: e.target.value } })}
-                                                    className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                                                    type="range" min="12" max="56"
+                                                    value={selectedBlock.styles?.fontSize ?? 16}
+                                                    onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, fontSize: parseInt(e.target.value) } })}
+                                                    className="w-full accent-primary h-2 bg-warm-200 rounded-lg cursor-pointer"
                                                 />
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    {/* 8. Cor de Fundo / Destaque do Bloco */}
-                                    <div>
-                                        <div className="flex justify-between items-center mb-1.5">
-                                            <label className="text-xs font-bold text-warm-700">Fundo do Cartão / Realce</label>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex flex-wrap gap-1.5 flex-1">
-                                                {[
-                                                    { color: 'transparent', label: 'Nenhum' },
-                                                    { color: '#fef3c7', label: 'Amarelo' },
-                                                    { color: '#f3f4f6', label: 'Cinza' },
-                                                    { color: '#f0fdf4', label: 'Verde' },
-                                                    { color: '#eff6ff', label: 'Azul' },
-                                                    { color: '#faf5ff', label: 'Roxo' }
-                                                ].map(bg => (
-                                                    <button
-                                                        key={bg.color}
-                                                        title={bg.label}
-                                                        onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, backgroundColor: bg.color } })}
-                                                        className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-110 flex items-center justify-center text-[8px] font-bold ${
-                                                            (selectedBlock.styles?.backgroundColor || 'transparent') === bg.color ? 'border-primary shadow-md scale-110' : 'border-warm-200'
-                                                        }`}
-                                                        style={{ backgroundColor: bg.color === 'transparent' ? '#ffffff' : bg.color }}
-                                                    >
-                                                        {bg.color === 'transparent' ? '✕' : ''}
-                                                    </button>
-                                                ))}
+                                                <div className="flex gap-1.5 mt-2">
+                                                    {[
+                                                        { label: 'P (14px)', size: 14 },
+                                                        { label: 'Normal (16px)', size: 16 },
+                                                        { label: 'H3 (22px)', size: 22 },
+                                                        { label: 'H2 (28px)', size: 28 },
+                                                        { label: 'H1 (36px)', size: 36 }
+                                                    ].map(sz => (
+                                                        <button
+                                                            key={sz.size}
+                                                            onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, fontSize: sz.size } })}
+                                                            className={`flex-1 py-1 text-[10px] rounded-lg border font-semibold transition-all ${(selectedBlock.styles?.fontSize ?? 16) === sz.size
+                                                                    ? 'bg-primary text-white border-primary shadow-sm'
+                                                                    : 'bg-warm-50 text-warm-600 border-warm-200 hover:bg-warm-100'
+                                                                }`}
+                                                        >
+                                                            {sz.label.split(' ')[0]}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <label className="relative p-1.5 bg-warm-100 hover:bg-warm-200 rounded-xl border border-warm-300 cursor-pointer transition-colors shrink-0 flex items-center gap-1 text-[10px] font-bold text-warm-700" title="Personalizar cor de fundo">
-                                                <Pipette size={14} className="text-primary" />
-                                                <input
-                                                    type="color"
-                                                    value={selectedBlock.styles?.backgroundColor && selectedBlock.styles?.backgroundColor !== 'transparent' ? selectedBlock.styles.backgroundColor : '#ffffff'}
-                                                    onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, backgroundColor: e.target.value } })}
-                                                    className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
-                                                />
-                                            </label>
-                                        </div>
-                                    </div>
 
-                                    {/* 9. Efeitos de Sombra do Texto (Photoshop Shadow) */}
-                                    <div>
-                                        <label className="block text-xs font-bold text-warm-700 mb-1.5">Sombra do Texto (Photoshop Shadow)</label>
-                                        <div className="grid grid-cols-2 gap-1.5">
-                                            {[
-                                                { value: 'none', label: 'Sem Sombra' },
-                                                { value: '0 2px 4px rgba(0,0,0,0.15)', label: 'Sutil' },
-                                                { value: '0 4px 10px rgba(0,0,0,0.3)', label: 'Marcada' },
-                                                { value: '0 0 12px rgba(99,102,241,0.5)', label: 'Brilho / Glow' }
-                                            ].map(sh => (
-                                                <button
-                                                    key={sh.value}
-                                                    onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textShadow: sh.value } })}
-                                                    className={`py-1.5 px-2 text-xs rounded-xl border transition-all ${
-                                                        (selectedBlock.styles?.textShadow || 'none') === sh.value
-                                                            ? 'bg-primary text-white border-primary font-bold shadow-sm'
-                                                            : 'bg-warm-50 text-warm-600 border-warm-200 hover:bg-warm-100'
-                                                    }`}
-                                                >
-                                                    {sh.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Quiz Properties */}
-                            {selectedBlock.type === 'QuizBlock' && (
-                                <div className="space-y-6">
-                                    {selectedBlock.data.questions?.map((q: any, qIndex: number) => (
-                                        <div key={qIndex} className="p-3 bg-warm-50 border border-warm-200 rounded-xl space-y-3">
-                                            <div className="flex justify-between items-center">
-                                                <h4 className="text-xs font-bold text-warm-600">Pergunta {qIndex + 1}</h4>
-                                                <button onClick={() => {
-                                                    const qs = [...selectedBlock.data.questions];
-                                                    qs.splice(qIndex, 1);
-                                                    updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, questions: qs }});
-                                                }} className="text-red-500 hover:text-red-700"><Trash2 size={14} /></button>
+                                            {/* 3. Espessura da Fonte (Weight) */}
+                                            <div>
+                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Espessura (Peso)</label>
+                                                <div className="grid grid-cols-4 gap-1">
+                                                    {[
+                                                        { value: '300', label: 'Fino' },
+                                                        { value: '400', label: 'Normal' },
+                                                        { value: '600', label: 'Semibold' },
+                                                        { value: '800', label: 'Negrito' }
+                                                    ].map(w => (
+                                                        <button
+                                                            key={w.value}
+                                                            onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, fontWeight: w.value } })}
+                                                            className={`py-1.5 text-xs rounded-lg border transition-all ${(selectedBlock.styles?.fontWeight || '400') === w.value
+                                                                    ? 'bg-primary text-white border-primary font-bold shadow-sm'
+                                                                    : 'bg-warm-50 text-warm-600 border-warm-200 hover:bg-warm-100'
+                                                                }`}
+                                                        >
+                                                            {w.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <textarea
-                                                value={q.text}
-                                                onChange={e => updateQuizQuestion(qIndex, 'text', e.target.value)}
-                                                className="w-full bg-white border border-warm-300 rounded-lg p-2 text-sm"
-                                                placeholder="Digite a pergunta..."
-                                                rows={2}
-                                            />
-                                            <div className="space-y-2">
-                                                {q.options.map((opt: string, oIndex: number) => (
-                                                    <div key={oIndex} className="flex items-center gap-2">
-                                                        <input 
-                                                            type="radio" 
-                                                            name={`correct_${qIndex}`} 
-                                                            checked={q.correct_index === oIndex}
-                                                            onChange={() => updateQuizQuestion(qIndex, 'correct_index', oIndex)}
-                                                            className="accent-green-500"
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            value={opt}
-                                                            onChange={e => updateQuizQuestion(qIndex, `option_${oIndex}`, e.target.value)}
-                                                            className="flex-1 bg-white border border-warm-300 rounded-md px-2 py-1 text-xs"
-                                                            placeholder={`Opção ${['A', 'B', 'C', 'D'][oIndex]}`}
-                                                        />
+
+                                            {/* 4. Alinhamento */}
+                                            <div>
+                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Alinhamento</label>
+                                                <div className="flex bg-warm-50 p-1 rounded-xl border border-warm-200 gap-1">
+                                                    {[
+                                                        { value: 'left', icon: <AlignLeft size={16} />, label: 'Esquerda' },
+                                                        { value: 'center', icon: <AlignCenter size={16} />, label: 'Centro' },
+                                                        { value: 'right', icon: <AlignRight size={16} />, label: 'Direita' },
+                                                        { value: 'justify', icon: <AlignJustify size={16} />, label: 'Justificado' }
+                                                    ].map(align => (
+                                                        <button
+                                                            key={align.value}
+                                                            title={align.label}
+                                                            onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textAlign: align.value } })}
+                                                            className={`flex-1 py-1.5 rounded-lg flex items-center justify-center transition-all ${(selectedBlock.styles?.textAlign || 'left') === align.value
+                                                                    ? 'bg-white text-primary shadow-sm font-bold'
+                                                                    : 'text-warm-400 hover:text-warm-700'
+                                                                }`}
+                                                        >
+                                                            {align.icon}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* 5. Transformação de Texto (Maiúsculas/Minúsculas) & Decoração */}
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-[11px] font-bold text-warm-700 mb-1">Caixa (Transform)</label>
+                                                    <div className="flex bg-warm-50 p-1 rounded-xl border border-warm-200 gap-1">
+                                                        {[
+                                                            { value: 'none', label: 'Aa' },
+                                                            { value: 'uppercase', label: 'AA' },
+                                                            { value: 'lowercase', label: 'aa' }
+                                                        ].map(t => (
+                                                            <button
+                                                                key={t.value}
+                                                                onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textTransform: t.value } })}
+                                                                className={`flex-1 py-1 text-xs rounded-lg transition-all ${(selectedBlock.styles?.textTransform || 'none') === t.value
+                                                                        ? 'bg-white text-primary font-bold shadow-sm'
+                                                                        : 'text-warm-400 hover:text-warm-700'
+                                                                    }`}
+                                                            >
+                                                                {t.label}
+                                                            </button>
+                                                        ))}
                                                     </div>
-                                                ))}
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-[11px] font-bold text-warm-700 mb-1">Decoração</label>
+                                                    <div className="flex bg-warm-50 p-1 rounded-xl border border-warm-200 gap-1">
+                                                        {[
+                                                            { value: 'none', label: '—' },
+                                                            { value: 'underline', icon: <Underline size={14} /> },
+                                                            { value: 'line-through', icon: <Strikethrough size={14} /> }
+                                                        ].map(d => (
+                                                            <button
+                                                                key={d.value}
+                                                                onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textDecoration: d.value } })}
+                                                                className={`flex-1 py-1 text-xs rounded-lg flex items-center justify-center transition-all ${(selectedBlock.styles?.textDecoration || 'none') === d.value
+                                                                        ? 'bg-white text-primary font-bold shadow-sm'
+                                                                        : 'text-warm-400 hover:text-warm-700'
+                                                                    }`}
+                                                            >
+                                                                {d.icon || d.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* 6. Entrelinha (Line Height), Espaço Parágrafo e Tracking (Letter Spacing) */}
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-warm-700 mb-1">Entrelinha</label>
+                                                    <select
+                                                        value={selectedBlock.styles?.lineHeight || '1.4'}
+                                                        onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, lineHeight: e.target.value } })}
+                                                        className="w-full bg-warm-50 border border-warm-200 rounded-xl px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary outline-none"
+                                                    >
+                                                        <option value="1.15">Compacto (1.15)</option>
+                                                        <option value="1.4">Padrão (1.4)</option>
+                                                        <option value="1.7">Confortável (1.7)</option>
+                                                        <option value="2.0">Espaçoso (2.0)</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-warm-700 mb-1">Espaço Parágrafo</label>
+                                                    <select
+                                                        value={selectedBlock.styles?.paragraphSpacing || '0px'}
+                                                        onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, paragraphSpacing: e.target.value } })}
+                                                        className="w-full bg-warm-50 border border-warm-200 rounded-xl px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary outline-none"
+                                                    >
+                                                        <option value="0px">Nenhum (0px)</option>
+                                                        <option value="4px">Pequeno (4px)</option>
+                                                        <option value="8px">Suave (8px)</option>
+                                                        <option value="16px">Médio (16px)</option>
+                                                        <option value="24px">Grande (24px)</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-warm-700 mb-1">Letras (Tracking)</label>
+                                                    <select
+                                                        value={selectedBlock.styles?.letterSpacing || 'normal'}
+                                                        onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, letterSpacing: e.target.value } })}
+                                                        className="w-full bg-warm-50 border border-warm-200 rounded-xl px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary outline-none"
+                                                    >
+                                                        <option value="-0.05em">Apertado (-0.05)</option>
+                                                        <option value="normal">Normal (0)</option>
+                                                        <option value="0.05em">Arejado (+0.05)</option>
+                                                        <option value="0.15em">Amplo (+0.15)</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            {/* 7. Cor do Texto com Seletor Livre */}
+                                            <div>
+                                                <div className="flex justify-between items-center mb-1.5">
+                                                    <label className="text-xs font-bold text-warm-700">Cor do Texto</label>
+                                                    <span className="text-[11px] font-mono text-warm-500">{selectedBlock.styles?.textColor || '#374151'}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex flex-wrap gap-1.5 flex-1">
+                                                        {['#111827', '#374151', '#4b5563', '#9ca3af', '#1e3a8a', '#2563eb', '#7c3aed', '#059669', '#dc2626', '#d97706'].map(c => (
+                                                            <button
+                                                                key={c}
+                                                                onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textColor: c } })}
+                                                                className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-110 ${(selectedBlock.styles?.textColor || '#374151') === c ? 'border-primary shadow-md scale-110' : 'border-warm-200'
+                                                                    }`}
+                                                                style={{ backgroundColor: c }}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    <label className="relative p-1.5 bg-warm-100 hover:bg-warm-200 rounded-xl border border-warm-300 cursor-pointer transition-colors shrink-0 flex items-center gap-1 text-[10px] font-bold text-warm-700" title="Escolher qualquer cor (Color Picker)">
+                                                        <Pipette size={14} className="text-primary" />
+                                                        <input
+                                                            type="color"
+                                                            value={selectedBlock.styles?.textColor || '#374151'}
+                                                            onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textColor: e.target.value } })}
+                                                            className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                                                        />
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            {/* 8. Cor de Fundo / Destaque do Bloco */}
+                                            <div>
+                                                <div className="flex justify-between items-center mb-1.5">
+                                                    <label className="text-xs font-bold text-warm-700">Fundo do Cartão / Realce</label>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex flex-wrap gap-1.5 flex-1">
+                                                        {[
+                                                            { color: 'transparent', label: 'Nenhum' },
+                                                            { color: '#fef3c7', label: 'Amarelo' },
+                                                            { color: '#f3f4f6', label: 'Cinza' },
+                                                            { color: '#f0fdf4', label: 'Verde' },
+                                                            { color: '#eff6ff', label: 'Azul' },
+                                                            { color: '#faf5ff', label: 'Roxo' }
+                                                        ].map(bg => (
+                                                            <button
+                                                                key={bg.color}
+                                                                title={bg.label}
+                                                                onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, backgroundColor: bg.color } })}
+                                                                className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-110 flex items-center justify-center text-[8px] font-bold ${(selectedBlock.styles?.backgroundColor || 'transparent') === bg.color ? 'border-primary shadow-md scale-110' : 'border-warm-200'
+                                                                    }`}
+                                                                style={{ backgroundColor: bg.color === 'transparent' ? '#ffffff' : bg.color }}
+                                                            >
+                                                                {bg.color === 'transparent' ? '✕' : ''}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    <label className="relative p-1.5 bg-warm-100 hover:bg-warm-200 rounded-xl border border-warm-300 cursor-pointer transition-colors shrink-0 flex items-center gap-1 text-[10px] font-bold text-warm-700" title="Personalizar cor de fundo">
+                                                        <Pipette size={14} className="text-primary" />
+                                                        <input
+                                                            type="color"
+                                                            value={selectedBlock.styles?.backgroundColor && selectedBlock.styles?.backgroundColor !== 'transparent' ? selectedBlock.styles.backgroundColor : '#ffffff'}
+                                                            onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, backgroundColor: e.target.value } })}
+                                                            className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                                                        />
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            {/* 9. Efeitos de Sombra do Texto (Photoshop Shadow) */}
+                                            <div>
+                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Sombra do Texto (Photoshop Shadow)</label>
+                                                <div className="grid grid-cols-2 gap-1.5">
+                                                    {[
+                                                        { value: 'none', label: 'Sem Sombra' },
+                                                        { value: '0 2px 4px rgba(0,0,0,0.15)', label: 'Sutil' },
+                                                        { value: '0 4px 10px rgba(0,0,0,0.3)', label: 'Marcada' },
+                                                        { value: '0 0 12px rgba(99,102,241,0.5)', label: 'Brilho / Glow' }
+                                                    ].map(sh => (
+                                                        <button
+                                                            key={sh.value}
+                                                            onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textShadow: sh.value } })}
+                                                            className={`py-1.5 px-2 text-xs rounded-xl border transition-all ${(selectedBlock.styles?.textShadow || 'none') === sh.value
+                                                                    ? 'bg-primary text-white border-primary font-bold shadow-sm'
+                                                                    : 'bg-warm-50 text-warm-600 border-warm-200 hover:bg-warm-100'
+                                                                }`}
+                                                        >
+                                                            {sh.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* 10. Ícone Lateral do Texto (Opcional) */}
+                                            <div className="pt-3 border-t border-warm-100">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <label className="text-xs font-bold text-warm-700 flex items-center gap-1.5">
+                                                        <BookOpen size={14} className="text-primary" /> Ícone Lateral do Texto
+                                                    </label>
+                                                    {(selectedBlock.data?.icon_name || selectedBlock.data?.icon) && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, icon_name: undefined, icon: undefined } })}
+                                                            className="text-[10px] text-red-600 hover:text-red-700 font-bold hover:underline"
+                                                        >
+                                                            Remover Ícone
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                <div className="grid grid-cols-3 gap-1.5 mb-3">
+                                                    {[
+                                                        { name: 'BookOpen', label: 'Livro Aberto' },
+                                                        { name: 'Book', label: 'Livro' },
+                                                        { name: 'Stethoscope', label: 'Estetoscópio' },
+                                                        { name: 'HeartPulse', label: 'Cuidado' },
+                                                        { name: 'Brain', label: 'Cérebro' },
+                                                        { name: 'HeartHandshake', label: 'Acolhimento' },
+                                                        { name: 'Scale', label: 'Ética' },
+                                                        { name: 'Users', label: 'Pessoas' },
+                                                        { name: 'Sparkles', label: 'Destaque' },
+                                                        { name: 'Lightbulb', label: 'Ideia' },
+                                                        { name: 'Info', label: 'Info' },
+                                                        { name: 'HelpCircle', label: 'Dúvidas' }
+                                                    ].map(item => (
+                                                        <button
+                                                            key={item.name}
+                                                            type="button"
+                                                            onClick={() => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, icon_name: item.name, icon: item.name } })}
+                                                            className={`py-2 px-1 rounded-xl border flex flex-col items-center gap-1 transition-all ${(selectedBlock.data?.icon_name || selectedBlock.data?.icon) === item.name
+                                                                    ? 'bg-primary text-white border-primary shadow-xs font-bold'
+                                                                    : 'bg-warm-50 text-warm-700 border-warm-200 hover:bg-warm-100'
+                                                                }`}
+                                                            title={item.label}
+                                                        >
+                                                            <span className="text-[10px] truncate max-w-full">{item.label}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+
+                                                {(selectedBlock.data?.icon_name || selectedBlock.data?.icon) && (
+                                                    <div>
+                                                        <label className="block text-[11px] font-bold text-warm-600 mb-1">Cor do Ícone</label>
+                                                        <div className="grid grid-cols-3 gap-1">
+                                                            {[
+                                                                { id: 'primary', label: 'Oliva', bg: 'bg-primary' },
+                                                                { id: 'emerald', label: 'Esmeralda', bg: 'bg-emerald-600' },
+                                                                { id: 'blue', label: 'Azul', bg: 'bg-blue-600' },
+                                                                { id: 'purple', label: 'Roxo', bg: 'bg-purple-600' },
+                                                                { id: 'amber', label: 'Âmbar', bg: 'bg-amber-600' },
+                                                                { id: 'rose', label: 'Rosa', bg: 'bg-rose-600' }
+                                                            ].map(c => (
+                                                                <button
+                                                                    key={c.id}
+                                                                    type="button"
+                                                                    onClick={() => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, iconColor: c.id } })}
+                                                                    className={`py-1 px-1.5 rounded-lg text-[11px] font-bold border flex items-center justify-center gap-1 transition-all ${(selectedBlock.data?.iconColor || 'primary') === c.id
+                                                                            ? 'border-warm-900 bg-warm-100 font-extrabold shadow-xs'
+                                                                            : 'border-warm-200 hover:bg-warm-50 text-warm-700'
+                                                                        }`}
+                                                                >
+                                                                    <span className={`w-2 h-2 rounded-full ${c.bg}`} />
+                                                                    <span className="truncate">{c.label}</span>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                    ))}
-                                    <button 
-                                        onClick={() => {
-                                            const qs = [...(selectedBlock.data.questions || []), { text: '', options: ['', '', '', ''], correct_index: 0 }];
-                                            updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, questions: qs } });
-                                        }}
-                                        className="w-full py-2 bg-purple-50 text-purple-700 border border-purple-200 font-bold text-xs rounded-lg hover:bg-purple-100"
-                                    >
-                                        + Adicionar Pergunta
-                                    </button>
-                                </div>
-                            )}
+                                    )}
 
-                            {/* Flashcard Properties */}
-                            {selectedBlock.type === 'FlashcardBlock' && (
-                                <div className="space-y-4">
-                                    {selectedBlock.data.cards?.map((card: any, cIndex: number) => (
-                                        <div key={cIndex} className="p-3 bg-warm-50 border border-warm-200 rounded-xl space-y-2">
-                                            <div className="flex justify-between items-center">
-                                                <h4 className="text-xs font-bold text-warm-600">Cartão {cIndex + 1}</h4>
-                                                <button onClick={() => {
-                                                    const cs = [...selectedBlock.data.cards];
-                                                    cs.splice(cIndex, 1);
-                                                    updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, cards: cs }});
-                                                }} className="text-red-500 hover:text-red-700"><Trash2 size={14} /></button>
-                                            </div>
-                                            <input
-                                                type="text" value={card.front}
-                                                onChange={e => {
-                                                    const cs = [...selectedBlock.data.cards];
-                                                    cs[cIndex].front = e.target.value;
-                                                    updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, cards: cs } });
+                                    {/* Quiz Properties */}
+                                    {selectedBlock.type === 'QuizBlock' && (
+                                        <div className="space-y-6">
+                                            {selectedBlock.data.questions?.map((q: any, qIndex: number) => (
+                                                <div key={qIndex} className="p-3 bg-warm-50 border border-warm-200 rounded-xl space-y-3">
+                                                    <div className="flex justify-between items-center">
+                                                        <h4 className="text-xs font-bold text-warm-600">Pergunta {qIndex + 1}</h4>
+                                                        <button onClick={() => {
+                                                            const qs = [...selectedBlock.data.questions];
+                                                            qs.splice(qIndex, 1);
+                                                            updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, questions: qs } });
+                                                        }} className="text-red-500 hover:text-red-700"><Trash2 size={14} /></button>
+                                                    </div>
+                                                    <textarea
+                                                        value={q.text}
+                                                        onChange={e => updateQuizQuestion(qIndex, 'text', e.target.value)}
+                                                        className="w-full bg-white border border-warm-300 rounded-lg p-2 text-sm"
+                                                        placeholder="Digite a pergunta..."
+                                                        rows={2}
+                                                    />
+                                                    <div className="space-y-2">
+                                                        {q.options.map((opt: string, oIndex: number) => (
+                                                            <div key={oIndex} className="flex items-center gap-2">
+                                                                <input
+                                                                    type="radio"
+                                                                    name={`correct_${qIndex}`}
+                                                                    checked={q.correct_index === oIndex}
+                                                                    onChange={() => updateQuizQuestion(qIndex, 'correct_index', oIndex)}
+                                                                    className="accent-green-500"
+                                                                />
+                                                                <input
+                                                                    type="text"
+                                                                    value={opt}
+                                                                    onChange={e => updateQuizQuestion(qIndex, `option_${oIndex}`, e.target.value)}
+                                                                    className="flex-1 bg-white border border-warm-300 rounded-md px-2 py-1 text-xs"
+                                                                    placeholder={`Opção ${['A', 'B', 'C', 'D'][oIndex]}`}
+                                                                />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            <button
+                                                onClick={() => {
+                                                    const qs = [...(selectedBlock.data.questions || []), { text: '', options: ['', '', '', ''], correct_index: 0 }];
+                                                    updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, questions: qs } });
                                                 }}
-                                                className="w-full bg-white border rounded p-2 text-xs font-bold" placeholder="Frente (Termo)"
-                                            />
-                                            <textarea
-                                                value={card.back}
-                                                onChange={e => {
-                                                    const cs = [...selectedBlock.data.cards];
-                                                    cs[cIndex].back = e.target.value;
-                                                    updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, cards: cs } });
-                                                }}
-                                                className="w-full bg-white border rounded p-2 text-xs" placeholder="Verso (Definição)" rows={2}
-                                            />
-                                        </div>
-                                    ))}
-                                    <button 
-                                        onClick={() => {
-                                            const cs = [...(selectedBlock.data.cards || []), { front: '', back: '' }];
-                                            updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, cards: cs } });
-                                        }}
-                                        className="w-full py-2 bg-orange-50 text-orange-700 border border-orange-200 font-bold text-xs rounded-lg hover:bg-orange-100"
-                                    >
-                                        + Adicionar Cartão
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Image Properties */}
-                            {selectedBlock.type === 'ImageBlock' && (
-                                <div className="space-y-4">
-                                    {selectedBlock.data.src && (
-                                        <div className="space-y-2">
-                                            <button 
-                                                onClick={() => setCroppingImage(selectedBlock.data.originalSrc || selectedBlock.data.src)}
-                                                className="w-full px-4 py-2.5 bg-primary/10 text-primary font-bold rounded-xl hover:bg-primary/20 transition-colors flex items-center justify-center gap-2 text-sm shadow-sm"
+                                                className="w-full py-2 bg-purple-50 text-purple-700 border border-purple-200 font-bold text-xs rounded-lg hover:bg-purple-100"
                                             >
-                                                <Crop size={16} /> Recortar / Ajustar Imagem
+                                                + Adicionar Pergunta
                                             </button>
-                                            {selectedBlock.data.originalSrc && (
-                                                <button 
-                                                    type="button"
-                                                    onClick={() => {
-                                                        updateBlock(selectedBlock.id, { 
-                                                            data: { ...selectedBlock.data, src: selectedBlock.data.originalSrc },
-                                                            styles: { ...selectedBlock.styles, objectFit: 'contain', heightMode: 'auto' }
-                                                        });
-                                                        showToast('Imagem original restaurada!');
-                                                    }}
-                                                    className="w-full px-3 py-2 bg-warm-100 hover:bg-warm-200 text-warm-700 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 text-xs border border-warm-200"
-                                                >
-                                                    <RotateCcw size={14} /> Restaurar Imagem Original
-                                                </button>
+                                        </div>
+                                    )}
+
+                                    {/* Flashcard Properties */}
+                                    {selectedBlock.type === 'FlashcardBlock' && (
+                                        <div className="space-y-4">
+                                            {selectedBlock.data.cards?.map((card: any, cIndex: number) => (
+                                                <div key={cIndex} className="p-3 bg-warm-50 border border-warm-200 rounded-xl space-y-2">
+                                                    <div className="flex justify-between items-center">
+                                                        <h4 className="text-xs font-bold text-warm-600">Cartão {cIndex + 1}</h4>
+                                                        <button onClick={() => {
+                                                            const cs = [...selectedBlock.data.cards];
+                                                            cs.splice(cIndex, 1);
+                                                            updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, cards: cs } });
+                                                        }} className="text-red-500 hover:text-red-700"><Trash2 size={14} /></button>
+                                                    </div>
+                                                    <input
+                                                        type="text" value={card.front}
+                                                        onChange={e => {
+                                                            const cs = [...selectedBlock.data.cards];
+                                                            cs[cIndex].front = e.target.value;
+                                                            updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, cards: cs } });
+                                                        }}
+                                                        className="w-full bg-white border rounded p-2 text-xs font-bold" placeholder="Frente (Termo)"
+                                                    />
+                                                    <textarea
+                                                        value={card.back}
+                                                        onChange={e => {
+                                                            const cs = [...selectedBlock.data.cards];
+                                                            cs[cIndex].back = e.target.value;
+                                                            updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, cards: cs } });
+                                                        }}
+                                                        className="w-full bg-white border rounded p-2 text-xs" placeholder="Verso (Definição)" rows={2}
+                                                    />
+                                                </div>
+                                            ))}
+                                            <button
+                                                onClick={() => {
+                                                    const cs = [...(selectedBlock.data.cards || []), { front: '', back: '' }];
+                                                    updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, cards: cs } });
+                                                }}
+                                                className="w-full py-2 bg-orange-50 text-orange-700 border border-orange-200 font-bold text-xs rounded-lg hover:bg-orange-100"
+                                            >
+                                                + Adicionar Cartão
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Image Properties */}
+                                    {selectedBlock.type === 'ImageBlock' && (
+                                        <div className="space-y-4">
+                                            {selectedBlock.data.src && (
+                                                <div className="space-y-2">
+                                                    <button
+                                                        onClick={() => setCroppingImage(selectedBlock.data.originalSrc || selectedBlock.data.src)}
+                                                        className="w-full px-4 py-2.5 bg-primary/10 text-primary font-bold rounded-xl hover:bg-primary/20 transition-colors flex items-center justify-center gap-2 text-sm shadow-sm"
+                                                    >
+                                                        <Crop size={16} /> Recortar / Ajustar Imagem
+                                                    </button>
+                                                    {selectedBlock.data.originalSrc && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                updateBlock(selectedBlock.id, {
+                                                                    data: { ...selectedBlock.data, src: selectedBlock.data.originalSrc },
+                                                                    styles: { ...selectedBlock.styles, objectFit: 'contain', heightMode: 'auto' }
+                                                                });
+                                                                showToast('Imagem original restaurada!');
+                                                            }}
+                                                            className="w-full px-3 py-2 bg-warm-100 hover:bg-warm-200 text-warm-700 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 text-xs border border-warm-200"
+                                                        >
+                                                            <RotateCcw size={14} /> Restaurar Imagem Original
+                                                        </button>
+                                                    )}
+                                                </div>
                                             )}
-                                        </div>
-                                    )}
 
-                                    <div>
-                                        <label className="block text-xs font-bold text-warm-700 mb-1.5">Enquadramento da Imagem</label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => updateBlock(selectedBlock.id, { 
-                                                    styles: { 
-                                                        ...selectedBlock.styles, 
-                                                        objectFit: 'contain',
-                                                        heightMode: 'auto'
-                                                    } 
-                                                })}
-                                                className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all ${
-                                                    (selectedBlock.styles?.objectFit || 'contain') === 'contain' && selectedBlock.styles?.heightMode !== 'fixed'
-                                                        ? 'bg-primary text-white border-primary shadow-sm'
-                                                        : 'bg-white text-warm-700 border-warm-200 hover:bg-warm-50'
-                                                }`}
-                                            >
-                                                Imagem Inteira (Sem corte)
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => updateBlock(selectedBlock.id, { 
-                                                    styles: { 
-                                                        ...selectedBlock.styles, 
-                                                        objectFit: 'cover',
-                                                        heightMode: 'fixed',
-                                                        height: selectedBlock.styles?.height || 400
-                                                    } 
-                                                })}
-                                                className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all ${
-                                                    selectedBlock.styles?.objectFit === 'cover' || selectedBlock.styles?.heightMode === 'fixed'
-                                                        ? 'bg-primary text-white border-primary shadow-sm'
-                                                        : 'bg-white text-warm-700 border-warm-200 hover:bg-warm-50'
-                                                }`}
-                                            >
-                                                Preencher / Altura Fixa
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {selectedBlock.styles?.heightMode === 'fixed' && (
-                                        <div>
-                                            <div className="flex items-center justify-between text-xs font-medium text-warm-600 mb-1">
-                                                <span>Altura Fixa</span>
-                                                <span className="font-bold text-primary">{selectedBlock.styles?.height || 400}px</span>
+                                            <div>
+                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Enquadramento da Imagem</label>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => updateBlock(selectedBlock.id, {
+                                                            styles: {
+                                                                ...selectedBlock.styles,
+                                                                objectFit: 'contain',
+                                                                heightMode: 'auto'
+                                                            }
+                                                        })}
+                                                        className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all ${(selectedBlock.styles?.objectFit || 'contain') === 'contain' && selectedBlock.styles?.heightMode !== 'fixed'
+                                                                ? 'bg-primary text-white border-primary shadow-sm'
+                                                                : 'bg-white text-warm-700 border-warm-200 hover:bg-warm-50'
+                                                            }`}
+                                                    >
+                                                        Imagem Inteira (Sem corte)
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => updateBlock(selectedBlock.id, {
+                                                            styles: {
+                                                                ...selectedBlock.styles,
+                                                                objectFit: 'cover',
+                                                                heightMode: 'fixed',
+                                                                height: selectedBlock.styles?.height || 400
+                                                            }
+                                                        })}
+                                                        className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all ${selectedBlock.styles?.objectFit === 'cover' || selectedBlock.styles?.heightMode === 'fixed'
+                                                                ? 'bg-primary text-white border-primary shadow-sm'
+                                                                : 'bg-white text-warm-700 border-warm-200 hover:bg-warm-50'
+                                                            }`}
+                                                    >
+                                                        Preencher / Altura Fixa
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <input
-                                                type="range"
-                                                min="150"
-                                                max="800"
-                                                step="25"
-                                                value={selectedBlock.styles?.height || 400}
-                                                onChange={(e) => updateBlock(selectedBlock.id, { 
-                                                    styles: { 
-                                                        ...selectedBlock.styles, 
-                                                        height: parseInt(e.target.value),
-                                                        heightMode: 'fixed'
-                                                    } 
-                                                })}
-                                                className="w-full accent-primary"
-                                            />
+
+                                            {selectedBlock.styles?.heightMode === 'fixed' && (
+                                                <div>
+                                                    <div className="flex items-center justify-between text-xs font-medium text-warm-600 mb-1">
+                                                        <span>Altura Fixa</span>
+                                                        <span className="font-bold text-primary">{selectedBlock.styles?.height || 400}px</span>
+                                                    </div>
+                                                    <input
+                                                        type="range"
+                                                        min="150"
+                                                        max="800"
+                                                        step="25"
+                                                        value={selectedBlock.styles?.height || 400}
+                                                        onChange={(e) => updateBlock(selectedBlock.id, {
+                                                            styles: {
+                                                                ...selectedBlock.styles,
+                                                                height: parseInt(e.target.value),
+                                                                heightMode: 'fixed'
+                                                            }
+                                                        })}
+                                                        className="w-full accent-primary"
+                                                    />
+                                                </div>
+                                            )}
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Largura Máxima do Bloco</label>
+                                                <select
+                                                    value={selectedBlock.styles?.containerWidth || 'max-w-4xl'}
+                                                    onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, containerWidth: e.target.value } })}
+                                                    className="w-full bg-white border border-warm-200 rounded-xl px-3 py-2 text-xs font-medium text-warm-800 focus:ring-2 focus:ring-primary outline-none"
+                                                >
+                                                    <option value="max-w-md">Pequena (500px)</option>
+                                                    <option value="max-w-2xl">Média (700px)</option>
+                                                    <option value="max-w-4xl">Padrão (900px)</option>
+                                                    <option value="max-w-6xl">Larga (1200px)</option>
+                                                    <option value="w-full">100% da Tela</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Alinhamento</label>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    {[
+                                                        { label: 'Esquerda', value: 'left' },
+                                                        { label: 'Centro', value: 'center' },
+                                                        { label: 'Direita', value: 'right' }
+                                                    ].map((align) => (
+                                                        <button
+                                                            key={align.value}
+                                                            type="button"
+                                                            onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, alignment: align.value } })}
+                                                            className={`py-1.5 text-xs font-bold rounded-lg border transition-all ${(selectedBlock.styles?.alignment || 'center') === align.value
+                                                                    ? 'bg-primary text-white border-primary shadow-sm'
+                                                                    : 'bg-white text-warm-700 border-warm-200 hover:bg-warm-50'
+                                                                }`}
+                                                        >
+                                                            {align.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Bordas Arredondadas</label>
+                                                <select
+                                                    value={selectedBlock.styles?.rounded || 'xl'}
+                                                    onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, rounded: e.target.value } })}
+                                                    className="w-full bg-white border border-warm-200 rounded-xl px-3 py-2 text-xs font-medium text-warm-800 focus:ring-2 focus:ring-primary outline-none"
+                                                >
+                                                    <option value="none">Nenhum (Reto)</option>
+                                                    <option value="md">Suave</option>
+                                                    <option value="xl">Médio (Padrão)</option>
+                                                    <option value="2xl">Grande</option>
+                                                    <option value="full">Círculo / Oval</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     )}
 
-                                    <div>
-                                        <label className="block text-xs font-bold text-warm-700 mb-1.5">Largura Máxima do Bloco</label>
-                                        <select
-                                            value={selectedBlock.styles?.containerWidth || 'max-w-4xl'}
-                                            onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, containerWidth: e.target.value } })}
-                                            className="w-full bg-white border border-warm-200 rounded-xl px-3 py-2 text-xs font-medium text-warm-800 focus:ring-2 focus:ring-primary outline-none"
-                                        >
-                                            <option value="max-w-md">Pequena (500px)</option>
-                                            <option value="max-w-2xl">Média (700px)</option>
-                                            <option value="max-w-4xl">Padrão (900px)</option>
-                                            <option value="max-w-6xl">Larga (1200px)</option>
-                                            <option value="w-full">100% da Tela</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-warm-700 mb-1.5">Alinhamento</label>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {[
-                                                { label: 'Esquerda', value: 'left' },
-                                                { label: 'Centro', value: 'center' },
-                                                { label: 'Direita', value: 'right' }
-                                            ].map((align) => (
-                                                <button
-                                                    key={align.value}
-                                                    type="button"
-                                                    onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, alignment: align.value } })}
-                                                    className={`py-1.5 text-xs font-bold rounded-lg border transition-all ${
-                                                        (selectedBlock.styles?.alignment || 'center') === align.value
-                                                            ? 'bg-primary text-white border-primary shadow-sm'
-                                                            : 'bg-white text-warm-700 border-warm-200 hover:bg-warm-50'
-                                                    }`}
-                                                >
-                                                    {align.label}
-                                                </button>
-                                            ))}
+                                    {/* Media Properties */}
+                                    {selectedBlock.type === 'MediaBlock' && (
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-xs font-medium text-warm-600 mb-1">URL do Vídeo (YouTube/Vimeo)</label>
+                                                <input
+                                                    type="text"
+                                                    value={selectedBlock.data.url || ''}
+                                                    onChange={(e) => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, url: e.target.value } })}
+                                                    className="w-full bg-white border border-warm-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                                    placeholder="https://youtube.com/watch?v=..."
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
 
-                                    <div>
-                                        <label className="block text-xs font-bold text-warm-700 mb-1.5">Bordas Arredondadas</label>
-                                        <select
-                                            value={selectedBlock.styles?.rounded || 'xl'}
-                                            onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, rounded: e.target.value } })}
-                                            className="w-full bg-white border border-warm-200 rounded-xl px-3 py-2 text-xs font-medium text-warm-800 focus:ring-2 focus:ring-primary outline-none"
-                                        >
-                                            <option value="none">Nenhum (Reto)</option>
-                                            <option value="md">Suave</option>
-                                            <option value="xl">Médio (Padrão)</option>
-                                            <option value="2xl">Grande</option>
-                                            <option value="full">Círculo / Oval</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            )}
+                                    {/* FeatureCardsBlock Properties */}
+                                    {selectedBlock.type === 'FeatureCardsBlock' && (
+                                        <div className="space-y-5 text-left">
+                                            <div className="flex items-center justify-between border-b border-warm-100 pb-2">
+                                                <h4 className="text-xs font-bold text-warm-900 uppercase tracking-wider flex items-center gap-1.5">
+                                                    <Sparkles size={15} className="text-primary" /> Configuração dos Cards
+                                                </h4>
+                                            </div>
 
-                            {/* Media Properties */}
-                            {selectedBlock.type === 'MediaBlock' && (
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-xs font-medium text-warm-600 mb-1">URL do Vídeo (YouTube/Vimeo)</label>
-                                        <input
-                                            type="text"
-                                            value={selectedBlock.data.url || ''}
-                                            onChange={(e) => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, url: e.target.value } })}
-                                            className="w-full bg-white border border-warm-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-                                            placeholder="https://youtube.com/watch?v=..."
-                                        />
-                                    </div>
-                                </div>
-                            )}
+                                            <div>
+                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Número de Colunas</label>
+                                                <div className="grid grid-cols-3 gap-1">
+                                                    {[1, 2, 3].map(cols => (
+                                                        <button
+                                                            key={cols}
+                                                            onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, columns: cols } })}
+                                                            className={`py-1.5 text-xs rounded-lg border transition-all ${(selectedBlock.styles?.columns || 2) === cols
+                                                                    ? 'bg-primary text-white border-primary font-bold shadow-sm'
+                                                                    : 'bg-warm-50 text-warm-600 border-warm-200 hover:bg-warm-100'
+                                                                }`}
+                                                        >
+                                                            {cols} Col
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
 
-                            {/* FeatureCardsBlock Properties */}
-                            {selectedBlock.type === 'FeatureCardsBlock' && (
-                                <div className="space-y-5 text-left">
-                                    <div className="flex items-center justify-between border-b border-warm-100 pb-2">
-                                        <h4 className="text-xs font-bold text-warm-900 uppercase tracking-wider flex items-center gap-1.5">
-                                            <Sparkles size={15} className="text-primary" /> Configuração dos Cards
-                                        </h4>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-warm-700 mb-1.5">Número de Colunas</label>
-                                        <div className="grid grid-cols-3 gap-1">
-                                            {[1, 2, 3].map(cols => (
-                                                <button
-                                                    key={cols}
-                                                    onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, columns: cols } })}
-                                                    className={`py-1.5 text-xs rounded-lg border transition-all ${
-                                                        (selectedBlock.styles?.columns || 2) === cols
-                                                            ? 'bg-primary text-white border-primary font-bold shadow-sm'
-                                                            : 'bg-warm-50 text-warm-600 border-warm-200 hover:bg-warm-100'
-                                                    }`}
+                                            <div>
+                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Sombra dos Cards</label>
+                                                <select
+                                                    value={selectedBlock.styles?.cardShadow || 'md'}
+                                                    onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, cardShadow: e.target.value } })}
+                                                    className="w-full bg-warm-50 border border-warm-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-primary outline-none"
                                                 >
-                                                    {cols} Col
-                                                </button>
-                                            ))}
+                                                    <option value="none">Sem Sombra</option>
+                                                    <option value="sm">Suave</option>
+                                                    <option value="md">Média (Padrão)</option>
+                                                    <option value="lg">Elevada / 3D</option>
+                                                </select>
+                                            </div>
+
+                                            <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-800 space-y-1">
+                                                <p className="font-bold flex items-center gap-1">💡 Dica de Edição:</p>
+                                                <p className="text-[11px] leading-relaxed">
+                                                    Você pode <strong>clicar diretamente no ícone de qualquer card na tela</strong> para abrir o seletor visual de ícones e mudar as cores!
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
 
-                                    <div>
-                                        <label className="block text-xs font-bold text-warm-700 mb-1.5">Sombra dos Cards</label>
-                                        <select
-                                            value={selectedBlock.styles?.cardShadow || 'md'}
-                                            onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, cardShadow: e.target.value } })}
-                                            className="w-full bg-warm-50 border border-warm-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-primary outline-none"
-                                        >
-                                            <option value="none">Sem Sombra</option>
-                                            <option value="sm">Suave</option>
-                                            <option value="md">Média (Padrão)</option>
-                                            <option value="lg">Elevada / 3D</option>
-                                        </select>
-                                    </div>
+                                    {/* HeaderBlock Properties */}
+                                    {selectedBlock.type === 'HeaderBlock' && (
+                                        <div className="space-y-5 text-left">
+                                            <div className="flex items-center justify-between border-b border-warm-100 pb-2">
+                                                <h4 className="text-xs font-bold text-warm-900 uppercase tracking-wider flex items-center gap-1.5">
+                                                    <BookOpen size={15} className="text-primary" /> Cabeçalho com Ícone
+                                                </h4>
+                                            </div>
 
-                                    <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-800 space-y-1">
-                                        <p className="font-bold flex items-center gap-1">💡 Dica de Edição:</p>
-                                        <p className="text-[11px] leading-relaxed">
-                                            Você pode <strong>clicar diretamente no ícone de qualquer card na tela</strong> para abrir o seletor visual de ícones e mudar as cores!
-                                        </p>
+                                            <div>
+                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Escolher Ícone</label>
+                                                <div className="grid grid-cols-3 gap-1.5">
+                                                    {[
+                                                        { name: 'BookOpen', label: 'Livro Aberto' },
+                                                        { name: 'Book', label: 'Livro' },
+                                                        { name: 'FileText', label: 'Documento' },
+                                                        { name: 'Sparkles', label: 'Destaque' },
+                                                        { name: 'HeartPulse', label: 'Cuidado' },
+                                                        { name: 'Stethoscope', label: 'Saúde' },
+                                                        { name: 'GraduationCap', label: 'Ensino' },
+                                                        { name: 'Bookmark', label: 'Marcador' },
+                                                        { name: 'HelpCircle', label: 'Dúvidas' },
+                                                        { name: 'Info', label: 'Info' },
+                                                        { name: 'Layers', label: 'Módulos' },
+                                                        { name: 'Lightbulb', label: 'Ideia' }
+                                                    ].map(item => (
+                                                        <button
+                                                            key={item.name}
+                                                            type="button"
+                                                            onClick={() => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, icon: item.name } })}
+                                                            className={`py-2 px-1.5 rounded-xl border flex flex-col items-center gap-1 transition-all ${(selectedBlock.data?.icon || 'BookOpen') === item.name
+                                                                    ? 'bg-primary text-white border-primary shadow-xs font-bold'
+                                                                    : 'bg-warm-50 text-warm-700 border-warm-200 hover:bg-warm-100'
+                                                                }`}
+                                                            title={item.label}
+                                                        >
+                                                            <span className="text-[11px] truncate max-w-full">{item.label}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Cor de Destaque</label>
+                                                <div className="grid grid-cols-3 gap-1.5">
+                                                    {[
+                                                        { id: 'primary', label: 'Oliva', bg: 'bg-primary' },
+                                                        { id: 'emerald', label: 'Esmeralda', bg: 'bg-emerald-600' },
+                                                        { id: 'blue', label: 'Azul', bg: 'bg-blue-600' },
+                                                        { id: 'purple', label: 'Roxo', bg: 'bg-purple-600' },
+                                                        { id: 'amber', label: 'Âmbar', bg: 'bg-amber-600' },
+                                                        { id: 'rose', label: 'Rosa', bg: 'bg-rose-600' }
+                                                    ].map(c => (
+                                                        <button
+                                                            key={c.id}
+                                                            type="button"
+                                                            onClick={() => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, iconColor: c.id } })}
+                                                            className={`py-1.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all ${(selectedBlock.data?.iconColor || 'primary') === c.id
+                                                                    ? 'border-warm-900 bg-warm-100 font-extrabold shadow-xs'
+                                                                    : 'border-warm-200 hover:bg-warm-50 text-warm-700'
+                                                                }`}
+                                                        >
+                                                            <span className={`w-2.5 h-2.5 rounded-full ${c.bg}`} />
+                                                            <span className="truncate">{c.label}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Tag / Badge Superior (Opcional)</label>
+                                                <input
+                                                    type="text"
+                                                    value={selectedBlock.data?.badge || ''}
+                                                    onChange={(e) => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, badge: e.target.value } })}
+                                                    placeholder="Ex: Módulo 1, Conceito..."
+                                                    className="w-full bg-warm-50 border border-warm-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-primary outline-none"
+                                                />
+                                            </div>
+
+                                            <div className="flex items-center justify-between p-3 bg-warm-50 rounded-2xl border border-warm-200">
+                                                <span className="text-xs font-bold text-warm-800">Linha Divisória Inferior</span>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedBlock.data?.showDivider !== false}
+                                                    onChange={(e) => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, showDivider: e.target.checked } })}
+                                                    className="w-4 h-4 text-primary rounded cursor-pointer"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="pt-4 border-t border-warm-100 mt-8">
+                                        <button onClick={() => deleteBlock(selectedBlock.id)} className="w-full py-2 bg-red-50 text-red-600 hover:bg-red-100 font-medium rounded-lg text-xs border border-red-200 flex justify-center items-center gap-1.5">
+                                            <Trash2 size={13} /> Excluir Bloco
+                                        </button>
                                     </div>
                                 </div>
                             )}
-
-                            <div className="pt-4 border-t border-warm-100 mt-8">
-                                <button onClick={() => deleteBlock(selectedBlock.id)} className="w-full py-2 bg-red-50 text-red-600 hover:bg-red-100 font-medium rounded-lg text-xs border border-red-200 flex justify-center items-center gap-1.5">
-                                    <Trash2 size={13} /> Excluir Bloco
-                                </button>
-                            </div>
                         </div>
                     )}
-                    </div>
-                )}
                 </div>
             </div>
 
@@ -1811,7 +1981,7 @@ const ModuleContentEditor: React.FC = () => {
                     <CheckCircle2 size={18} /> <span className="font-medium">{successMessage}</span>
                 </div>
             )}
-            
+
             {showPublishModal && (
                 <div className="fixed inset-0 z-[70] flex items-center justify-center bg-warm-900/50 backdrop-blur-sm p-4">
                     <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md border border-warm-200">
@@ -1845,9 +2015,9 @@ const ModuleContentEditor: React.FC = () => {
                             const currentBlock = blocks.find(b => b.id === selectedBlockId);
                             const orig = currentBlock?.data?.originalSrc || croppingImage;
                             const isRestoring = newUrl === orig;
-                            updateBlock(selectedBlockId, { 
-                                data: { 
-                                    ...currentBlock?.data, 
+                            updateBlock(selectedBlockId, {
+                                data: {
+                                    ...currentBlock?.data,
                                     src: newUrl,
                                     originalSrc: orig
                                 },

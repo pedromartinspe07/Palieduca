@@ -15,19 +15,34 @@ const API_URL = import.meta.env.VITE_API_URL ||
 interface ImageCropperModalProps {
     imageUrl: string;
     originalUrl?: string;
+    cropShape?: 'round' | 'rect';
+    initialAspect?: AspectRatioOption;
+    title?: string;
+    hideUseOriginal?: boolean;
     onClose: () => void;
     onCropComplete: (newUrl: string) => void;
+    onSaveBlob?: (blob: Blob) => Promise<void> | void;
 }
 
 type AspectRatioOption = 'original' | 'free' | '1:1' | '16:9' | '4:3' | '3:4' | '9:16';
 
-const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ imageUrl, originalUrl, onClose, onCropComplete }) => {
+const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ 
+    imageUrl, 
+    originalUrl, 
+    cropShape = 'rect',
+    initialAspect = 'original',
+    title = 'Ajustar e Recortar Imagem',
+    hideUseOriginal = false,
+    onClose, 
+    onCropComplete,
+    onSaveBlob
+}) => {
     const { token: authToken } = useAuth();
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [rotation, setRotation] = useState(0);
-    const [aspectRatioType, setAspectRatioType] = useState<AspectRatioOption>('original');
-    const [naturalAspect, setNaturalAspect] = useState<number | undefined>(undefined);
+    const [aspectRatioType, setAspectRatioType] = useState<AspectRatioOption>(initialAspect);
+    const [naturalAspect, setNaturalAspect] = useState<number | undefined>(initialAspect === '1:1' ? 1 : undefined);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
@@ -185,6 +200,13 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ imageUrl, origina
         setIsSaving(true);
         try {
             const croppedBlob = await getCroppedImg(fullImageUrl, croppedAreaPixels, rotation);
+            
+            if (onSaveBlob) {
+                await onSaveBlob(croppedBlob);
+                setIsSaving(false);
+                return;
+            }
+
             const file = new File([croppedBlob], `cropped_${Date.now()}.jpg`, { type: 'image/jpeg' });
             
             const token = authToken || localStorage.getItem('palieduca_token') || localStorage.getItem('token');
@@ -227,21 +249,23 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ imageUrl, origina
                             <Crop size={22} />
                         </div>
                         <div>
-                            <h2 className="text-lg sm:text-xl font-bold">Ajustar e Recortar Imagem</h2>
-                            <p className="text-xs text-warm-500 hidden sm:block">Selecione uma proporção ou use a imagem original inteira</p>
+                            <h2 className="text-lg sm:text-xl font-bold">{title}</h2>
+                            <p className="text-xs text-warm-500 hidden sm:block">Ajuste o enquadramento, zoom e rotação da imagem</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button 
-                            type="button"
-                            onClick={handleUseOriginal}
-                            disabled={isSaving}
-                            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-warm-200/70 hover:bg-warm-300 text-warm-800 rounded-xl text-xs font-bold transition-colors shadow-sm"
-                            title="Usar imagem sem nenhum corte"
-                        >
-                            <Sparkles size={14} className="text-primary" />
-                            Usar Imagem Inteira (Sem corte)
-                        </button>
+                        {!hideUseOriginal && (
+                            <button 
+                                type="button"
+                                onClick={handleUseOriginal}
+                                disabled={isSaving}
+                                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-warm-200/70 hover:bg-warm-300 text-warm-800 rounded-xl text-xs font-bold transition-colors shadow-sm"
+                                title="Usar imagem sem nenhum corte"
+                            >
+                                <Sparkles size={14} className="text-primary" />
+                                Usar Imagem Inteira (Sem corte)
+                            </button>
+                        )}
                         <button 
                             onClick={onClose}
                             disabled={isSaving}
@@ -362,6 +386,7 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ imageUrl, origina
                         zoom={zoom}
                         rotation={rotation}
                         aspect={getAspectValue()}
+                        cropShape={cropShape}
                         minZoom={0.5}
                         maxZoom={4}
                         zoomWithScroll={true}

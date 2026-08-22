@@ -4,12 +4,13 @@ import {
     UserCircle, LogOut, Users, BookOpen, Palette, KeyRound, 
     Lock, X, CheckCircle2, AlertCircle, Loader2, ShieldCheck, Clock, Camera, 
     Trash2, Globe, UploadCloud, Sparkles, Download, Database, RefreshCw, 
-    Award, TrendingUp, Layers, ChevronRight
+    Award, TrendingUp, Layers, ChevronRight, Crop
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { parseGoogleDriveUrl, parseZohoWorkDriveUrl, getFullMediaUrl } from '../utils/mediaUtils';
 import CertificateModal from '../components/CertificateModal';
 import StudentAnalyticsDashboard from '../components/StudentAnalyticsDashboard';
+import ImageCropperModal from '../components/cms/ImageCropperModal';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://127.0.0.1:8000'
@@ -30,6 +31,8 @@ const Perfil: React.FC = () => {
 
     // Profile photo modal state
     const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+    const [isCropperOpen, setIsCropperOpen] = useState(false);
+    const [cropTargetImage, setCropTargetImage] = useState<string | null>(null);
     const [photoTab, setPhotoTab] = useState<'upload' | 'link'>('upload');
     const [photoUrlInput, setPhotoUrlInput] = useState('');
     const [photoLoading, setPhotoLoading] = useState(false);
@@ -250,91 +253,38 @@ const Perfil: React.FC = () => {
         }
     };
 
-    // Client-side lightweight image compression com corte quadrado centralizado 1:1 perfeito
-    const compressImage = (file: File): Promise<Blob> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (event) => {
-                const img = new Image();
-                img.src = event.target?.result as string;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    
-                    // Corta o centro exato da foto em proporção 1:1 perfeita (evita esticar fotos verticais ou horizontais)
-                    const minDim = Math.min(img.width, img.height);
-                    const startX = (img.width - minDim) / 2;
-                    const startY = (img.height - minDim) / 2;
-                    const TARGET_SIZE = Math.min(minDim, 400);
-
-                    canvas.width = TARGET_SIZE;
-                    canvas.height = TARGET_SIZE;
-                    const ctx = canvas.getContext('2d');
-                    ctx?.drawImage(img, startX, startY, minDim, minDim, 0, 0, TARGET_SIZE, TARGET_SIZE);
-
-                    canvas.toBlob((blob) => {
-                        if (blob) resolve(blob);
-                        else reject(new Error('Falha ao comprimir imagem'));
-                    }, 'image/webp', 0.85);
-                };
-                img.onerror = () => reject(new Error('Falha ao processar imagem'));
-            };
-            reader.onerror = () => reject(new Error('Falha ao ler arquivo'));
-        });
-    };
-
-    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        setPhotoLoading(true);
-        setPhotoError('');
-        setPhotoSuccess('');
-
-        try {
-            const compressedBlob = await compressImage(file);
-            const formData = new FormData();
-            formData.append('file', compressedBlob, `avatar_${Date.now()}.webp`);
-
-            const res = await fetch(`${API_URL}/api/auth/profile-photo`, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`
-                },
-                body: formData
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.detail || 'Erro ao enviar foto');
-
-            updateUser({ foto_url: data.foto_url });
-            setPhotoSuccess('Foto de perfil atualizada com sucesso!');
-            setTimeout(() => {
-                setIsPhotoModalOpen(false);
-                setPhotoSuccess('');
-            }, 2000);
-        } catch (err: any) {
-            setPhotoError(err.message || 'Erro ao atualizar foto');
-        } finally {
-            setPhotoLoading(false);
-            if (fileInputRef.current) fileInputRef.current.value = '';
-        }
+        const objectUrl = URL.createObjectURL(file);
+        setCropTargetImage(objectUrl);
+        setIsCropperOpen(true);
+        setIsPhotoModalOpen(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
-    const handleLinkSubmit = async (e: React.FormEvent) => {
+    const handleLinkSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!photoUrlInput.trim()) return;
-
-        setPhotoLoading(true);
-        setPhotoError('');
-        setPhotoSuccess('');
 
         let parsedUrl = parseGoogleDriveUrl(photoUrlInput.trim());
         parsedUrl = parseZohoWorkDriveUrl(parsedUrl);
 
+        setCropTargetImage(parsedUrl);
+        setIsCropperOpen(true);
+        setIsPhotoModalOpen(false);
+        setPhotoUrlInput('');
+    };
+
+    const handleSaveCroppedAvatar = async (croppedBlob: Blob) => {
+        setPhotoLoading(true);
+        setPhotoError('');
+        setPhotoSuccess('');
+
         try {
             const formData = new FormData();
-            formData.append('foto_url', parsedUrl);
+            formData.append('file', croppedBlob, `avatar_${Date.now()}.webp`);
 
             const res = await fetch(`${API_URL}/api/auth/profile-photo`, {
                 method: 'POST',
@@ -345,17 +295,15 @@ const Perfil: React.FC = () => {
             });
 
             const data = await res.json();
-            if (!res.ok) throw new Error(data.detail || 'Erro ao vincular link da foto');
+            if (!res.ok) throw new Error(data.detail || 'Erro ao salvar foto');
 
             updateUser({ foto_url: data.foto_url });
-            setPhotoSuccess('Foto de perfil atualizada!');
-            setPhotoUrlInput('');
-            setTimeout(() => {
-                setIsPhotoModalOpen(false);
-                setPhotoSuccess('');
-            }, 2000);
+            setIsCropperOpen(false);
+            setCropTargetImage(null);
+            setPhotoSuccess('Foto de perfil atualizada com sucesso!');
         } catch (err: any) {
-            setPhotoError(err.message || 'Erro ao salvar link da foto');
+            console.error('Erro ao salvar foto:', err);
+            alert(err.message || 'Erro ao atualizar foto');
         } finally {
             setPhotoLoading(false);
         }
@@ -503,6 +451,19 @@ const Perfil: React.FC = () => {
                             <Camera size={16} />
                             Alterar Foto de Perfil
                         </button>
+
+                        {resolvedFotoUrl && (
+                            <button
+                                onClick={() => {
+                                    setCropTargetImage(user.foto_url || null);
+                                    setIsCropperOpen(true);
+                                }}
+                                className="w-full flex items-center justify-center gap-2 text-primary hover:bg-primary/10 p-3 rounded-2xl border border-primary/20 bg-primary/5 transition-all font-bold text-xs cursor-pointer"
+                            >
+                                <Crop size={16} />
+                                Ajustar Enquadramento / Recortar
+                            </button>
+                        )}
 
                         <button
                             onClick={() => setIsPasswordModalOpen(true)}
@@ -816,18 +777,50 @@ const Perfil: React.FC = () => {
                         )}
 
                         {user.foto_url && (
-                            <div className="mt-5 pt-4 border-t border-warm-100 flex justify-center">
+                            <div className="mt-5 pt-4 border-t border-warm-100 flex flex-col gap-2">
                                 <button
                                     type="button"
-                                    onClick={handleDeletePhoto}
-                                    className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
+                                    onClick={() => {
+                                        setCropTargetImage(user.foto_url || null);
+                                        setIsCropperOpen(true);
+                                        setIsPhotoModalOpen(false);
+                                    }}
+                                    className="w-full py-2 bg-warm-100 hover:bg-warm-200 text-warm-800 text-xs rounded-xl font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                                 >
-                                    <Trash2 size={14} /> Remover Foto de Perfil
+                                    <Crop size={14} className="text-primary" />
+                                    Ajustar Enquadramento da Foto Atual
                                 </button>
+
+                                <div className="flex justify-center">
+                                    <button
+                                        type="button"
+                                        onClick={handleDeletePhoto}
+                                        className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
+                                    >
+                                        <Trash2 size={14} /> Remover Foto de Perfil
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
                 </div>
+            )}
+
+            {/* Modal de Recorte / Enquadramento de Foto de Perfil */}
+            {isCropperOpen && cropTargetImage && (
+                <ImageCropperModal
+                    imageUrl={cropTargetImage}
+                    cropShape="round"
+                    initialAspect="1:1"
+                    title="Ajustar e Enquadrar Foto de Perfil"
+                    hideUseOriginal={false}
+                    onClose={() => {
+                        setIsCropperOpen(false);
+                        setCropTargetImage(null);
+                    }}
+                    onCropComplete={() => {}}
+                    onSaveBlob={handleSaveCroppedAvatar}
+                />
             )}
 
             {/* Modal de Alteração de Senha */}

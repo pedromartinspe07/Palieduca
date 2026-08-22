@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2, ArrowLeft, BookOpen, CheckCircle2, Circle, Sparkles, MonitorPlay, ChevronLeft, ChevronRight, X, Award } from 'lucide-react';
 import BlockRenderer from '../components/cms/blocks/BlockRenderer';
 import { useAuth } from '../context/AuthContext';
+import { getModuleIcon } from '../utils/iconUtils';
 import '../index.css';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -199,8 +200,8 @@ const ModuleViewer: React.FC = () => {
                 {/* Conteúdo Principal do Módulo */}
                 <div className="glassmorphism p-6 md:p-10 rounded-3xl border border-warm-200 shadow-xl bg-white mb-12">
                     <div className="flex items-center gap-4 mb-8 pb-8 border-b border-warm-100">
-                        <div className="bg-primary/10 p-4 rounded-2xl text-primary shrink-0">
-                            <BookOpen size={32} />
+                        <div className="bg-primary/10 p-4 rounded-2xl text-primary shrink-0 shadow-xs">
+                            {getModuleIcon(moduleInfo?.icon_name, 32)}
                         </div>
                         <div>
                             <h1 className="text-2xl md:text-3xl font-bold text-warm-900">

@@ -44,7 +44,7 @@ export const getFullMediaUrl = (url: string | undefined): string => {
     if (!url) return '';
     let parsed = parseGoogleDriveUrl(url);
     parsed = parseZohoWorkDriveUrl(parsed);
-    if (parsed.startsWith('http://') || parsed.startsWith('https://') || parsed.startsWith('data:')) {
+    if (parsed.startsWith('http://') || parsed.startsWith('https://') || parsed.startsWith('data:') || parsed.startsWith('blob:')) {
         return parsed;
     }
     const apiBase = import.meta.env.VITE_API_URL || 

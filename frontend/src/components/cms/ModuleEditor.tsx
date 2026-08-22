@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Pencil, CheckCircle2, Loader2, X, Image as ImageIcon, UploadCloud } from 'lucide-react';
 import MediaLibrary from './MediaLibrary';
+import { getModuleIcon } from '../../utils/iconUtils';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
@@ -198,9 +199,14 @@ const ModuleEditor: React.FC = () => {
                             </div>
                         ) : (
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                <div>
-                                    <h4 className="font-bold text-warm-900 text-lg">{mod.title}</h4>
-                                    <p className="text-sm text-warm-500 line-clamp-1">{mod.description}</p>
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-primary/10 p-2.5 rounded-xl text-primary shrink-0 flex items-center justify-center">
+                                        {getModuleIcon(mod.icon_name, 22)}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-warm-900 text-lg">{mod.title}</h4>
+                                        <p className="text-sm text-warm-500 line-clamp-1">{mod.description}</p>
+                                    </div>
                                 </div>
                                 <button
                                     onClick={() => handleEdit(mod)}

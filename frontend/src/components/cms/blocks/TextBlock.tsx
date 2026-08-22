@@ -1,8 +1,38 @@
 import React, { useRef, useEffect } from 'react';
 import type { BlockProps } from './types';
+import { 
+    BookOpen, Book, FileText, Sparkles, HeartPulse, Stethoscope, 
+    GraduationCap, Bookmark, HelpCircle, Info, Layers, Lightbulb,
+    Type, Users, Brain, HeartHandshake, Scale, MessageSquare
+} from 'lucide-react';
+
+const ICON_MAP: Record<string, React.FC<{ size?: number; className?: string }>> = {
+    BookOpen,
+    Book,
+    FileText,
+    Sparkles,
+    HeartPulse,
+    Stethoscope,
+    GraduationCap,
+    Bookmark,
+    HelpCircle,
+    Info,
+    Layers,
+    Lightbulb,
+    Type,
+    Users,
+    Brain,
+    HeartHandshake,
+    Scale,
+    MessageSquare
+};
 
 const TextBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdate, onSelect }) => {
     const { content } = block.data;
+    const iconName = block.data?.icon_name || block.data?.icon;
+    const iconColor = block.data?.iconColor || 'primary';
+    const IconComponent = iconName ? ICON_MAP[iconName] : null;
+
     const { 
         fontSize = 16, 
         textColor = '#374151',
@@ -20,6 +50,26 @@ const TextBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
 
     const textRef = useRef<HTMLDivElement>(null);
     const isFocusedRef = useRef(false);
+
+    const getColorClasses = (color: string) => {
+        switch (color) {
+            case 'emerald':
+                return { bg: 'bg-emerald-100', text: 'text-emerald-700' };
+            case 'blue':
+                return { bg: 'bg-blue-100', text: 'text-blue-700' };
+            case 'purple':
+                return { bg: 'bg-purple-100', text: 'text-purple-700' };
+            case 'amber':
+                return { bg: 'bg-amber-100', text: 'text-amber-700' };
+            case 'rose':
+                return { bg: 'bg-rose-100', text: 'text-rose-700' };
+            case 'primary':
+            default:
+                return { bg: 'bg-primary/10', text: 'text-primary' };
+        }
+    };
+
+    const colorClasses = getColorClasses(iconColor);
 
     // Sincroniza o HTML inicial APENAS se o elemento não estiver com o foco ativo do usuário.
     // Isso impede que o React recrie o innerHTML a cada Enter ou letra digitada, mantendo o cursor perfeitamente no lugar!
@@ -51,37 +101,44 @@ const TextBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
             }`}
         >
             <div className="max-w-[85rem] mx-auto px-6 py-6">
-                <div
-                    ref={textRef}
-                    contentEditable={isEditing}
-                    suppressContentEditableWarning={true}
-                    onFocus={() => { isFocusedRef.current = true; }}
-                    onBlur={() => { 
-                        isFocusedRef.current = false; 
-                        handleTextChange(); 
-                    }}
-                    onInput={handleTextChange}
-                    className="prose prose-warm rich-text-content max-w-none outline-none transition-all duration-150"
-                    style={{ 
-                        fontSize: `${fontSize}px`, 
-                        color: textColor,
-                        fontFamily: fontFamily === 'serif' ? 'Georgia, Cambria, "Times New Roman", Times, serif' :
-                                    fontFamily === 'mono' ? 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' :
-                                    fontFamily === 'rounded' ? '"Outfit", "Poppins", sans-serif' :
-                                    'Inter, system-ui, -apple-system, sans-serif',
-                        fontWeight: fontWeight,
-                        textAlign: (textAlign && textAlign !== 'left') ? textAlign as any : undefined,
-                        lineHeight: lineHeight,
-                        letterSpacing: letterSpacing,
-                        textTransform: textTransform as any,
-                        textDecoration: textDecoration as any,
-                        backgroundColor: backgroundColor !== 'transparent' ? backgroundColor : undefined,
-                        textShadow: textShadow !== 'none' ? textShadow : undefined,
-                        padding: backgroundColor !== 'transparent' ? '1.5rem' : undefined,
-                        borderRadius: backgroundColor !== 'transparent' ? '1rem' : undefined,
-                        ['--p-spacing' as any]: paragraphSpacing || '0px'
-                    }}
-                />
+                <div className="flex items-start gap-4">
+                    {IconComponent && (
+                        <div className={`${colorClasses.bg} p-3.5 rounded-2xl ${colorClasses.text} shrink-0 shadow-xs mt-1`}>
+                            <IconComponent size={28} />
+                        </div>
+                    )}
+                    <div
+                        ref={textRef}
+                        contentEditable={isEditing}
+                        suppressContentEditableWarning={true}
+                        onFocus={() => { isFocusedRef.current = true; }}
+                        onBlur={() => { 
+                            isFocusedRef.current = false; 
+                            handleTextChange(); 
+                        }}
+                        onInput={handleTextChange}
+                        className="flex-1 min-w-0 prose prose-warm rich-text-content max-w-none outline-none transition-all duration-150"
+                        style={{ 
+                            fontSize: `${fontSize}px`, 
+                            color: textColor,
+                            fontFamily: fontFamily === 'serif' ? 'Georgia, Cambria, "Times New Roman", Times, serif' :
+                                        fontFamily === 'mono' ? 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' :
+                                        fontFamily === 'rounded' ? '"Outfit", "Poppins", sans-serif' :
+                                        'Inter, system-ui, -apple-system, sans-serif',
+                            fontWeight: fontWeight,
+                            textAlign: (textAlign && textAlign !== 'left') ? textAlign as any : undefined,
+                            lineHeight: lineHeight,
+                            letterSpacing: letterSpacing,
+                            textTransform: textTransform as any,
+                            textDecoration: textDecoration as any,
+                            backgroundColor: backgroundColor !== 'transparent' ? backgroundColor : undefined,
+                            textShadow: textShadow !== 'none' ? textShadow : undefined,
+                            padding: backgroundColor !== 'transparent' ? '1.5rem' : undefined,
+                            borderRadius: backgroundColor !== 'transparent' ? '1rem' : undefined,
+                            ['--p-spacing' as any]: paragraphSpacing || '0px'
+                        }}
+                    />
+                </div>
             </div>
 
             {isSelected && (

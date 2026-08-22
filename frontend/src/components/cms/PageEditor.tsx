@@ -6,7 +6,7 @@ import {
     Crop, RotateCcw, RotateCw, Monitor, Tablet, Smartphone,
     Globe, Share2, AlertCircle, RefreshCw, AlignLeft, AlignCenter, AlignRight, AlignJustify,
     Underline, Strikethrough, Pipette, Wand2, Search, Check, Plus, CheckCheck,
-    ExternalLink, Link as LinkIcon, History
+    ExternalLink, Link as LinkIcon, History, BookOpen
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BlockRenderer from './blocks/BlockRenderer';
@@ -31,10 +31,10 @@ const PAGES_AVAILABLE = [
 ];
 
 const BLOCK_TEMPLATES: { type: BlockData['type']; label: string; icon: React.ReactNode; description: string; defaultData: any }[] = [
-{
-type: 'HeroBlock', label: 'Hero Section', icon: <Sparkles size={20} />, description: 'Banner principal com imagem de fundo',
-defaultData: { title: 'Novo Hero', subtitle: 'Subtítulo descritivo', bgImage: '' }
-},
+    {
+        type: 'HeroBlock', label: 'Hero Section', icon: <Sparkles size={20} />, description: 'Banner principal com imagem de fundo',
+        defaultData: { title: 'Novo Hero', subtitle: 'Subtítulo descritivo', bgImage: '' }
+    },
 {
 type: 'ModulesGridBlock', label: 'Grade de Módulos', icon: <Layers size={20} />, description: 'Grid dinâmico com os módulos ativos',
 defaultData: { title: 'Nossos Módulos', intro: 'Explore o conteúdo disponível.' }
@@ -1892,8 +1892,87 @@ onSelect={setSelectedBlockId}
                                     ))}
                                 </div>
                             </div>
-                        </div>
-                    )}
+
+                            {/* 10. Ícone Lateral do Texto (Opcional) */}
+                            <div className="pt-3 border-t border-warm-100">
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-xs font-bold text-warm-700 flex items-center gap-1.5">
+                                        <BookOpen size={14} className="text-primary" /> Ícone Lateral do Texto
+                                    </label>
+                                    {(selectedBlock.data?.icon_name || selectedBlock.data?.icon) && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, icon_name: undefined, icon: undefined } })}
+                                                    className="text-[10px] text-red-600 hover:text-red-700 font-bold hover:underline"
+                                                >
+                                                    Remover Ícone
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className="grid grid-cols-3 gap-1.5 mb-3">
+                                            {[
+                                                { name: 'BookOpen', label: 'Livro Aberto' },
+                                                { name: 'Book', label: 'Livro' },
+                                                { name: 'Stethoscope', label: 'Estetoscópio' },
+                                                { name: 'HeartPulse', label: 'Cuidado' },
+                                                { name: 'Brain', label: 'Cérebro' },
+                                                { name: 'HeartHandshake', label: 'Acolhimento' },
+                                                { name: 'Scale', label: 'Ética' },
+                                                { name: 'Users', label: 'Pessoas' },
+                                                { name: 'Sparkles', label: 'Destaque' },
+                                                { name: 'Lightbulb', label: 'Ideia' },
+                                                { name: 'Info', label: 'Info' },
+                                                { name: 'HelpCircle', label: 'Dúvidas' }
+                                            ].map(item => (
+                                                <button
+                                                    key={item.name}
+                                                    type="button"
+                                                    onClick={() => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, icon_name: item.name, icon: item.name } })}
+                                                    className={`py-2 px-1 rounded-xl border flex flex-col items-center gap-1 transition-all ${
+                                                        (selectedBlock.data?.icon_name || selectedBlock.data?.icon) === item.name
+                                                            ? 'bg-primary text-white border-primary shadow-xs font-bold'
+                                                            : 'bg-warm-50 text-warm-700 border-warm-200 hover:bg-warm-100'
+                                                    }`}
+                                                    title={item.label}
+                                                >
+                                                    <span className="text-[10px] truncate max-w-full">{item.label}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {(selectedBlock.data?.icon_name || selectedBlock.data?.icon) && (
+                                            <div>
+                                                <label className="block text-[11px] font-bold text-warm-600 mb-1">Cor do Ícone</label>
+                                                <div className="grid grid-cols-3 gap-1">
+                                                    {[
+                                                        { id: 'primary', label: 'Oliva', bg: 'bg-primary' },
+                                                        { id: 'emerald', label: 'Esmeralda', bg: 'bg-emerald-600' },
+                                                        { id: 'blue', label: 'Azul', bg: 'bg-blue-600' },
+                                                        { id: 'purple', label: 'Roxo', bg: 'bg-purple-600' },
+                                                        { id: 'amber', label: 'Âmbar', bg: 'bg-amber-600' },
+                                                        { id: 'rose', label: 'Rosa', bg: 'bg-rose-600' }
+                                                    ].map(c => (
+                                                        <button
+                                                            key={c.id}
+                                                            type="button"
+                                                            onClick={() => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, iconColor: c.id } })}
+                                                            className={`py-1 px-1.5 rounded-lg text-[11px] font-bold border flex items-center justify-center gap-1 transition-all ${
+                                                                (selectedBlock.data?.iconColor || 'primary') === c.id
+                                                                    ? 'border-warm-900 bg-warm-100 font-extrabold shadow-xs'
+                                                                    : 'border-warm-200 hover:bg-warm-50 text-warm-700'
+                                                            }`}
+                                                        >
+                                                            <span className={`w-2 h-2 rounded-full ${c.bg}`} />
+                                                            <span className="truncate">{c.label}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                     {selectedBlock.type === 'SpacerBlock' && (
                         <div className="space-y-4">
@@ -2106,6 +2185,100 @@ onSelect={setSelectedBlockId}
                                 <p className="text-[11px] leading-relaxed">
                                     Você pode <strong>clicar diretamente no ícone de qualquer card na tela</strong> para abrir o seletor visual de ícones e mudar as cores!
                                 </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* HeaderBlock Properties */}
+                    {selectedBlock.type === 'HeaderBlock' && (
+                        <div className="space-y-5 text-left">
+                            <div className="flex items-center justify-between border-b border-warm-100 pb-2">
+                                <h4 className="text-xs font-bold text-warm-900 uppercase tracking-wider flex items-center gap-1.5">
+                                    <BookOpen size={15} className="text-primary" /> Cabeçalho com Ícone
+                                </h4>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Escolher Ícone</label>
+                                <div className="grid grid-cols-3 gap-1.5">
+                                    {[
+                                        { name: 'BookOpen', label: 'Livro Aberto' },
+                                        { name: 'Book', label: 'Livro' },
+                                        { name: 'FileText', label: 'Documento' },
+                                        { name: 'Sparkles', label: 'Destaque' },
+                                        { name: 'HeartPulse', label: 'Cuidado' },
+                                        { name: 'Stethoscope', label: 'Saúde' },
+                                        { name: 'GraduationCap', label: 'Ensino' },
+                                        { name: 'Bookmark', label: 'Marcador' },
+                                        { name: 'HelpCircle', label: 'Dúvidas' },
+                                        { name: 'Info', label: 'Info' },
+                                        { name: 'Layers', label: 'Módulos' },
+                                        { name: 'Lightbulb', label: 'Ideia' }
+                                    ].map(item => (
+                                        <button
+                                            key={item.name}
+                                            type="button"
+                                            onClick={() => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, icon: item.name } })}
+                                            className={`py-2 px-1.5 rounded-xl border flex flex-col items-center gap-1 transition-all ${
+                                                (selectedBlock.data?.icon || 'BookOpen') === item.name
+                                                    ? 'bg-primary text-white border-primary shadow-xs font-bold'
+                                                    : 'bg-warm-50 text-warm-700 border-warm-200 hover:bg-warm-100'
+                                            }`}
+                                            title={item.label}
+                                        >
+                                            <span className="text-[11px] truncate max-w-full">{item.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Cor de Destaque</label>
+                                <div className="grid grid-cols-3 gap-1.5">
+                                    {[
+                                        { id: 'primary', label: 'Oliva', bg: 'bg-primary' },
+                                        { id: 'emerald', label: 'Esmeralda', bg: 'bg-emerald-600' },
+                                        { id: 'blue', label: 'Azul', bg: 'bg-blue-600' },
+                                        { id: 'purple', label: 'Roxo', bg: 'bg-purple-600' },
+                                        { id: 'amber', label: 'Âmbar', bg: 'bg-amber-600' },
+                                        { id: 'rose', label: 'Rosa', bg: 'bg-rose-600' }
+                                    ].map(c => (
+                                        <button
+                                            key={c.id}
+                                            type="button"
+                                            onClick={() => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, iconColor: c.id } })}
+                                            className={`py-1.5 px-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all ${
+                                                (selectedBlock.data?.iconColor || 'primary') === c.id
+                                                    ? 'border-warm-900 bg-warm-100 font-extrabold shadow-xs'
+                                                    : 'border-warm-200 hover:bg-warm-50 text-warm-700'
+                                            }`}
+                                        >
+                                            <span className={`w-2.5 h-2.5 rounded-full ${c.bg}`} />
+                                            <span className="truncate">{c.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Tag / Badge Superior (Opcional)</label>
+                                <input
+                                    type="text"
+                                    value={selectedBlock.data?.badge || ''}
+                                    onChange={(e) => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, badge: e.target.value } })}
+                                    placeholder="Ex: Página Oficial, Glossário..."
+                                    className="w-full bg-warm-50 border border-warm-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-primary outline-none"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between p-3 bg-warm-50 rounded-2xl border border-warm-200">
+                                <span className="text-xs font-bold text-warm-800">Linha Divisória Inferior</span>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedBlock.data?.showDivider !== false}
+                                    onChange={(e) => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, showDivider: e.target.checked } })}
+                                    className="w-4 h-4 text-primary rounded cursor-pointer"
+                                />
                             </div>
                         </div>
                     )}

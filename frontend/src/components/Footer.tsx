@@ -66,9 +66,9 @@ const Footer: React.FC = () => {
                             Pedro Martins
                         </a>
                         <span>&amp;</span>
-                        <span className="text-warm-300">
+                        <a href="https://github.com/eduardostc" target="_blank" rel="noopener noreferrer" className="text-warm-300 hover:text-white transition-colors">
                             Carlos Eduardo
-                        </span>
+                        </a>
                     </div>
                 </div>
             </div>

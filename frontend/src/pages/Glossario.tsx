@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Type } from 'lucide-react';
+import { Loader2, BookOpen } from 'lucide-react';
 import BlockRenderer from '../components/cms/blocks/BlockRenderer';
 import type { BlockData } from '../components/cms/blocks/types';
 
@@ -74,18 +74,30 @@ const Glossario: React.FC<GlossarioProps> = ({ isEditing, initialContent, onCont
     return (
         <main className={`min-h-screen pt-32 pb-20 px-4 bg-warm-50 ${isEditing ? 'pointer-events-auto' : ''}`}>
             <div className="max-w-4xl mx-auto">
-                <div className="flex items-center gap-3 mb-8">
-                    <div className="bg-primary text-white p-3 rounded-xl shadow-md">
-                        <Type size={28} />
+                <div className="glassmorphism p-6 sm:p-8 rounded-3xl border border-warm-200 shadow-sm bg-white mb-8">
+                    <div className="flex items-center gap-4">
+                        <div className="bg-primary/10 p-4 rounded-2xl text-primary shrink-0 shadow-xs">
+                            <BookOpen size={32} />
+                        </div>
+                        <div>
+                            <h1 
+                                contentEditable={isEditing}
+                                suppressContentEditableWarning={true}
+                                onBlur={(e) => handleTextChange('title', e.currentTarget.innerText)}
+                                className={`text-2xl sm:text-3xl font-extrabold text-warm-900 ${editableClass}`}
+                            >
+                                {content.title || 'Glossário'}
+                            </h1>
+                            <p 
+                                contentEditable={isEditing}
+                                suppressContentEditableWarning={true}
+                                onBlur={(e) => handleTextChange('intro', e.currentTarget.innerText)}
+                                className={`text-warm-600 mt-1.5 text-sm sm:text-base leading-relaxed ${editableClass}`}
+                            >
+                                {content.intro || 'Encontre aqui o significado dos principais termos médicos.'}
+                            </p>
+                        </div>
                     </div>
-                    <h1 
-                        contentEditable={isEditing}
-                        suppressContentEditableWarning={true}
-                        onBlur={(e) => handleTextChange('title', e.currentTarget.innerText)}
-                        className={`text-3xl font-bold text-warm-900 ${editableClass}`}
-                    >
-                        {content.title || 'Glossário'}
-                    </h1>
                 </div>
 
                 <div className="glassmorphism bg-white/80 p-8 md:p-12 rounded-3xl border border-warm-200 shadow-sm min-h-[50vh]">
@@ -95,12 +107,7 @@ const Glossario: React.FC<GlossarioProps> = ({ isEditing, initialContent, onCont
                         </div>
                     ) : (
                         <div className="prose prose-warm max-w-none">
-                            <p 
-                                contentEditable={isEditing}
-                                suppressContentEditableWarning={true}
-                                onBlur={(e) => handleTextChange('intro', e.currentTarget.innerText)}
-                                className={`text-lg text-warm-700 ${editableClass}`}
-                            >
+                            <p className="text-warm-700">
                                 {content.intro || 'Encontre aqui o significado dos principais termos médicos.'}
                             </p>
                             {/* Dynamic glossary content renders here */}
