@@ -56,6 +56,20 @@ seed.seed_pages()
 
 app = FastAPI()
 
+# ==========================================
+# Cibersegurança: Configurações de Upload
+# ==========================================
+ALLOWED_MEDIA_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg", ".pdf", ".mp3", ".mp4", ".wav"}
+ALLOWED_AVATAR_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"}
+MAX_MEDIA_FILE_SIZE = 25 * 1024 * 1024  # 25 MB
+MAX_AVATAR_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+def sanitize_filename(filename: str) -> str:
+    """Remove caracteres perigosos, espaços e sequências de path traversal."""
+    base_name = os.path.basename(filename)
+    clean_name = re.sub(r'[^a-zA-Z0-9_.-]', '_', base_name)
+    return clean_name[:80] or "arquivo"
+
 # Configura pasta para upload de mídias
 os.makedirs("static/uploads", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -387,18 +401,35 @@ async def update_profile_photo(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    import shutil
-    # Upload direto de arquivo
     if file and file.filename:
         filename_ext = os.path.splitext(file.filename)[1].lower()
-        if filename_ext not in [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"]:
-            raise HTTPException(status_code=400, detail="Formato de imagem inválido")
+        if filename_ext not in ALLOWED_AVATAR_EXTENSIONS:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Extensão de imagem não permitida ({filename_ext}). Use: {', '.join(sorted(ALLOWED_AVATAR_EXTENSIONS))}"
+            )
             
-        unique_filename = f"avatar_{current_user.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}{filename_ext}"
+        clean_name = sanitize_filename(file.filename)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        random_id = uuid.uuid4().hex[:6]
+        unique_filename = f"avatar_{current_user.id}_{timestamp}_{random_id}{filename_ext}"
+        
+        os.makedirs("static/uploads", exist_ok=True)
         file_path = os.path.join("static/uploads", unique_filename)
         
+        file_size = 0
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            while True:
+                chunk = await file.read(512 * 1024) # 512 KB chunks
+                if not chunk:
+                    break
+                file_size += len(chunk)
+                if file_size > MAX_AVATAR_FILE_SIZE:
+                    buffer.close()
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                    raise HTTPException(status_code=413, detail="A foto de perfil excede o limite máximo permitido de 5MB.")
+                buffer.write(chunk)
             
         current_user.foto_url = f"/static/uploads/{unique_filename}"
     elif foto_url:
@@ -1220,21 +1251,46 @@ async def upload_media_file(
     if current_user.cargo not in ["dona", "desenvolvedor"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
         
-    os.makedirs("static/uploads", exist_ok=True)
-    # Salvar arquivo no disco
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    safe_filename = f"{timestamp}_{file.filename}"
-    file_path = f"static/uploads/{safe_filename}"
+    if not file or not file.filename:
+        raise HTTPException(status_code=400, detail="Nenhum arquivo enviado.")
+
+    filename_ext = os.path.splitext(file.filename)[1].lower()
+    if filename_ext not in ALLOWED_MEDIA_EXTENSIONS:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Extensão de arquivo não permitida ({filename_ext}). Extensões aceitas: {', '.join(sorted(ALLOWED_MEDIA_EXTENSIONS))}"
+        )
+
+    # Sanitização do nome original e geração de caminho seguro contra Path Traversal
+    clean_name = sanitize_filename(file.filename)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    random_id = uuid.uuid4().hex[:8]
+    safe_filename = f"{timestamp}_{random_id}_{clean_name}"
     
+    os.makedirs("static/uploads", exist_ok=True)
+    file_path = os.path.join("static/uploads", safe_filename)
+    
+    # Leitura em chunks com limite de 25MB (Proteção contra DoS por estouro de memória/disco)
+    file_size = 0
     with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        while True:
+            chunk = await file.read(1024 * 1024) # 1 MB chunks
+            if not chunk:
+                break
+            file_size += len(chunk)
+            if file_size > MAX_MEDIA_FILE_SIZE:
+                buffer.close()
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                raise HTTPException(status_code=413, detail="O arquivo excede o limite máximo permitido de 25MB.")
+            buffer.write(chunk)
         
     # A URL que será devolvida pro frontend (caminho relativo)
     file_url = f"/static/uploads/{safe_filename}"
     
     # Salvar no banco
     media = models.MediaFile(
-        filename=file.filename,
+        filename=clean_name,
         file_url=file_url,
         uploaded_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     )
