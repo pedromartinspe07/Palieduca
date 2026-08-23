@@ -110,20 +110,26 @@ const Home: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                         {loading
                             ? Array.from({ length: 6 }).map((_, i) => <ModuleCardSkeleton key={i} />)
-                            : modules.map(module => (
-                                <div id={module.slug_id} key={module.id} className="scroll-mt-24">
-                                    <ModuleCard 
-                                        id={module.slug_id}
-                                        title={module.title}
-                                        description={module.description}
-                                        icon={iconMap[module.icon_name] || <Stethoscope size={24} />}
-                                        progress={module.progress}
-                                        resources={module.resources.split(',').map(s => s.trim())}
-                                        image={module.image_url}
-                                        delay={module.delay / 10}
-                                    />
-                                </div>
-                            ))
+                            : modules.map((module, idx) => {
+                                const levels = ['Fundamentos', 'Comunicação', 'Controle de Sintomas', 'Apoio & Família', 'Acolhimento', 'Bioética & Decisões'];
+                                const times = [15, 20, 25, 20, 15, 30];
+                                return (
+                                    <div id={module.slug_id} key={module.id} className="scroll-mt-24">
+                                        <ModuleCard 
+                                            id={module.slug_id}
+                                            title={module.title}
+                                            description={module.description}
+                                            icon={iconMap[module.icon_name] || <Stethoscope size={24} />}
+                                            progress={module.progress}
+                                            resources={module.resources.split(',').map(s => s.trim())}
+                                            image={module.image_url}
+                                            delay={(module.delay || idx * 1.5) / 10}
+                                            level={levels[idx % levels.length]}
+                                            estimatedMinutes={times[idx % times.length]}
+                                        />
+                                    </div>
+                                );
+                            })
                         }
                     </div>
                 </div>

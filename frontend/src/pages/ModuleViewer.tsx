@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, ArrowLeft, BookOpen, CheckCircle2, Circle, Sparkles, MonitorPlay, ChevronLeft, ChevronRight, X, Award } from 'lucide-react';
+import { Loader2, ArrowLeft, BookOpen, CheckCircle2, Circle, Sparkles, MonitorPlay, ChevronLeft, ChevronRight, X, Award, BookMarked } from 'lucide-react';
 import BlockRenderer from '../components/cms/blocks/BlockRenderer';
 import { useAuth } from '../context/AuthContext';
 import { getModuleIcon } from '../utils/iconUtils';
+import ConfettiCelebration from '../components/effects/ConfettiCelebration';
 import '../index.css';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -19,10 +20,28 @@ const ModuleViewer: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [moduleInfo, setModuleInfo] = useState<any>(null);
     const [completedActivities, setCompletedActivities] = useState<Set<string>>(new Set());
+    const [scrollProgress, setScrollProgress] = useState(0);
+    const [showConfetti, setShowConfetti] = useState(false);
+    const [isFocusMode, setIsFocusMode] = useState(false);
+    const [showGuestModal, setShowGuestModal] = useState(false);
 
     // Presentation mode (Modo Aula / Apresentação em Tela Cheia)
     const [isPresentationMode, setIsPresentationMode] = useState(false);
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+
+    // Scroll Progress Bar Tracker
+    useEffect(() => {
+        const handleScroll = () => {
+            const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+            if (totalHeight > 0) {
+                const current = (window.scrollY / totalHeight) * 100;
+                setScrollProgress(Math.min(100, Math.max(0, current)));
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const fetchModuleData = useCallback(async () => {
         setLoading(true);
@@ -56,8 +75,8 @@ const ModuleViewer: React.FC = () => {
                     setCompletedActivities(new Set(progData.completed_activities || []));
                 }
             }
-        } catch (error) {
-            console.error("Erro ao buscar dados do módulo:", error);
+        } catch (err) {
+            console.error('Erro ao carregar módulo:', err);
         } finally {
             setLoading(false);
         }
@@ -69,8 +88,9 @@ const ModuleViewer: React.FC = () => {
     }, [slug_id, fetchModuleData]);
 
     const toggleActivity = async (activityId: string) => {
-        if (!token) {
-            navigate('/login');
+        if (!token || !user) {
+            // Em vez de redirecionar bruscamente, abre o modal explicativo do modo Visitante
+            setShowGuestModal(true);
             return;
         }
 
@@ -82,6 +102,11 @@ const ModuleViewer: React.FC = () => {
             const next = new Set(prev);
             if (newStatus) next.add(activityId);
             else next.delete(activityId);
+            
+            // Se todas as atividades forem concluídas com este clique, dispara a chuva de confetes!
+            if (newStatus && elements.length > 0 && next.size === elements.length) {
+                setShowConfetti(true);
+            }
             return next;
         });
 
@@ -135,8 +160,24 @@ const ModuleViewer: React.FC = () => {
     }
 
     return (
-        <main className="min-h-screen pt-24 pb-16 bg-warm-50">
-            <div className="max-w-4xl mx-auto px-4">
+        <main className={`min-h-screen pt-24 pb-16 transition-colors duration-300 ${isFocusMode ? 'bg-[#fcfaf7]' : 'bg-warm-50'}`}>
+            {/* 1. Barra de Progresso de Leitura Fixa no Topo */}
+            <div className="fixed top-0 left-0 w-full h-1.5 z-[60] bg-warm-200/50 backdrop-blur-sm pointer-events-none">
+                <div
+                    className="h-full bg-gradient-to-r from-primary via-emerald-400 to-amber-400 transition-all duration-150 shadow-[0_0_10px_rgba(74,107,83,0.6)]"
+                    style={{ width: `${scrollProgress}%` }}
+                />
+            </div>
+
+            {/* 2. Chuva de Confetes ao Concluir 100% */}
+            {showConfetti && (
+                <ConfettiCelebration
+                    duration={4500}
+                    onComplete={() => setShowConfetti(false)}
+                />
+            )}
+
+            <div className={`mx-auto px-4 transition-all duration-300 ${isFocusMode ? 'max-w-3xl text-lg' : 'max-w-4xl'}`}>
                 
                 {/* Barra de Navegação & Ações Superiores */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -148,25 +189,47 @@ const ModuleViewer: React.FC = () => {
                         Voltar para Trilhas
                     </button>
 
-                    {elements.length > 0 && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                        {/* Botão de Modo Foco */}
                         <button
-                            onClick={() => { setIsPresentationMode(true); setCurrentSlideIndex(0); }}
-                            className="flex items-center gap-2 px-4 py-2 bg-warm-800 hover:bg-warm-900 text-white rounded-2xl font-bold text-xs shadow-sm transition-all cursor-pointer"
+                            type="button"
+                            onClick={() => setIsFocusMode(!isFocusMode)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-bold text-xs shadow-xs transition-all cursor-pointer border ${
+                                isFocusMode
+                                    ? 'bg-amber-100 text-amber-900 border-amber-300'
+                                    : 'bg-white text-warm-700 border-warm-200 hover:bg-warm-100'
+                            }`}
+                            title="Alternar Modo Foco / Leitura Confortável"
                         >
-                            <MonitorPlay size={15} className="text-amber-300" />
-                            Modo Apresentação (Tela Cheia)
+                            <BookMarked size={15} className={isFocusMode ? 'text-amber-700' : 'text-primary'} />
+                            <span>{isFocusMode ? 'Modo Normal' : 'Modo Leitura Focada'}</span>
                         </button>
-                    )}
+
+                        {/* Botão de Apresentação */}
+                        {elements.length > 0 && (
+                            <button
+                                onClick={() => { setIsPresentationMode(true); setCurrentSlideIndex(0); }}
+                                className="flex items-center gap-2 px-4 py-2 bg-warm-800 hover:bg-warm-900 text-white rounded-2xl font-bold text-xs shadow-sm transition-all cursor-pointer"
+                            >
+                                <MonitorPlay size={15} className="text-amber-300" />
+                                Modo Apresentação
+                            </button>
+                        )}
+                    </div>
                 </div>
 
-                {/* Card de Progresso do Módulo no Topo */}
-                {user && (
-                    <div className="bg-white p-5 rounded-3xl border border-warm-200 shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                {/* Card de Progresso do Aluno (Logado) */}
+                {user ? (
+                    <div className={`p-5 rounded-3xl border shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all ${
+                        isModuleFinished
+                            ? 'bg-gradient-to-r from-amber-50 to-emerald-50 border-amber-200'
+                            : 'bg-white border-warm-200'
+                    }`}>
                         <div className="flex items-center gap-3.5 w-full sm:w-auto">
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-                                isModuleFinished ? 'bg-emerald-100 text-emerald-700' : 'bg-primary/10 text-primary'
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-xs ${
+                                isModuleFinished ? 'bg-gradient-to-tr from-amber-400 to-amber-500 text-warm-950 animate-bounce' : 'bg-primary/10 text-primary'
                             }`}>
-                                {isModuleFinished ? <Award size={26} /> : <Sparkles size={24} />}
+                                {isModuleFinished ? <Award size={28} /> : <Sparkles size={24} />}
                             </div>
                             <div>
                                 <h4 className="text-xs font-bold uppercase tracking-wider text-warm-500">
@@ -180,25 +243,55 @@ const ModuleViewer: React.FC = () => {
 
                         {/* Barra de Progresso Visual */}
                         <div className="w-full sm:w-64 flex flex-col items-end gap-1.5">
-                            <div className="w-full bg-warm-100 rounded-full h-3 overflow-hidden border border-warm-200">
+                            <div className="w-full bg-warm-100 rounded-full h-3 overflow-hidden border border-warm-200 shadow-inner">
                                 <div 
                                     className={`h-full transition-all duration-500 rounded-full ${
                                         isModuleFinished 
-                                            ? 'bg-gradient-to-r from-emerald-500 to-teal-500' 
+                                            ? 'bg-gradient-to-r from-amber-400 via-emerald-400 to-teal-500' 
                                             : 'bg-gradient-to-r from-primary to-secondary'
                                     }`}
                                     style={{ width: `${progressPercentage}%` }}
                                 />
                             </div>
-                            <span className="text-[11px] font-bold text-warm-500">
-                                {isModuleFinished ? '🎉 Módulo 100% Concluído!' : 'Continue aprendendo para avançar'}
+                            <span className="text-[11px] font-bold text-warm-600">
+                                {isModuleFinished ? '🎉 Parabéns! Módulo 100% Concluído!' : 'Continue aprendendo para avançar'}
                             </span>
+                        </div>
+                    </div>
+                ) : (
+                    /* Banner do Modo Visitante (Demonstração) */
+                    <div className="p-5 sm:p-6 rounded-3xl border border-amber-200/90 bg-gradient-to-r from-amber-50/90 via-orange-50/50 to-white shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center gap-3.5">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 shadow-xs">
+                                <Sparkles size={24} />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-extrabold uppercase tracking-wider bg-amber-200/90 text-amber-900 px-2.5 py-0.5 rounded-full">
+                                        Modo Visitante (Demonstração)
+                                    </span>
+                                </div>
+                                <p className="text-xs text-warm-700 mt-1 max-w-xl leading-relaxed font-light">
+                                    Você está explorando o conteúdo do módulo livremente. Para marcar atividades concluídas, salvar seu progresso acadêmico e emitir certificados, crie uma conta gratuita.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/login')}
+                                className="px-4 py-2 bg-primary text-white rounded-xl font-bold text-xs shadow-sm hover:bg-sage-700 transition-all cursor-pointer"
+                            >
+                                Entrar / Cadastrar
+                            </button>
                         </div>
                     </div>
                 )}
 
                 {/* Conteúdo Principal do Módulo */}
-                <div className="glassmorphism p-6 md:p-10 rounded-3xl border border-warm-200 shadow-xl bg-white mb-12">
+                <div className={`p-6 md:p-10 rounded-3xl border shadow-xl bg-white mb-12 transition-all ${
+                    isFocusMode ? 'border-amber-200/80 shadow-2xl' : 'border-warm-200'
+                }`}>
                     <div className="flex items-center gap-4 mb-8 pb-8 border-b border-warm-100">
                         <div className="bg-primary/10 p-4 rounded-2xl text-primary shrink-0 shadow-xs">
                             {getModuleIcon(moduleInfo?.icon_name, 32)}
@@ -350,6 +443,54 @@ const ModuleViewer: React.FC = () => {
                                 }`}
                             />
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Explicativo do Modo Visitante */}
+            {showGuestModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-warm-950/60 backdrop-blur-xs animate-fade-in">
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-warm-200 text-center relative animate-scale-up">
+                        <button
+                            type="button"
+                            onClick={() => setShowGuestModal(false)}
+                            className="absolute top-4 right-4 p-2 text-warm-400 hover:text-warm-700 rounded-full hover:bg-warm-100 transition-colors cursor-pointer"
+                        >
+                            <X size={18} />
+                        </button>
+
+                        <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto mb-4 shadow-xs">
+                            <Award size={30} />
+                        </div>
+
+                        <span className="text-[10px] font-extrabold uppercase tracking-widest bg-amber-100 text-amber-900 px-3 py-1 rounded-full">
+                            Modo Visitante
+                        </span>
+
+                        <h3 className="text-xl font-extrabold text-warm-900 mt-3 mb-2">
+                            Conclua e Salve seu Progresso
+                        </h3>
+
+                        <p className="text-xs sm:text-sm text-warm-600 leading-relaxed font-light mb-6">
+                            Você está navegando como <strong>Visitante</strong> para conhecer a plataforma. Para marcar atividades como concluídas, registrar respostas em quizzes e emitir seu certificado, acesse sua conta!
+                        </p>
+
+                        <div className="flex flex-col gap-2.5">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/login')}
+                                className="w-full py-3 bg-primary text-white rounded-2xl font-bold text-xs shadow-md hover:bg-sage-700 transition-all cursor-pointer"
+                            >
+                                Criar Conta / Fazer Login
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setShowGuestModal(false)}
+                                className="w-full py-2.5 bg-warm-100 hover:bg-warm-200 text-warm-700 rounded-2xl font-bold text-xs transition-all cursor-pointer"
+                            >
+                                Continuar apenas visualizando
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

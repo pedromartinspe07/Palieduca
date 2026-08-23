@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ArrowRight, Play, Heart, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Play, Heart, ChevronLeft, ChevronRight, Sparkles, Award, GraduationCap, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import Hero3DCanvas from './3d/Hero3DCanvas';
 
 interface Slide {
     url: string;
@@ -63,17 +64,22 @@ const HeroSection: React.FC = () => {
 
     return (
         <section className="relative pt-28 pb-16 lg:pt-32 lg:pb-24 overflow-hidden">
-            {/* Background elements */}
+            {/* Background elements & Three.js 3D Sphere */}
             <div className="absolute inset-0 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-gradient-to-b from-warm-50/90 via-background to-background" />
                 <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-sage-300/15 rounded-full blur-[120px] animate-subtle-float" />
                 <div className="absolute bottom-10 right-1/4 w-[28rem] h-[28rem] bg-warm-300/15 rounded-full blur-[120px] animate-subtle-float" style={{ animationDelay: '2s' }} />
+                
+                {/* Three.js 3D Background Canvas */}
+                <div className="absolute top-10 right-0 w-full max-w-xl h-[450px] opacity-60 hidden lg:block">
+                    <Hero3DCanvas />
+                </div>
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 {/* Rectangular Banner Carousel */}
                 <div
-                    className="relative w-full h-[280px] sm:h-[380px] md:h-[440px] lg:h-[480px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-warm-200/80 bg-warm-900 group mb-12 select-none"
+                    className="relative w-full h-[280px] sm:h-[380px] md:h-[440px] lg:h-[480px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-warm-200/80 bg-warm-900 group mb-12 select-none"
                     onMouseEnter={() => setIsPaused(true)}
                     onMouseLeave={() => setIsPaused(false)}
                     aria-label="Carrossel de imagens de cuidados paliativos"
@@ -116,7 +122,7 @@ const HeroSection: React.FC = () => {
                     <button
                         onClick={prevSlide}
                         aria-label="Imagem anterior"
-                        className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/80 hover:bg-white text-warm-900 shadow-lg backdrop-blur-md flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary opacity-80 group-hover:opacity-100"
+                        className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/80 hover:bg-white text-warm-900 shadow-lg backdrop-blur-md flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary opacity-80 group-hover:opacity-100 cursor-pointer"
                     >
                         <ChevronLeft size={24} className="stroke-[2.5]" />
                     </button>
@@ -125,7 +131,7 @@ const HeroSection: React.FC = () => {
                     <button
                         onClick={nextSlide}
                         aria-label="Próxima imagem"
-                        className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/80 hover:bg-white text-warm-900 shadow-lg backdrop-blur-md flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary opacity-80 group-hover:opacity-100"
+                        className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/80 hover:bg-white text-warm-900 shadow-lg backdrop-blur-md flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary opacity-80 group-hover:opacity-100 cursor-pointer"
                     >
                         <ChevronRight size={24} className="stroke-[2.5]" />
                     </button>
@@ -137,7 +143,7 @@ const HeroSection: React.FC = () => {
                                 key={index}
                                 onClick={() => setCurrentIndex(index)}
                                 aria-label={`Ir para slide ${index + 1}`}
-                                className={`transition-all duration-300 rounded-full ${
+                                className={`transition-all duration-300 rounded-full cursor-pointer ${
                                     index === currentIndex
                                         ? 'w-6 sm:w-7 h-2 bg-white'
                                         : 'w-2 h-2 bg-white/50 hover:bg-white/80'
@@ -149,7 +155,7 @@ const HeroSection: React.FC = () => {
 
                 {/* Welcome / Presentation Content */}
                 <div className="text-center max-w-4xl mx-auto animate-slide-up">
-                    <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/80 backdrop-blur-md border border-warm-200 text-primary font-medium text-sm mb-6 shadow-sm">
+                    <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/90 backdrop-blur-md border border-warm-200 text-primary font-medium text-sm mb-6 shadow-sm hover:scale-105 transition-transform">
                         <Heart size={16} className="fill-primary" />
                         <span>Projeto de Doutorado em Enfermagem</span>
                     </div>
@@ -162,10 +168,26 @@ const HeroSection: React.FC = () => {
                         Plataforma educativa para aprofundar competências em cuidados paliativos, unindo conhecimento científico, ética e humanização no cuidado.
                     </p>
 
+                    {/* Badges Flutuantes Interativos (Gamificação / Prova Social) */}
+                    <div className="flex flex-wrap justify-center items-center gap-3 mb-10">
+                        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200/80 rounded-full text-xs font-bold shadow-xs">
+                            <CheckCircle2 size={14} className="text-emerald-600" />
+                            <span>100% Gratuito & Aberto</span>
+                        </div>
+                        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-amber-50 text-amber-800 border border-amber-200/80 rounded-full text-xs font-bold shadow-xs">
+                            <Award size={14} className="text-amber-600" />
+                            <span>Certificado com Autenticação</span>
+                        </div>
+                        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-blue-50 text-blue-800 border border-blue-200/80 rounded-full text-xs font-bold shadow-xs">
+                            <GraduationCap size={14} className="text-blue-600" />
+                            <span>6 Módulos Baseados em Evidências</span>
+                        </div>
+                    </div>
+
                     <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
                         <Link
                             to="/modulos"
-                            className="w-full sm:w-auto flex justify-center items-center gap-2 px-8 py-4 bg-primary text-white rounded-full font-medium text-lg shadow-lg hover:shadow-primary/30 hover:bg-sage-700 transition-all interactive-btn group"
+                            className="w-full sm:w-auto flex justify-center items-center gap-2 px-8 py-4 bg-primary text-white rounded-full font-bold text-lg shadow-xl hover:shadow-primary/40 hover:bg-sage-700 transition-all btn-shimmer interactive-btn group"
                         >
                             <span>Iniciar aprendizagem</span>
                             <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
@@ -173,7 +195,7 @@ const HeroSection: React.FC = () => {
 
                         <Link
                             to="/apresentacao"
-                            className="w-full sm:w-auto flex justify-center items-center gap-2 px-8 py-4 bg-white text-warm-800 rounded-full font-medium text-lg shadow-md hover:shadow-lg border border-warm-100 transition-all interactive-btn group"
+                            className="w-full sm:w-auto flex justify-center items-center gap-2 px-8 py-4 bg-white text-warm-800 rounded-full font-bold text-lg shadow-md hover:shadow-xl border border-warm-200/80 hover:border-primary/40 transition-all interactive-btn group"
                         >
                             <Play size={20} className="text-secondary group-hover:scale-110 transition-transform" />
                             <span>Ver apresentação</span>
@@ -186,4 +208,5 @@ const HeroSection: React.FC = () => {
 };
 
 export default HeroSection;
+
 

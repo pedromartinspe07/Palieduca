@@ -159,8 +159,10 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
                 <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 ${isEditing ? 'pointer-events-none opacity-80' : ''}`}>
                     {loadingModules
                         ? Array.from({ length: 6 }).map((_, i) => <ModuleCardSkeleton key={i} />)
-                        : modules.map(module => {
+                        : modules.map((module, idx) => {
                             const realProgress = moduleProgressMap[module.slug_id]?.percentage ?? 0;
+                            const levels = ['Fundamentos', 'Comunicação', 'Controle de Sintomas', 'Apoio & Família', 'Acolhimento', 'Bioética & Decisões'];
+                            const times = [15, 20, 25, 20, 15, 30];
                             return (
                                 <div id={module.slug_id} key={module.id}>
                                     <ModuleCard 
@@ -171,7 +173,9 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
                                         progress={realProgress}
                                         resources={module.resources.split(',').map(s => s.trim())}
                                         image={module.image_url}
-                                        delay={module.delay / 10}
+                                        delay={(module.delay || idx * 1.5) / 10}
+                                        level={levels[idx % levels.length]}
+                                        estimatedMinutes={times[idx % times.length]}
                                     />
                                 </div>
                             );

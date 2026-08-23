@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, BookOpen } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import BlockRenderer from '../components/cms/blocks/BlockRenderer';
 import type { BlockData } from '../components/cms/blocks/types';
 
@@ -13,17 +13,9 @@ interface GlossarioProps {
     onContentChange?: (content: any) => void;
 }
 
-const Glossario: React.FC<GlossarioProps> = ({ isEditing, initialContent, onContentChange }) => {
-    const [content, setContent] = useState<any>(initialContent || { 
-        title: 'Glossário',
-        intro: 'Encontre aqui o significado dos principais termos médicos.'
-    });
+const Glossario: React.FC<GlossarioProps> = ({ isEditing, initialContent }) => {
     const [blocks, setBlocks] = useState<BlockData[] | null>(null);
     const [loading, setLoading] = useState(!initialContent);
-
-    useEffect(() => {
-        if (initialContent) setContent(initialContent);
-    }, [initialContent]);
 
     useEffect(() => {
         if (isEditing) {
@@ -33,88 +25,74 @@ const Glossario: React.FC<GlossarioProps> = ({ isEditing, initialContent, onCont
                 .then(res => res.json())
                 .then(data => {
                     try {
-                        const parsed = JSON.parse(data.content || '{}');
+                        const parsed = JSON.parse(data.content || '[]');
                         if (Array.isArray(parsed) && parsed.length > 0) {
                             setBlocks(parsed);
                         } else {
-                            setContent(parsed);
+                            // Default clean GlossaryBlock with no mock items
+                            setBlocks([
+                                {
+                                    id: 'block-glossary-1',
+                                    type: 'GlossaryBlock',
+                                    data: {
+                                        title: 'Glossário de Cuidados Paliativos',
+                                        subtitle: 'Consulte os principais termos, conceitos bioéticos e definições fundamentais para a prática humanizada.',
+                                        terms: []
+                                    }
+                                }
+                            ]);
                         }
-                    } catch (e) {
-                        setContent({
-                            title: 'Glossário',
-                            intro: 'Encontre aqui o significado dos principais termos médicos.'
-                        });
+                    } catch {
+                        setBlocks([
+                            {
+                                id: 'block-glossary-1',
+                                type: 'GlossaryBlock',
+                                data: {
+                                    title: 'Glossário de Cuidados Paliativos',
+                                    subtitle: 'Consulte os principais termos, conceitos bioéticos e definições fundamentais para a prática humanizada.',
+                                    terms: []
+                                }
+                            }
+                        ]);
                     }
                 })
-                .catch(err => {
-                    console.error("Erro ao carregar a página:", err);
-                })
+                .catch(err => console.error("Erro ao carregar o glossário:", err))
                 .finally(() => setLoading(false));
         }
     }, [isEditing, initialContent]);
 
-    const handleTextChange = (field: string, text: string) => {
-        const newContent = { ...content, [field]: text };
-        setContent(newContent);
-        if (onContentChange) onContentChange(newContent);
-    };
-
-    const editableClass = isEditing ? 'outline-dashed outline-2 outline-primary/50 outline-offset-4 cursor-text hover:bg-warm-100/50 transition-colors rounded' : '';
-
-    if (blocks && blocks.length > 0) {
+    if (loading) {
         return (
-            <main className="min-h-screen pb-20 bg-warm-50 overflow-x-hidden pt-20">
-                {blocks.map(block => (
-                    <BlockRenderer key={block.id} block={block} isEditing={false} onUpdate={() => {}} onSelect={() => {}} isSelected={false} />
-                ))}
+            <main className="min-h-screen pt-32 pb-20 flex items-center justify-center bg-background">
+                <Loader2 className="animate-spin text-primary" size={40} />
             </main>
         );
     }
 
-    return (
-        <main className={`min-h-screen pt-32 pb-20 px-4 bg-warm-50 ${isEditing ? 'pointer-events-auto' : ''}`}>
-            <div className="max-w-4xl mx-auto">
-                <div className="glassmorphism p-6 sm:p-8 rounded-3xl border border-warm-200 shadow-sm bg-white mb-8">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-primary/10 p-4 rounded-2xl text-primary shrink-0 shadow-xs">
-                            <BookOpen size={32} />
-                        </div>
-                        <div>
-                            <h1 
-                                contentEditable={isEditing}
-                                suppressContentEditableWarning={true}
-                                onBlur={(e) => handleTextChange('title', e.currentTarget.innerText)}
-                                className={`text-2xl sm:text-3xl font-extrabold text-warm-900 ${editableClass}`}
-                            >
-                                {content.title || 'Glossário'}
-                            </h1>
-                            <p 
-                                contentEditable={isEditing}
-                                suppressContentEditableWarning={true}
-                                onBlur={(e) => handleTextChange('intro', e.currentTarget.innerText)}
-                                className={`text-warm-600 mt-1.5 text-sm sm:text-base leading-relaxed ${editableClass}`}
-                            >
-                                {content.intro || 'Encontre aqui o significado dos principais termos médicos.'}
-                            </p>
-                        </div>
-                    </div>
-                </div>
+    const blocksToRender = blocks || [
+        {
+            id: 'block-glossary-1',
+            type: 'GlossaryBlock',
+            data: {
+                title: 'Glossário de Cuidados Paliativos',
+                subtitle: 'Consulte os principais termos, conceitos bioéticos e definições fundamentais para a prática humanizada.',
+                terms: []
+            }
+        }
+    ];
 
-                <div className="glassmorphism bg-white/80 p-8 md:p-12 rounded-3xl border border-warm-200 shadow-sm min-h-[50vh]">
-                    {loading ? (
-                        <div className="flex justify-center items-center h-full">
-                            <Loader2 className="animate-spin text-primary" size={40} />
-                        </div>
-                    ) : (
-                        <div className="prose prose-warm max-w-none">
-                            <p className="text-warm-700">
-                                {content.intro || 'Encontre aqui o significado dos principais termos médicos.'}
-                            </p>
-                            {/* Dynamic glossary content renders here */}
-                        </div>
-                    )}
-                </div>
-            </div>
+    return (
+        <main className="min-h-screen pb-20 bg-background overflow-x-hidden pt-28 px-4">
+            {blocksToRender.map(block => (
+                <BlockRenderer 
+                    key={block.id} 
+                    block={block} 
+                    isEditing={false} 
+                    onUpdate={() => {}} 
+                    onSelect={() => {}} 
+                    isSelected={false} 
+                />
+            ))}
         </main>
     );
 };

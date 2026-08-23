@@ -40,7 +40,7 @@ const Header: React.FC = () => {
     };
 
     return (
-        <header className={`fixed top-0 w-full z-50 glassmorphism transition-all duration-300 ${scrolled ? 'shadow-lg' : ''}`}>
+        <header className={`fixed top-0 w-full z-50 glass-nav transition-all duration-300 ${scrolled ? 'shadow-md bg-white/90 border-b border-warm-200' : 'bg-white/75 border-b border-white/50'}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-20">
 
@@ -94,10 +94,16 @@ const Header: React.FC = () => {
                                 <span className="whitespace-nowrap">{getDisplayName(user.nome)}</span>
                             </button>
                         ) : (
-                            <button onClick={() => navigate('/login')} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-medium shadow-md hover:shadow-lg interactive-btn text-xs">
-                                <User size={16} />
-                                <span>Entrar</span>
-                            </button>
+                            <div className="flex items-center gap-2.5">
+                                <span className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50/90 text-amber-800 border border-amber-200 rounded-full text-[11px] font-bold shadow-2xs" title="Você está navegando em modo de demonstração como Visitante">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                    Visitante
+                                </span>
+                                <button onClick={() => navigate('/login')} className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-bold shadow-md hover:shadow-lg interactive-btn text-xs cursor-pointer">
+                                    <User size={15} />
+                                    <span>Entrar</span>
+                                </button>
+                            </div>
                         )}
                     </div>
 

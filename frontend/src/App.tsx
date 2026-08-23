@@ -16,6 +16,7 @@ import Glossario from './pages/Glossario';
 import Editor from './pages/Editor';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
+import SiteIntroPreloader from './components/preloader/SiteIntroPreloader';
 import useAnchorScroll from './hooks/useAnchorScroll';
 import { useAuth } from './context/AuthContext';
 
@@ -61,6 +62,7 @@ const App: React.FC = () => {
   return (
     <Router>
       <div className="min-h-screen flex flex-col bg-background relative selection:bg-primary/30">
+        <SiteIntroPreloader />
         <Header />
         <main className="flex-grow">
           <AnimatedRoutes />

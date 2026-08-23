@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import type { BlockProps } from './types';
-import { CheckCircle2, XCircle, LayoutList } from 'lucide-react';
+import { CheckCircle2, XCircle, LayoutList, Sparkles } from 'lucide-react';
+import { useAuth } from '../../../context/AuthContext';
 
 const QuizBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdate, onSelect }) => {
     const { title = 'Quiz de Conhecimento', questions = [] } = block.data || {};
+    const { user } = useAuth();
     const [selectedOpts, setSelectedOpts] = useState<Record<number, number | null>>({});
     const [submitted, setSubmitted] = useState<Record<number, boolean>>({});
 
@@ -29,17 +31,30 @@ const QuizBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
             }`}
         >
             <div className="bg-white rounded-2xl border border-warm-200 overflow-hidden shadow-sm">
-                <div className="p-4 border-b border-warm-100 bg-warm-50 flex items-center gap-3">
-                    <div className="p-2 bg-purple-100 text-purple-600 rounded-lg"><LayoutList size={20}/></div>
-                    <h3 
-                        contentEditable={isEditing}
-                        suppressContentEditableWarning={true}
-                        onBlur={(e) => onUpdate(block.id, { data: { ...block.data, title: e.currentTarget.innerText } })}
-                        className="font-bold text-warm-900 text-lg outline-none flex-1"
-                    >
-                        {title}
-                    </h3>
+                <div className="p-4 border-b border-warm-100 bg-warm-50 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-purple-100 text-purple-600 rounded-lg"><LayoutList size={20}/></div>
+                        <h3 
+                            contentEditable={isEditing}
+                            suppressContentEditableWarning={true}
+                            onBlur={(e) => onUpdate(block.id, { data: { ...block.data, title: e.currentTarget.innerText } })}
+                            className="font-bold text-warm-900 text-lg outline-none flex-1"
+                        >
+                            {title}
+                        </h3>
+                    </div>
+                    {!user && !isEditing && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full flex items-center gap-1">
+                            <Sparkles size={12} /> Modo Visitante
+                        </span>
+                    )}
                 </div>
+                
+                {!user && !isEditing && (
+                    <div className="bg-amber-50/70 border-b border-amber-200/60 px-6 py-2.5 text-xs text-amber-900 flex items-center gap-2">
+                        <span>💡 <strong>Modo Demonstração:</strong> Você pode testar as respostas livremente. Para registrar suas notas no boletim acadêmico, faça login.</span>
+                    </div>
+                )}
                 
                 <div className={`p-6 flex flex-col gap-8 ${isEditing ? 'pointer-events-none' : ''}`}>
                     {questions.length === 0 ? (

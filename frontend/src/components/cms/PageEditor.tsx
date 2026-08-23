@@ -35,32 +35,49 @@ const BLOCK_TEMPLATES: { type: BlockData['type']; label: string; icon: React.Rea
         type: 'HeroBlock', label: 'Hero Section', icon: <Sparkles size={20} />, description: 'Banner principal com imagem de fundo',
         defaultData: { title: 'Novo Hero', subtitle: 'Subtítulo descritivo', bgImage: '' }
     },
-{
-type: 'ModulesGridBlock', label: 'Grade de Módulos', icon: <Layers size={20} />, description: 'Grid dinâmico com os módulos ativos',
-defaultData: { title: 'Nossos Módulos', intro: 'Explore o conteúdo disponível.' }
-},
-{
-type: 'TextBlock', label: 'Bloco de Texto', icon: <Type size={20} />, description: 'Parágrafo de texto rico editável',
-defaultData: { content: '<p>Clique para editar este bloco de texto. Use <strong>negrito</strong>, <em>itálico</em> e muito mais.</p>' }
-},
-{
-type: 'SpacerBlock', label: 'Espaçador', icon: <Minus size={20} />, description: 'Espaçamento visual entre seções',
-defaultData: {}
-},
-{
-type: 'ImageBlock', label: 'Imagem', icon: <ImageIcon size={20} />, description: 'Adicione uma imagem destacada',
-defaultData: { src: '', alt: 'Imagem', caption: '' }
-},
-{
-type: 'FeatureCardsBlock', label: 'Cards com Ícones', icon: <Sparkles size={20} className="text-emerald-500" />, description: 'Cards de tópicos com ícones selecionáveis',
-defaultData: {
-cards: [
-{ id: '1', icon_name: 'HeartHandshake', iconColor: '#059669', iconBg: '#ecfdf5', badge: 'Módulo 1', title: 'Fundamentos dos Cuidados Paliativos', description: 'Princípios, conceitos e diretrizes.' },
-{ id: '2', icon_name: 'MessageSquare', iconColor: '#d97706', iconBg: '#fef3c7', badge: 'Módulo 2', title: 'Comunicação', description: 'Habilidades de comunicação terapêutica.' },
-{ id: '3', icon_name: 'Scale', iconColor: '#2563eb', iconBg: '#eff6ff', badge: 'Módulo 3', title: 'Bioética', description: 'Princípios éticos e autonomia do paciente.' }
-]
-}
-}
+    {
+        type: 'LibraryBlock', label: 'Biblioteca Digital', icon: <BookOpen size={20} className="text-blue-500" />, description: 'Acervo com busca, categorias e cards de materiais',
+        defaultData: {
+            title: 'Biblioteca Virtual',
+            subtitle: 'Acesse manuais científicos, diretrizes clínicas, escalas validadas e materiais complementares em Cuidados Paliativos.',
+            categories: ['Todas', 'Diretrizes', 'Manuais', 'Escalas', 'Artigos'],
+            items: []
+        }
+    },
+    {
+        type: 'GlossaryBlock', label: 'Glossário Interativo', icon: <Sparkles size={20} className="text-emerald-500" />, description: 'Dicionário com índice A-Z, pesquisa e definições clínicas',
+        defaultData: {
+            title: 'Glossário de Cuidados Paliativos',
+            subtitle: 'Consulte os principais termos, conceitos bioéticos e definições fundamentais para a prática humanizada.',
+            terms: []
+        }
+    },
+    {
+        type: 'ModulesGridBlock', label: 'Grade de Módulos', icon: <Layers size={20} />, description: 'Grid dinâmico com os módulos ativos',
+        defaultData: { title: 'Nossos Módulos', intro: 'Explore o conteúdo disponível.' }
+    },
+    {
+        type: 'TextBlock', label: 'Bloco de Texto', icon: <Type size={20} />, description: 'Parágrafo de texto rico editável',
+        defaultData: { content: '<p>Clique para editar este bloco de texto. Use <strong>negrito</strong>, <em>itálico</em> e muito mais.</p>' }
+    },
+    {
+        type: 'SpacerBlock', label: 'Espaçador', icon: <Minus size={20} />, description: 'Espaçamento visual entre seções',
+        defaultData: {}
+    },
+    {
+        type: 'ImageBlock', label: 'Imagem', icon: <ImageIcon size={20} />, description: 'Adicione uma imagem destacada',
+        defaultData: { src: '', alt: 'Imagem', caption: '' }
+    },
+    {
+        type: 'FeatureCardsBlock', label: 'Cards com Ícones', icon: <Sparkles size={20} className="text-emerald-500" />, description: 'Cards de tópicos com ícones selecionáveis',
+        defaultData: {
+            cards: [
+                { id: '1', icon_name: 'HeartHandshake', iconColor: '#059669', iconBg: '#ecfdf5', badge: 'Módulo 1', title: 'Fundamentos dos Cuidados Paliativos', description: 'Princípios, conceitos e diretrizes.' },
+                { id: '2', icon_name: 'MessageSquare', iconColor: '#d97706', iconBg: '#fef3c7', badge: 'Módulo 2', title: 'Comunicação', description: 'Habilidades de comunicação terapêutica.' },
+                { id: '3', icon_name: 'Scale', iconColor: '#2563eb', iconBg: '#eff6ff', badge: 'Módulo 3', title: 'Bioética', description: 'Princípios éticos e autonomia do paciente.' }
+            ]
+        }
+    }
 ];
 
 const PageEditor: React.FC = () => {
@@ -392,7 +409,7 @@ parsed = JSON.parse(contentToParse);
 if (!Array.isArray(parsed)) parsed = [];
 } catch { parsed = []; }
 
-if (parsed.length === 0) {
+if (parsed.length === 0 || (parsed.length === 1 && parsed[0].type === 'TextBlock' && (parsed[0].data?.content?.includes('Biblioteca') || parsed[0].data?.content?.includes('Glossário')))) {
     if (pageName === 'home' || pageName === 'modulos') {
         parsed = [
             { id: 'block-1', type: 'HeroBlock' as const, data: { title: 'Transforme o Conhecimento em Prática', subtitle: 'Uma plataforma dedicada ao aprimoramento contínuo em cuidados paliativos.', bgImage: '' } },
@@ -400,11 +417,28 @@ if (parsed.length === 0) {
         ];
     } else if (pageName === 'biblioteca') {
         parsed = [
-            { id: 'block-1', type: 'TextBlock' as const, data: { content: '<h1>Biblioteca Digital</h1><p>Nossos recursos educacionais.</p>' } }
+            {
+                id: 'block-library-1',
+                type: 'LibraryBlock' as const,
+                data: {
+                    title: 'Biblioteca Virtual',
+                    subtitle: 'Acesse manuais científicos, diretrizes clínicas, escalas validadas e materiais complementares em Cuidados Paliativos.',
+                    categories: ['Todas', 'Diretrizes', 'Manuais', 'Escalas', 'Artigos'],
+                    items: []
+                }
+            }
         ];
     } else if (pageName === 'glossario') {
         parsed = [
-            { id: 'block-1', type: 'TextBlock' as const, data: { content: '<h1>Glossário</h1><p>Encontre aqui o significado dos principais termos médicos.</p>' } }
+            {
+                id: 'block-glossary-1',
+                type: 'GlossaryBlock' as const,
+                data: {
+                    title: 'Glossário de Cuidados Paliativos',
+                    subtitle: 'Consulte os principais termos, conceitos bioéticos e definições fundamentais para a prática humanizada.',
+                    terms: []
+                }
+            }
         ];
     } else {
         parsed = [

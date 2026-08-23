@@ -80,7 +80,7 @@ const HeroBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
                 isSelected ? 'ring-4 ring-primary ring-inset z-10 rounded-xl' : 'hover:ring-2 hover:ring-blue-400/50 hover:ring-inset rounded-xl'
             } ${isDragging ? 'ring-4 ring-primary ring-inset opacity-90' : ''}`}
             style={{
-                backgroundImage: bgImage ? `url(${getFullMediaUrl(bgImage)})` : 'linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)',
+                backgroundImage: bgImage ? `url(${getFullMediaUrl(bgImage)})` : 'linear-gradient(135deg, #fdfbf7 0%, #f4eee5 50%, #e8decb 100%)',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
             }}
@@ -89,6 +89,13 @@ const HeroBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
                 className="absolute inset-0 backdrop-blur-[2px] transition-colors duration-300" 
                 style={{ backgroundColor: isDragging ? 'rgba(var(--primary-rgb), 0.3)' : `rgba(255, 255, 255, ${bgOverlayOpacity / 100})` }}
             >
+                {/* Luzes Ambientes de Fundo */}
+                {!bgImage && (
+                    <>
+                        <div className="absolute top-1/4 left-1/3 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
+                        <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
+                    </>
+                )}
                 {uploading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-20">
                         <Loader2 className="animate-spin text-primary" size={40} />
@@ -103,30 +110,30 @@ const HeroBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
                 )}
             </div>
             
-            <div className={`relative z-10 h-full flex flex-col items-${titleAlign === 'left' ? 'start' : titleAlign === 'right' ? 'end' : 'center'} text-${titleAlign} p-8 sm:p-12`}>
+            <div className={`relative z-10 h-full flex flex-col justify-center items-${titleAlign === 'left' ? 'start' : titleAlign === 'right' ? 'end' : 'center'} text-${titleAlign} p-8 sm:p-16`}>
                 <h1 
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}
                     onBlur={(e) => handleTextChange('title', e.currentTarget.innerText)}
-                    className="text-4xl sm:text-6xl font-bold text-warm-900 mb-6 max-w-4xl tracking-tight"
+                    className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-warm-900 mb-6 max-w-4xl tracking-tight font-display leading-[1.2]"
                     style={{ outline: 'none' }}
                 >
-                    {title || 'Título do seu Hero'}
+                    {title || 'Transforme o Conhecimento em Prática'}
                 </h1>
                 
                 <p 
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}
                     onBlur={(e) => handleTextChange('subtitle', e.currentTarget.innerText)}
-                    className="text-lg sm:text-xl text-warm-700 max-w-2xl leading-relaxed"
+                    className="text-base sm:text-xl text-warm-700 max-w-2xl leading-relaxed font-light mb-8"
                     style={{ outline: 'none' }}
                 >
-                    {subtitle || 'Adicione um subtítulo cativante para engajar seus visitantes logo na primeira dobra do site.'}
+                    {subtitle || 'Uma plataforma dedicada ao aprimoramento contínuo em cuidados paliativos.'}
                 </p>
                 
-                {/* Mocked Button, uneditable inline for safety, can be styled later in Properties */}
-                <div className="mt-8 px-8 py-3 bg-primary text-white rounded-xl font-bold shadow-lg hover:scale-105 transition-transform pointer-events-none">
-                    Saiba Mais
+                {/* Action Button */}
+                <div className="px-8 py-3.5 bg-primary text-white rounded-full font-bold text-sm shadow-xl hover:scale-105 transition-transform btn-shimmer cursor-pointer">
+                    Explorar Conteúdo
                 </div>
             </div>
             
