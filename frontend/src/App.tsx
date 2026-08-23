@@ -19,7 +19,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import SiteIntroPreloader from './components/preloader/SiteIntroPreloader';
 import useAnchorScroll from './hooks/useAnchorScroll';
 import { useAuth } from './context/AuthContext';
-import { Analytics } from '@vercel/analytics/react';
+import { inject } from '@vercel/analytics';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://127.0.0.1:8000'
@@ -55,6 +55,7 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    inject();
     keepAlive();
     const interval = setInterval(keepAlive, 10 * 60 * 1000);
     return () => clearInterval(interval);
@@ -71,7 +72,6 @@ const App: React.FC = () => {
         <Footer />
         <FontSizeControl />
         <ChatBox />
-        <Analytics />
       </div>
     </Router>
   );

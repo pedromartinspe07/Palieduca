@@ -647,6 +647,11 @@ def restore_page_revision(
 # CMS v1 Routes (used by ModuleContentEditor)
 # ================================
 
+@app.get("/api/v1/cms/pages")
+def list_all_cms_pages(db: Session = Depends(get_db)):
+    pages = db.query(models.PageContent).all()
+    return [{"id": p.id, "page_name": p.page_name, "content": p.content, "meta_title": p.meta_title, "meta_description": p.meta_description, "slug": p.slug} for p in pages]
+
 @app.get("/api/v1/cms/pages/{page_name}")
 def get_cms_page(page_name: str, db: Session = Depends(get_db)):
     page = db.query(models.PageContent).filter(models.PageContent.page_name == page_name).first()

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ALargeSmall, Minus, Plus } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 
 const STORAGE_KEY = 'palieduca-font-size';
 const MIN_SIZE = 14;
@@ -23,30 +23,37 @@ const FontSizeControl: React.FC = () => {
 
     return (
         <div
-            className="fixed bottom-24 right-6 z-40 flex flex-col items-center gap-1.5"
+            className="fixed bottom-24 right-5 sm:right-6 z-40 flex flex-col items-center select-none"
             role="group"
             aria-label="Controle de tamanho da fonte"
         >
-            <div className="flex flex-col items-center bg-white/80 backdrop-blur-md border border-warm-200 rounded-2xl shadow-lg p-2 gap-1">
-                <div className="flex items-center justify-center text-warm-500 pb-1 border-b border-warm-100 w-full mb-1">
-                    <ALargeSmall size={18} />
-                </div>
+            <div className="flex flex-col items-center bg-white/90 backdrop-blur-xl border border-white/90 rounded-full shadow-[0_10px_25px_-5px_rgba(15,23,42,0.12)] p-1.5 py-3 gap-1.5">
+                <span className="text-[11px] font-extrabold text-slate-700 select-none px-1 tracking-tight">
+                    AA
+                </span>
+                
+                <div className="w-5 h-[1px] bg-slate-200/80 my-0.5" />
+
                 <button
                     onClick={increase}
                     disabled={fontSize >= MAX_SIZE}
                     aria-label="Aumentar fonte"
-                    className="flex items-center justify-center w-8 h-8 rounded-xl text-warm-700 hover:bg-primary hover:text-white transition-all disabled:opacity-30 disabled:pointer-events-none font-bold text-sm interactive-btn"
+                    className="flex items-center justify-center w-7 h-7 rounded-full text-slate-700 hover:bg-teal-600 hover:text-white transition-all disabled:opacity-30 disabled:pointer-events-none font-bold text-sm cursor-pointer"
                 >
-                    <Plus size={16} />
+                    <Plus size={14} strokeWidth={2.5} />
                 </button>
-                <span className="text-[10px] font-bold text-warm-500 tabular-nums">{fontSize}px</span>
+                
+                <span className="text-[10px] font-bold text-slate-500 tabular-nums select-none">
+                    {fontSize}px
+                </span>
+                
                 <button
                     onClick={decrease}
                     disabled={fontSize <= MIN_SIZE}
                     aria-label="Diminuir fonte"
-                    className="flex items-center justify-center w-8 h-8 rounded-xl text-warm-700 hover:bg-primary hover:text-white transition-all disabled:opacity-30 disabled:pointer-events-none font-bold text-sm interactive-btn"
+                    className="flex items-center justify-center w-7 h-7 rounded-full text-slate-700 hover:bg-teal-600 hover:text-white transition-all disabled:opacity-30 disabled:pointer-events-none font-bold text-sm cursor-pointer"
                 >
-                    <Minus size={16} />
+                    <Minus size={14} strokeWidth={2.5} />
                 </button>
             </div>
         </div>

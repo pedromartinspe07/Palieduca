@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import HeroSection from '../components/HeroSection';
 import ModuleCard from '../components/ModuleCard';
 import ModuleCardSkeleton from '../components/ModuleCardSkeleton';
-import { Stethoscope, Users, HeartPulse, Brain, HeartHandshake, Scale, Loader2 } from 'lucide-react';
+import { Stethoscope, Users, HeartPulse, Brain, HeartHandshake, Scale, Loader2, Leaf } from 'lucide-react';
 import BlockRenderer from '../components/cms/blocks/BlockRenderer';
 import type { BlockData } from '../components/cms/blocks/types';
+import BotanicalBackground from '../components/effects/BotanicalBackground';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://127.0.0.1:8000'
@@ -74,47 +75,59 @@ const Home: React.FC = () => {
 
     if (blocks && blocks.length > 0) {
         return (
-            <main className="min-h-screen pb-20 bg-background overflow-x-hidden pt-20">
-                {blocks.map(block => (
-                    <BlockRenderer key={block.id} block={block} isEditing={false} onUpdate={() => { }} onSelect={() => { }} isSelected={false} />
-                ))}
-            </main>
+            <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true} className="pt-20 pb-12">
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    {blocks.map(block => (
+                        <BlockRenderer key={block.id} block={block} isEditing={false} onUpdate={() => { }} onSelect={() => { }} isSelected={false} />
+                    ))}
+                </main>
+            </BotanicalBackground>
         );
     }
 
     return (
-        <main>
-            <HeroSection />
+        <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true}>
+            <main>
+                <HeroSection />
 
-            <section className="py-20 bg-warm-50 relative z-10 border-y border-warm-100">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-primary text-sm font-medium mb-6 shadow-sm border border-warm-100">
-                        <span>Produto de Tese de Doutorado</span>
+                {/* Sobre o Projeto */}
+                <section className="py-16 px-4 max-w-5xl mx-auto relative z-10">
+                    <div className="p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/80 backdrop-blur-2xl text-center relative overflow-hidden">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200/80 font-bold text-xs mb-5 shadow-2xs">
+                            <Leaf size={13} className="text-teal-600" />
+                            <span>Produto de Tese de Doutorado</span>
+                        </div>
+                        <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f172a] mb-4 tracking-tight font-display">
+                            Sobre o Projeto <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0284c7] via-[#0d9488] to-[#0f766e]">PaliEduca</span>
+                        </h2>
+                        <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-light max-w-3xl mx-auto">
+                            O PaliEduca é um Ambiente Virtual de Aprendizagem desenvolvido no âmbito do <strong className="font-bold text-teal-800">Programa de Pós-Graduação em Enfermagem da UFPB</strong>. O objetivo científico desta plataforma é capacitar profissionais e estudantes nas melhores práticas e na humanização dos Cuidados Paliativos.
+                        </p>
                     </div>
-                    <h2 className="text-3xl font-bold text-warm-900 mb-6">Sobre o Projeto Palieduca</h2>
-                    <p className="text-lg text-warm-700 leading-relaxed font-light mb-8">
-                        O Palieduca é um Ambiente Virtual de Aprendizagem desenvolvido no âmbito do <strong>Programa de Pós-Graduação em Enfermagem da UFPB</strong>. O objetivo científico desta plataforma é para capacitar profissionais e estudantes nas melhores práticas e humanização dos Cuidados Paliativos.
-                    </p>
-                </div>
-            </section>
+                </section>
 
-            <section className="py-24 bg-background relative z-10" id="trilha">
-                <div className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl lg:text-4xl font-bold text-warm-900 mb-5">Trilha de Aprendizagem</h2>
-                        <p className="text-lg text-warm-700 max-w-2xl mx-auto font-light">
+                {/* Trilha de Aprendizagem (Cards) */}
+                <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto relative z-10" id="trilha">
+                    <div className="text-center max-w-3xl mx-auto mb-12">
+                        <span className="text-[11px] font-extrabold uppercase tracking-widest text-sky-800 bg-sky-50 border border-sky-200/80 px-3.5 py-1 rounded-full">
+                            Trilhas de Aprendizagem
+                        </span>
+                        <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f172a] mt-3 mb-3">
+                            Explore Nossos Módulos
+                        </h2>
+                        <p className="text-slate-600 text-sm max-w-2xl mx-auto font-light">
                             Siga os módulos projetados para construir seu conhecimento passo a passo, aliando a teoria à prática humanizada.
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                         {loading
                             ? Array.from({ length: 6 }).map((_, i) => <ModuleCardSkeleton key={i} />)
                             : modules.map((module, idx) => {
                                 const levels = ['Fundamentos', 'Comunicação', 'Controle de Sintomas', 'Apoio & Família', 'Acolhimento', 'Bioética & Decisões'];
                                 const times = [15, 20, 25, 20, 15, 30];
                                 return (
-                                    <div id={module.slug_id} key={module.id} className="scroll-mt-24">
+                                    <div id={module.slug_id} key={module.id} className="scroll-mt-28">
                                         <ModuleCard
                                             id={module.slug_id}
                                             title={module.title}
@@ -132,9 +145,9 @@ const Home: React.FC = () => {
                             })
                         }
                     </div>
-                </div>
-            </section>
-        </main>
+                </section>
+            </main>
+        </BotanicalBackground>
     );
 };
 

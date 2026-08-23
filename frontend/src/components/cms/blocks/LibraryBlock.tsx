@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { BlockProps } from './types';
-import { Search, ExternalLink, Sparkles, Plus, Trash2, FileText, Tag } from 'lucide-react';
+import { Search, ExternalLink, Plus, Trash2, FileText, Tag, Leaf } from 'lucide-react';
 import Tilt3DCard from '../../3d/Tilt3DCard';
 
 export interface LibraryItem {
@@ -16,10 +16,10 @@ export interface LibraryItem {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-    'Diretrizes': 'bg-blue-50 text-blue-800 border-blue-200',
-    'Manuais': 'bg-emerald-50 text-emerald-800 border-emerald-200',
-    'Escalas': 'bg-amber-50 text-amber-800 border-amber-200',
-    'Artigos': 'bg-purple-50 text-purple-800 border-purple-200',
+    'Diretrizes': 'bg-sky-100/70 text-sky-800 border-sky-200/70',
+    'Manuais': 'bg-emerald-100/70 text-emerald-800 border-emerald-200/70',
+    'Escalas': 'bg-teal-100/70 text-teal-800 border-teal-200/70',
+    'Artigos': 'bg-indigo-100/70 text-indigo-800 border-indigo-200/70',
 };
 
 const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdate, onSelect }) => {
@@ -42,14 +42,14 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
         const targetCategory = categoryOverride || (selectedCategory !== 'Todas' ? selectedCategory : 'Diretrizes');
         const newItem: LibraryItem = {
             id: Date.now().toString(),
-            title: 'Novo Material / Artigo',
-            author: 'Nome do Autor / Instituição',
+            title: 'Novo Material Científico',
+            author: 'Ministério da Saúde / ANCP',
             year: new Date().getFullYear().toString(),
             category: targetCategory,
-            type: 'PDF',
-            description: 'Descrição sucinta sobre os objetivos e o conteúdo deste material.',
+            type: 'PDF / Diretriz',
+            description: 'Descrição detalhada com evidências e recomendações práticas.',
             url: 'https://',
-            badgeColor: CATEGORY_COLORS[targetCategory] || 'bg-warm-100 text-warm-800 border-warm-200'
+            badgeColor: CATEGORY_COLORS[targetCategory] || 'bg-sky-100/70 text-sky-800 border-sky-200/70'
         };
         handleUpdateField('items', [...items, newItem]);
     };
@@ -58,7 +58,7 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
         const updated = [...items];
         updated[index] = { ...updated[index], [field]: val };
         if (field === 'category') {
-            updated[index].badgeColor = CATEGORY_COLORS[val] || 'bg-warm-100 text-warm-800 border-warm-200';
+            updated[index].badgeColor = CATEGORY_COLORS[val] || 'bg-sky-100/70 text-sky-800 border-sky-200/70';
         }
         handleUpdateField('items', updated);
     };
@@ -101,45 +101,51 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                 e.stopPropagation();
                 onSelect(block.id);
             }}
-            className={`relative w-full max-w-7xl mx-auto py-6 transition-all ${
+            className={`relative w-full max-w-6xl mx-auto py-4 transition-all ${
                 isSelected ? 'ring-2 ring-primary ring-offset-4 rounded-3xl' : ''
             }`}
         >
-            {/* Header Banner */}
-            <div className="p-8 sm:p-12 rounded-3xl border border-warm-200 shadow-xl bg-gradient-to-br from-white via-warm-50/80 to-blue-50/40 mb-10 text-center relative overflow-hidden">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-800 font-bold text-xs mb-4 border border-blue-200 shadow-2xs">
-                    <Sparkles size={14} className="text-blue-600" />
+            {/* Header Hero Banner (Glassmorphism Acolhedor) */}
+            <div className="p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/80 backdrop-blur-2xl mb-12 text-center relative overflow-hidden">
+                
+                {/* Badge Botânica */}
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200/80 font-bold text-xs mb-5 shadow-2xs">
+                    <Leaf size={13} className="text-teal-600" />
                     <span>Acervo Científico & Diretrizes Clínicas</span>
                 </div>
 
+                {/* Título com Tipografia Gradiente */}
                 <h1
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}
                     onBlur={(e) => handleUpdateField('title', e.currentTarget.innerText)}
-                    className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold text-warm-900 mb-4 tracking-tight font-display ${editableClass}`}
+                    className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] mb-4 tracking-tight font-display ${editableClass}`}
                 >
-                    {title}
+                    {isEditing ? title : (
+                        <>Biblioteca <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0284c7] via-[#0d9488] to-[#0f766e]">Virtual & Acadêmica</span></>
+                    )}
                 </h1>
 
+                {/* Subtítulo */}
                 <p
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}
                     onBlur={(e) => handleUpdateField('subtitle', e.currentTarget.innerText)}
-                    className={`text-sm sm:text-base text-warm-600 max-w-2xl mx-auto leading-relaxed ${editableClass}`}
+                    className={`text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed ${editableClass}`}
                 >
                     {subtitle}
                 </p>
 
-                {/* Barra de Pesquisa e Filtros */}
+                {/* Barra de Pesquisa e Filtros em Pílulas */}
                 <div className="mt-8 max-w-xl mx-auto space-y-4">
-                    <div className="relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-warm-400" size={18} />
+                    <div className="relative group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-teal-600 transition-colors" size={18} />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Pesquisar manuais, escalas, diretrizes ou autores..."
-                            className="w-full pl-11 pr-4 py-3.5 bg-white border border-warm-200 rounded-2xl text-sm font-medium text-warm-800 shadow-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                            className="w-full pl-11 pr-4 py-3.5 bg-white/90 border border-slate-200/80 rounded-full text-sm font-medium text-slate-800 shadow-2xs focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400 focus:bg-white outline-none transition-all"
                         />
                     </div>
 
@@ -150,10 +156,10 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                                 key={cat}
                                 type="button"
                                 onClick={() => setSelectedCategory(cat)}
-                                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                                     selectedCategory === cat
-                                        ? 'bg-primary text-white shadow-xs'
-                                        : 'bg-white text-warm-700 border border-warm-200 hover:bg-warm-100'
+                                        ? 'bg-gradient-to-r from-teal-600 to-sky-600 text-white shadow-xs scale-105'
+                                        : 'bg-white/90 text-slate-600 border border-slate-200/70 hover:bg-sky-50 hover:text-sky-800'
                                 }`}
                             >
                                 {cat}
@@ -165,7 +171,7 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                             <button
                                 type="button"
                                 onClick={() => setShowAddCategoryInput(true)}
-                                className="px-3 py-1.5 rounded-full text-xs font-bold bg-warm-100 text-warm-700 hover:bg-warm-200 border border-dashed border-warm-300 flex items-center gap-1 cursor-pointer"
+                                className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-white text-teal-700 hover:bg-teal-50 border border-dashed border-teal-300 flex items-center gap-1 cursor-pointer"
                                 title="Criar nova categoria"
                             >
                                 <Plus size={13} />
@@ -174,27 +180,27 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                         )}
 
                         {isEditing && showAddCategoryInput && (
-                            <div className="flex items-center gap-1 bg-white border border-primary p-1 rounded-full shadow-xs animate-fade-in">
+                            <div className="flex items-center gap-1 bg-white border border-teal-500 p-1 rounded-full shadow-xs animate-fade-in">
                                 <input
                                     type="text"
                                     value={newCategoryInput}
                                     onChange={(e) => setNewCategoryInput(e.target.value)}
                                     placeholder="Nome da categoria"
-                                    className="px-2 py-0.5 text-xs outline-none text-warm-800 w-32"
+                                    className="px-2 py-0.5 text-xs outline-none text-slate-800 w-32"
                                     autoFocus
                                     onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
                                 />
                                 <button
                                     type="button"
                                     onClick={handleAddCategory}
-                                    className="px-2 py-0.5 bg-primary text-white text-xs font-bold rounded-full cursor-pointer"
+                                    className="px-2.5 py-0.5 bg-teal-600 text-white text-xs font-bold rounded-full cursor-pointer"
                                 >
                                     OK
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setShowAddCategoryInput(false)}
-                                    className="px-1.5 text-warm-400 hover:text-warm-700 text-xs cursor-pointer"
+                                    className="px-1.5 text-slate-400 hover:text-slate-700 text-xs cursor-pointer"
                                 >
                                     ✕
                                 </button>
@@ -206,22 +212,22 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
 
             {/* Ação de Adicionar no Modo Edição */}
             {isEditing && (
-                <div className="bg-white p-4 rounded-2xl border border-warm-200 shadow-sm mb-6 flex flex-wrap justify-between items-center gap-4">
+                <div className="bg-white/90 backdrop-blur-md p-4 rounded-2xl border border-slate-200/80 shadow-xs mb-6 flex flex-wrap justify-between items-center gap-4">
                     <div className="flex items-center gap-2">
-                        <Tag size={16} className="text-primary" />
-                        <span className="text-xs font-bold text-warm-700">
+                        <Tag size={16} className="text-teal-600" />
+                        <span className="text-xs font-bold text-slate-700">
                             {items.length} Materiais Cadastrados {selectedCategory !== 'Todas' ? `(${filteredItems.length} em ${selectedCategory})` : ''}
                         </span>
                     </div>
 
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-medium text-warm-500">Adicionar material em:</span>
+                        <span className="text-xs font-medium text-slate-500">Adicionar material em:</span>
                         {availableCategories.map(cat => (
                             <button
                                 key={cat}
                                 type="button"
                                 onClick={() => handleAddItem(cat)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-warm-50 hover:bg-primary hover:text-white text-warm-800 rounded-xl font-bold text-xs border border-warm-200 transition-all cursor-pointer"
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 hover:bg-teal-600 hover:text-white text-teal-800 rounded-full font-bold text-xs border border-teal-200 transition-all cursor-pointer"
                             >
                                 <Plus size={14} />
                                 <span>{cat}</span>
@@ -231,16 +237,16 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                 </div>
             )}
 
-            {/* Grid de Cards */}
+            {/* Grid de Cards dos Materiais */}
             {filteredItems.length > 0 ? (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                     {filteredItems.map((res, index) => {
                         const originalIndex = items.findIndex(it => it.id === res.id);
                         const cardIndex = originalIndex >= 0 ? originalIndex : index;
 
                         return (
                             <Tilt3DCard key={res.id} maxTilt={5}>
-                                <div className="p-7 rounded-3xl bg-white border border-warm-200 shadow-sm hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col justify-between h-full group relative">
+                                <div className="p-7 rounded-[28px] bg-white/90 backdrop-blur-xl border border-white/90 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.05)] hover:shadow-2xl hover:border-teal-300/60 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-full group relative">
                                     {isEditing && (
                                         <button
                                             type="button"
@@ -253,28 +259,24 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                                     )}
 
                                     <div>
-                                        {/* Barra Superior do Card (Categoria e Tipo) */}
+                                        {/* Barra Superior do Card (Categoria, Tipo e Ano) */}
                                         <div className="flex items-center justify-between gap-2 mb-4 pr-6 flex-wrap">
                                             {isEditing ? (
                                                 <div className="flex items-center gap-1.5">
-                                                    {/* Seletor de Categoria */}
                                                     <select
                                                         value={res.category}
                                                         onChange={(e) => handleUpdateItem(cardIndex, 'category', e.target.value)}
-                                                        className="text-[11px] font-bold px-2 py-1 rounded-lg border bg-primary/10 border-primary/20 text-primary outline-none cursor-pointer"
-                                                        title="Mudar categoria deste material"
+                                                        className="text-[11px] font-bold px-2.5 py-1 rounded-full border bg-teal-50 border-teal-200 text-teal-800 outline-none cursor-pointer"
                                                     >
                                                         {availableCategories.map(c => (
                                                             <option key={c} value={c}>{c}</option>
                                                         ))}
                                                     </select>
 
-                                                    {/* Seletor de Tipo */}
                                                     <select
                                                         value={res.type}
                                                         onChange={(e) => handleUpdateItem(cardIndex, 'type', e.target.value)}
-                                                        className="text-[11px] font-medium px-2 py-1 rounded-lg border bg-warm-50 border-warm-200 text-warm-700 outline-none cursor-pointer"
-                                                        title="Tipo do arquivo/documento"
+                                                        className="text-[11px] font-medium px-2 py-1 rounded-full border bg-slate-50 border-slate-200 text-slate-700 outline-none cursor-pointer"
                                                     >
                                                         <option value="PDF">PDF</option>
                                                         <option value="Guia Clínico">Guia Clínico</option>
@@ -287,10 +289,10 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                                                 </div>
                                             ) : (
                                                 <div className="flex items-center gap-1.5">
-                                                    <span className={`text-[11px] font-bold px-3 py-1 rounded-full border ${res.badgeColor || 'bg-emerald-50 text-emerald-800 border-emerald-200'}`}>
+                                                    <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${res.badgeColor || 'bg-teal-100/70 text-teal-800 border-teal-200/70'}`}>
                                                         {res.category}
                                                     </span>
-                                                    <span className="text-[10px] font-medium text-warm-500 bg-warm-100 px-2 py-0.5 rounded-full">
+                                                    <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
                                                         {res.type}
                                                     </span>
                                                 </div>
@@ -300,49 +302,53 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                                                 contentEditable={isEditing}
                                                 suppressContentEditableWarning={true}
                                                 onBlur={(e) => handleUpdateItem(cardIndex, 'year', e.currentTarget.innerText)}
-                                                className={`text-xs font-bold text-warm-400 ${editableClass}`}
+                                                className={`text-xs font-bold text-slate-400 ${editableClass}`}
                                             >
                                                 {res.year}
                                             </span>
                                         </div>
 
+                                        {/* Título do Material */}
                                         <h3
                                             contentEditable={isEditing}
                                             suppressContentEditableWarning={true}
                                             onBlur={(e) => handleUpdateItem(cardIndex, 'title', e.currentTarget.innerText)}
-                                            className={`font-extrabold text-lg text-warm-900 mb-2 group-hover:text-primary transition-colors leading-snug ${editableClass}`}
+                                            className={`font-extrabold text-lg text-[#0f172a] mb-1.5 group-hover:text-teal-700 transition-colors leading-snug ${editableClass}`}
                                         >
                                             {res.title}
                                         </h3>
 
+                                        {/* Autor / Instituição */}
                                         <p
                                             contentEditable={isEditing}
                                             suppressContentEditableWarning={true}
                                             onBlur={(e) => handleUpdateItem(cardIndex, 'author', e.currentTarget.innerText)}
-                                            className={`text-xs font-semibold text-primary mb-3 ${editableClass}`}
+                                            className={`text-xs font-semibold text-teal-700 mb-3 flex items-center gap-1 ${editableClass}`}
                                         >
-                                            {res.author}
+                                            <span>✍️</span> {res.author}
                                         </p>
 
+                                        {/* Descrição */}
                                         <p
                                             contentEditable={isEditing}
                                             suppressContentEditableWarning={true}
                                             onBlur={(e) => handleUpdateItem(cardIndex, 'description', e.currentTarget.innerText)}
-                                            className={`text-warm-600 text-xs sm:text-sm leading-relaxed font-light mb-6 line-clamp-3 ${editableClass}`}
+                                            className={`text-slate-600 text-xs sm:text-sm leading-relaxed font-light mb-6 line-clamp-3 ${editableClass}`}
                                         >
                                             {res.description}
                                         </p>
                                     </div>
 
+                                    {/* Botão de Acesso */}
                                     {isEditing ? (
-                                        <div className="pt-2 border-t border-warm-100">
-                                            <label className="block text-[10px] font-bold text-warm-500 mb-1">Link de Acesso (URL):</label>
+                                        <div className="pt-2 border-t border-slate-100">
+                                            <label className="block text-[10px] font-bold text-slate-500 mb-1">Link de Acesso (URL):</label>
                                             <input
                                                 type="text"
                                                 value={res.url}
                                                 onChange={(e) => handleUpdateItem(cardIndex, 'url', e.target.value)}
                                                 placeholder="https://..."
-                                                className="w-full text-xs bg-warm-50 border border-warm-200 rounded-lg px-2 py-1.5 font-mono text-warm-700 outline-none"
+                                                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono text-slate-700 outline-none"
                                             />
                                         </div>
                                     ) : (
@@ -350,7 +356,7 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                                             href={res.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-warm-50 hover:bg-primary hover:text-white text-warm-800 rounded-xl font-bold text-xs border border-warm-200 hover:border-primary transition-all duration-300 shadow-2xs"
+                                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-sky-50 to-teal-50 hover:from-teal-600 hover:to-sky-600 hover:text-white text-slate-800 rounded-2xl font-bold text-xs border border-teal-200 hover:border-transparent transition-all duration-300 shadow-2xs group-hover:shadow-md"
                                         >
                                             <span>Acessar Material</span>
                                             <ExternalLink size={14} />
@@ -362,16 +368,16 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                     })}
                 </div>
             ) : (
-                <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-warm-300">
-                    <FileText size={40} className="mx-auto text-warm-400 mb-3" />
-                    <p className="text-warm-700 font-bold">
+                <div className="text-center py-16 bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-dashed border-slate-300">
+                    <FileText size={40} className="mx-auto text-slate-400 mb-3" />
+                    <p className="text-slate-700 font-bold">
                         {items.length === 0 ? 'Nenhum material cadastrado na biblioteca ainda.' : `Nenhum material encontrado em "${selectedCategory}".`}
                     </p>
                     {isEditing && (
                         <button
                             type="button"
                             onClick={() => handleAddItem(selectedCategory !== 'Todas' ? selectedCategory : 'Diretrizes')}
-                            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl font-bold text-xs shadow-sm cursor-pointer"
+                            className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-teal-600 to-sky-600 text-white rounded-full font-bold text-xs shadow-sm cursor-pointer"
                         >
                             <Plus size={15} /> Adicionar Primeiro Material {selectedCategory !== 'Todas' ? `em ${selectedCategory}` : ''}
                         </button>

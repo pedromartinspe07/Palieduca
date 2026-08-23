@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard } from 'lucide-react';
 import ModuleCardSkeleton from '../components/ModuleCardSkeleton';
 import ModuleCard from '../components/ModuleCard';
-import { Stethoscope, Users, HeartPulse, Brain, HeartHandshake, Scale } from 'lucide-react';
+import { Stethoscope, Users, HeartPulse, Brain, HeartHandshake, Scale, Leaf } from 'lucide-react';
 import BlockRenderer from '../components/cms/blocks/BlockRenderer';
 import type { BlockData } from '../components/cms/blocks/types';
-
+import BotanicalBackground from '../components/effects/BotanicalBackground';
 import { useAuth } from '../context/AuthContext';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -43,7 +42,7 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
     const { token } = useAuth();
     const [content, setContent] = useState<any>(initialContent || { 
         title: 'Módulos de Aprendizagem',
-        intro: 'Bem-vindo à área de módulos. Escolha um módulo abaixo para começar a aprender.'
+        intro: 'Explore trilhas interativas baseadas em evidências científicas, casos clínicos e metodologias ativas para aprofundar sua prática em cuidados paliativos.'
     });
     const [blocks, setBlocks] = useState<BlockData[] | null>(null);
     const [modules, setModules] = useState<ModuleData[]>([]);
@@ -74,7 +73,7 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
                     } catch (e) {
                         setContent({
                             title: 'Módulos de Aprendizagem',
-                            intro: 'Bem-vindo à área de módulos. Escolha um módulo abaixo para começar a aprender.'
+                            intro: 'Explore trilhas interativas baseadas em evidências científicas, casos clínicos e metodologias ativas para aprofundar sua prática em cuidados paliativos.'
                         });
                     }
                 })
@@ -110,84 +109,58 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
         if (onContentChange) onContentChange(newContent);
     };
 
-    const editableClass = isEditing ? 'outline-dashed outline-2 outline-primary/50 outline-offset-4 cursor-text hover:bg-warm-100/50 transition-colors rounded' : '';
+    const editableClass = isEditing ? 'outline-dashed outline-1 outline-primary/40 focus:outline-primary rounded px-1' : '';
 
     if (blocks && blocks.length > 0) {
         return (
-            <main className="min-h-screen pb-20 bg-gradient-to-b from-[#F0FDF4]/60 via-[#F8FAFC] to-[#F8FAFC] overflow-x-hidden pt-20 relative">
-                {/* Backdrop Blobs de Luz Difusa (Esmeralda & Azul-Sereno) */}
-                <div 
-                    className="absolute pointer-events-none rounded-full"
-                    style={{
-                        width: '450px',
-                        height: '450px',
-                        background: '#A7F3D0',
-                        filter: 'blur(140px)',
-                        opacity: 0.35,
-                        top: '40px',
-                        left: '20px',
-                    }} 
-                />
-                <div 
-                    className="absolute pointer-events-none rounded-full"
-                    style={{
-                        width: '500px',
-                        height: '500px',
-                        background: '#BAE6FD',
-                        filter: 'blur(140px)',
-                        opacity: 0.30,
-                        top: '80px',
-                        right: '20px',
-                    }} 
-                />
-                <div className="relative z-10">
+            <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true} className="pt-28 pb-12 px-4 sm:px-6 lg:px-8">
+                <main className="max-w-7xl mx-auto">
                     {blocks.map(block => (
                         <BlockRenderer key={block.id} block={block} isEditing={false} onUpdate={() => {}} onSelect={() => {}} isSelected={false} />
                     ))}
-                </div>
-            </main>
+                </main>
+            </BotanicalBackground>
         );
     }
 
     return (
-        <main className={`min-h-screen pt-32 pb-20 px-4 bg-gradient-to-b from-sky-50/60 via-emerald-50/30 to-background relative overflow-hidden ${isEditing ? 'pointer-events-auto' : ''}`}>
-            {/* Orbes de luz suaves de acolhimento */}
-            <div className="absolute top-20 left-1/4 w-[32rem] h-[32rem] bg-sky-300/15 rounded-full blur-[140px] pointer-events-none" />
-            <div className="absolute top-1/2 right-1/4 w-[30rem] h-[30rem] bg-emerald-300/15 rounded-full blur-[140px] pointer-events-none" />
-
-            <div className="max-w-[85rem] mx-auto relative z-10">
-                <div className="flex items-center gap-3 mb-8">
-                    <div className="bg-gradient-to-tr from-sky-600 via-teal-600 to-emerald-600 text-white p-3 rounded-2xl shadow-md">
-                        <LayoutDashboard size={28} />
+        <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true} className="pt-28 pb-12 px-4 sm:px-6 lg:px-8">
+            <main className="max-w-6xl mx-auto">
+                {/* Hero Banner do Módulo (Glassmorphism Botânico) */}
+                <div className="p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/80 backdrop-blur-2xl mb-12 text-center relative overflow-hidden">
+                    {/* Badge Botânica */}
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200/80 font-bold text-xs mb-5 shadow-2xs">
+                        <Leaf size={13} className="text-teal-600" />
+                        <span>Trilhas de Aprendizagem &amp; Formação Humanizada</span>
                     </div>
+
+                    {/* Título com Tipografia Gradiente Oficial */}
                     <h1 
                         contentEditable={isEditing}
                         suppressContentEditableWarning={true}
                         onBlur={(e) => handleTextChange('title', e.currentTarget.innerText)}
-                        className={`text-3xl font-extrabold text-warm-900 ${editableClass}`}
+                        className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] mb-4 tracking-tight font-display ${editableClass}`}
                     >
-                        {content.title || 'Módulos de Aprendizagem'}
+                        Módulos <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0284c7] via-[#0d9488] to-[#0f766e]">de Cuidados Paliativos</span>
                     </h1>
-                </div>
 
-                {/* Área de Texto Editável pelo CMS */}
-                <div className="mb-12">
+                    {/* Subtítulo */}
                     {loadingContent ? (
-                        <div className="animate-pulse h-6 bg-warm-200 rounded-xl w-3/4 max-w-2xl"></div>
+                        <div className="animate-pulse h-6 bg-slate-200 rounded-xl w-3/4 max-w-2xl mx-auto"></div>
                     ) : (
                         <p 
                             contentEditable={isEditing}
                             suppressContentEditableWarning={true}
                             onBlur={(e) => handleTextChange('intro', e.currentTarget.innerText)}
-                            className={`text-lg text-warm-600 max-w-3xl ${editableClass}`}
+                            className={`text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed ${editableClass}`}
                         >
-                            {content.intro || 'Bem-vindo à área de módulos. Escolha um módulo abaixo para começar a aprender.'}
+                            {content.intro || 'Explore trilhas interativas baseadas em evidências científicas, casos clínicos e metodologias ativas para aprofundar sua prática em cuidados paliativos.'}
                         </p>
                     )}
                 </div>
 
                 {/* Lista de Módulos (Cards) */}
-                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 ${isEditing ? 'pointer-events-none opacity-80' : ''}`}>
+                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 ${isEditing ? 'pointer-events-none opacity-80' : ''}`}>
                     {loadingModules
                         ? Array.from({ length: 6 }).map((_, i) => <ModuleCardSkeleton key={i} />)
                         : modules.map((module, idx) => {
@@ -213,8 +186,8 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
                         })
                     }
                 </div>
-            </div>
-        </main>
+            </main>
+        </BotanicalBackground>
     );
 };
 

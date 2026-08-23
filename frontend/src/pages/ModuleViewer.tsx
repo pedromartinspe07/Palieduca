@@ -5,6 +5,7 @@ import BlockRenderer from '../components/cms/blocks/BlockRenderer';
 import { useAuth } from '../context/AuthContext';
 import { getModuleIcon } from '../utils/iconUtils';
 import ConfettiCelebration from '../components/effects/ConfettiCelebration';
+import BotanicalBackground from '../components/effects/BotanicalBackground';
 import '../index.css';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -160,7 +161,7 @@ const ModuleViewer: React.FC = () => {
     }
 
     return (
-        <main className={`min-h-screen pt-24 pb-16 transition-colors duration-300 ${isFocusMode ? 'bg-[#fcfaf7]' : 'bg-warm-50'}`}>
+        <BotanicalBackground showButterflies={true} showWaves={false} showFoliage={true} className="pt-24 pb-16">
             {/* 1. Barra de Progresso de Leitura Fixa no Topo */}
             <div className="fixed top-0 left-0 w-full h-1.5 z-[60] bg-warm-200/50 backdrop-blur-sm pointer-events-none">
                 <div
@@ -494,7 +495,7 @@ const ModuleViewer: React.FC = () => {
                     </div>
                 </div>
             )}
-        </main>
+        </BotanicalBackground>
     );
 };
 

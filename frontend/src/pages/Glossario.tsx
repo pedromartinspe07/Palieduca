@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import BlockRenderer from '../components/cms/blocks/BlockRenderer';
 import type { BlockData } from '../components/cms/blocks/types';
+import BotanicalBackground from '../components/effects/BotanicalBackground';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://127.0.0.1:8000'
@@ -29,7 +30,6 @@ const Glossario: React.FC<GlossarioProps> = ({ isEditing, initialContent }) => {
                         if (Array.isArray(parsed) && parsed.length > 0) {
                             setBlocks(parsed);
                         } else {
-                            // Default clean GlossaryBlock with no mock items
                             setBlocks([
                                 {
                                     id: 'block-glossary-1',
@@ -82,12 +82,8 @@ const Glossario: React.FC<GlossarioProps> = ({ isEditing, initialContent }) => {
     ];
 
     return (
-        <main className="min-h-screen pb-20 bg-gradient-to-b from-sky-50/60 via-emerald-50/30 to-background overflow-x-hidden pt-28 px-4 relative">
-            {/* Orbes de acolhimento visual */}
-            <div className="absolute top-20 left-1/4 w-[30rem] h-[30rem] bg-sky-300/15 rounded-full blur-[140px] pointer-events-none" />
-            <div className="absolute top-1/2 right-1/4 w-[30rem] h-[30rem] bg-emerald-300/15 rounded-full blur-[140px] pointer-events-none" />
-
-            <div className="relative z-10">
+        <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true} className="pt-28 pb-12 px-4 sm:px-6 lg:px-8">
+            <main className="max-w-7xl mx-auto">
                 {blocksToRender.map(block => (
                     <BlockRenderer 
                         key={block.id} 
@@ -98,8 +94,8 @@ const Glossario: React.FC<GlossarioProps> = ({ isEditing, initialContent }) => {
                         isSelected={false} 
                     />
                 ))}
-            </div>
-        </main>
+            </main>
+        </BotanicalBackground>
     );
 };
 

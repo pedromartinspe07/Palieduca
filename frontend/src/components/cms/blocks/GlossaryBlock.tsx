@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { BlockProps } from './types';
-import { Search, Copy, Check, Sparkles, Plus, Trash2, HelpCircle } from 'lucide-react';
+import { Search, Copy, Check, Plus, Trash2, HelpCircle, Leaf } from 'lucide-react';
 import Tilt3DCard from '../../3d/Tilt3DCard';
 
 export interface GlossaryTermItem {
@@ -28,7 +28,7 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
     const handleAddTerm = () => {
         const newTerm: GlossaryTermItem = {
             id: Date.now().toString(),
-            term: 'Novo Termo Médico',
+            term: 'Novo Termo',
             category: 'Conceito Fundamental',
             definition: 'Explicação detalhada e humanizada sobre o termo ou conceito.',
             example: 'Exemplo prático de aplicação no cuidado ao paciente.'
@@ -74,59 +74,65 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
                 e.stopPropagation();
                 onSelect(block.id);
             }}
-            className={`relative w-full max-w-7xl mx-auto py-6 transition-all ${
+            className={`relative w-full max-w-6xl mx-auto py-4 transition-all ${
                 isSelected ? 'ring-2 ring-primary ring-offset-4 rounded-3xl' : ''
             }`}
         >
-            {/* Header Banner */}
-            <div className="p-8 sm:p-12 rounded-3xl border border-warm-200 shadow-xl bg-gradient-to-br from-white via-warm-50/80 to-emerald-50/40 mb-10 text-center relative overflow-hidden">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs mb-4 border border-primary/20 shadow-2xs">
-                    <Sparkles size={14} className="text-secondary" />
-                    <span>Dicionário Terminolóxico & Conceitual</span>
+            {/* Header Hero Banner (Glassmorphism Acolhedor) */}
+            <div className="p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/80 backdrop-blur-2xl mb-12 text-center relative overflow-hidden">
+                
+                {/* Badge Botânica */}
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200/80 font-bold text-xs mb-5 shadow-2xs">
+                    <Leaf size={13} className="text-teal-600" />
+                    <span>Dicionário Terminológico e Conceitual</span>
                 </div>
 
+                {/* Título com Tipografia Gradiente Oficial */}
                 <h1
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}
                     onBlur={(e) => handleUpdateField('title', e.currentTarget.innerText)}
-                    className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold text-warm-900 mb-4 tracking-tight font-display ${editableClass}`}
+                    className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] mb-4 tracking-tight font-display ${editableClass}`}
                 >
-                    {title}
+                    {isEditing ? title : (
+                        <>Glossário <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0284c7] via-[#0d9488] to-[#0f766e]">de Cuidados Paliativos</span></>
+                    )}
                 </h1>
 
+                {/* Subtítulo */}
                 <p
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}
                     onBlur={(e) => handleUpdateField('subtitle', e.currentTarget.innerText)}
-                    className={`text-sm sm:text-base text-warm-600 max-w-2xl mx-auto leading-relaxed ${editableClass}`}
+                    className={`text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed ${editableClass}`}
                 >
                     {subtitle}
                 </p>
 
-                {/* Barra de Pesquisa */}
+                {/* Barra de Pesquisa em Pílula */}
                 <div className="mt-8 max-w-xl mx-auto space-y-4">
-                    <div className="relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-warm-400" size={18} />
+                    <div className="relative group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-teal-600 transition-colors" size={18} />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Pesquisar termo ou conceito (ex: Ortotanásia, Dor Total, PPS...)"
-                            className="w-full pl-11 pr-4 py-3.5 bg-white border border-warm-200 rounded-2xl text-sm font-medium text-warm-800 shadow-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                            className="w-full pl-11 pr-4 py-3.5 bg-white/90 border border-slate-200/80 rounded-full text-sm font-medium text-slate-800 shadow-2xs focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400 focus:bg-white outline-none transition-all"
                         />
                     </div>
 
-                    {/* Índice Alfabético */}
+                    {/* Índice Alfabético com Botões Pílula */}
                     <div className="flex flex-wrap justify-center gap-1.5 pt-2">
                         {alphabet.map(letter => (
                             <button
                                 key={letter}
                                 type="button"
                                 onClick={() => setSelectedLetter(letter)}
-                                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                                     selectedLetter === letter
-                                        ? 'bg-primary text-white shadow-xs'
-                                        : 'bg-white text-warm-700 border border-warm-200 hover:bg-warm-100'
+                                        ? 'bg-gradient-to-r from-teal-600 to-sky-600 text-white shadow-xs scale-105'
+                                        : 'bg-white/90 text-slate-600 border border-slate-200/70 hover:bg-sky-50 hover:text-sky-800'
                                 }`}
                             >
                                 {letter}
@@ -139,13 +145,13 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
             {/* Ação de Adicionar no Modo Edição */}
             {isEditing && (
                 <div className="flex justify-between items-center mb-6 px-2">
-                    <span className="text-xs font-bold text-warm-500 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                         {terms.length} Termos no Glossário
                     </span>
                     <button
                         type="button"
                         onClick={handleAddTerm}
-                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl font-bold text-xs shadow-sm hover:bg-sage-700 transition-all cursor-pointer"
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-600 to-sky-600 text-white rounded-full font-bold text-xs shadow-sm hover:brightness-110 transition-all cursor-pointer"
                     >
                         <Plus size={16} />
                         <span>Adicionar Novo Termo</span>
@@ -155,12 +161,14 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
 
             {/* Grid de Cards dos Termos */}
             {filteredTerms.length > 0 ? (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                     {filteredTerms.map((item, index) => {
                         const originalIndex = terms.findIndex(it => it.id === item.id);
+                        const isEven = index % 2 === 0;
+
                         return (
                             <Tilt3DCard key={item.id} maxTilt={5}>
-                                <div className="p-7 rounded-3xl bg-white border border-warm-200 shadow-sm hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col justify-between h-full group relative">
+                                <div className="p-7 rounded-[28px] bg-white/90 backdrop-blur-xl border border-white/90 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.05)] hover:shadow-2xl hover:border-sky-300/60 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-full group relative">
                                     {isEditing && (
                                         <button
                                             type="button"
@@ -173,21 +181,22 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
                                     )}
 
                                     <div>
-                                        <div className="flex items-center justify-between mb-3 pr-6">
+                                        {/* Categoria & Botão Copiar */}
+                                        <div className="flex items-center justify-between mb-3.5 pr-6">
                                             <span
                                                 contentEditable={isEditing}
                                                 suppressContentEditableWarning={true}
                                                 onBlur={(e) => handleUpdateTerm(originalIndex, 'category', e.currentTarget.innerText)}
-                                                className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 ${editableClass}`}
+                                                className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-sky-100/70 text-sky-800 border border-sky-200/70 ${editableClass}`}
                                             >
-                                                {item.category}
+                                                {item.category || 'CONCEITO FUNDAMENTAL'}
                                             </span>
 
                                             {!isEditing && (
                                                 <button
                                                     type="button"
                                                     onClick={() => copyToClipboard(item.term, item.definition)}
-                                                    className="p-1.5 text-warm-400 hover:text-primary transition-colors rounded-lg hover:bg-warm-50 cursor-pointer"
+                                                    className="p-1.5 text-slate-400 hover:text-sky-600 transition-colors rounded-lg hover:bg-sky-50 cursor-pointer"
                                                     title="Copiar definição"
                                                 >
                                                     {copiedTerm === item.term ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
@@ -195,34 +204,42 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
                                             )}
                                         </div>
 
+                                        {/* Título do Termo */}
                                         <h3
                                             contentEditable={isEditing}
                                             suppressContentEditableWarning={true}
                                             onBlur={(e) => handleUpdateTerm(originalIndex, 'term', e.currentTarget.innerText)}
-                                            className={`font-extrabold text-xl text-warm-900 mb-3 group-hover:text-primary transition-colors ${editableClass}`}
+                                            className={`font-extrabold text-xl text-[#0f172a] mb-2.5 group-hover:text-teal-700 transition-colors ${editableClass}`}
                                         >
                                             {item.term}
                                         </h3>
 
+                                        {/* Definição */}
                                         <p
                                             contentEditable={isEditing}
                                             suppressContentEditableWarning={true}
                                             onBlur={(e) => handleUpdateTerm(originalIndex, 'definition', e.currentTarget.innerText)}
-                                            className={`text-warm-600 text-xs sm:text-sm leading-relaxed font-light mb-4 ${editableClass}`}
+                                            className={`text-slate-600 text-xs sm:text-sm leading-relaxed font-light mb-4 ${editableClass}`}
                                         >
                                             {item.definition}
                                         </p>
 
+                                        {/* Destaque "Na prática clínica" */}
                                         {(item.example || isEditing) && (
-                                            <div className="p-3 bg-warm-50 rounded-2xl border border-warm-100 text-xs text-warm-700 space-y-1">
-                                                <span className="font-bold text-warm-800 flex items-center gap-1 text-[11px]">
-                                                    💡 Na prática clínica:
+                                            <div className={`p-3.5 rounded-2xl border text-xs space-y-1 transition-colors ${
+                                                isEven 
+                                                    ? 'bg-[#f5f3ff]/80 border-[#e0e7ff] text-indigo-950' 
+                                                    : 'bg-[#ecfdf5]/80 border-[#d1fae5] text-emerald-950'
+                                            }`}>
+                                                <span className="font-bold flex items-center gap-1.5 text-[11px] text-slate-800">
+                                                    <Leaf size={12} className={isEven ? 'text-indigo-600' : 'text-emerald-600'} />
+                                                    Na prática clínica:
                                                 </span>
                                                 <p
                                                     contentEditable={isEditing}
                                                     suppressContentEditableWarning={true}
                                                     onBlur={(e) => handleUpdateTerm(originalIndex, 'example', e.currentTarget.innerText)}
-                                                    className={`font-light text-[11px] leading-relaxed text-warm-600 ${editableClass}`}
+                                                    className={`font-light text-[11px] leading-relaxed text-slate-600 ${editableClass}`}
                                                 >
                                                     {item.example || 'Clique para adicionar um exemplo prático de aplicação.'}
                                                 </p>
@@ -235,16 +252,16 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
                     })}
                 </div>
             ) : (
-                <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-warm-300">
-                    <HelpCircle size={40} className="mx-auto text-warm-400 mb-3" />
-                    <p className="text-warm-700 font-bold">
+                <div className="text-center py-16 bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-dashed border-slate-300">
+                    <HelpCircle size={40} className="mx-auto text-slate-400 mb-3" />
+                    <p className="text-slate-700 font-bold">
                         {terms.length === 0 ? 'Nenhum termo cadastrado no glossário ainda.' : `Nenhum termo encontrado para "${searchQuery}".`}
                     </p>
                     {isEditing && (
                         <button
                             type="button"
                             onClick={handleAddTerm}
-                            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl font-bold text-xs shadow-sm cursor-pointer"
+                            className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-teal-600 to-sky-600 text-white rounded-full font-bold text-xs shadow-sm cursor-pointer"
                         >
                             <Plus size={15} /> Adicionar Primeiro Termo
                         </button>

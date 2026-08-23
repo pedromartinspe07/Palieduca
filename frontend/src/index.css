@@ -320,3 +320,45 @@
     border-bottom: 1px solid rgba(231, 229, 228, 0.8);
 }
 
+/* ═══ BUTTERFLY WING FLAPPING ANIMATIONS ═══ */
+@keyframes flap-left {
+    0%, 100% {
+        transform: rotateY(0deg) skewY(0deg);
+    }
+    50% {
+        transform: rotateY(65deg) skewY(-8deg);
+    }
+}
+
+@keyframes flap-right {
+    0%, 100% {
+        transform: rotateY(0deg) skewY(0deg);
+    }
+    50% {
+        transform: rotateY(-65deg) skewY(8deg);
+    }
+}
+
+@keyframes butterfly-gentle-bob {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-4px) rotate(2deg);
+    }
+}
+
+.butterfly-flap-left {
+    transform-origin: right center;
+    animation: flap-left 0.4s ease-in-out infinite;
+}
+
+.butterfly-flap-right {
+    transform-origin: left center;
+    animation: flap-right 0.4s ease-in-out infinite;
+}
+
+.butterfly-bobbing {
+    animation: butterfly-gentle-bob 2.5s ease-in-out infinite;
+}
+
