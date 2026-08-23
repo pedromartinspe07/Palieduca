@@ -1,11 +1,17 @@
 import React from 'react';
 import { HeartPulse, GraduationCap } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import GrassDivider from './effects/GrassDivider';
 
 const Footer: React.FC = () => {
     return (
-        <footer className="bg-warm-900 text-warm-100/80 pt-16 pb-8 border-t border-warm-800">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <footer className="relative bg-warm-900 text-warm-100/80 pb-8">
+            {/* Grama Acolhedora no Topo do Footer */}
+            <div className="w-full -mt-1 pointer-events-none">
+                <GrassDivider />
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
                     {/* Coluna 1: Sobre o Projeto */}
                     <div>
