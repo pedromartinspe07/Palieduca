@@ -66,12 +66,12 @@ const HeroSection: React.FC = () => {
         <section className="relative pt-28 pb-16 lg:pt-32 lg:pb-24 overflow-hidden">
             {/* Background elements & Three.js 3D Sphere */}
             <div className="absolute inset-0 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-gradient-to-b from-warm-50/90 via-background to-background" />
-                <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-sage-300/15 rounded-full blur-[120px] animate-subtle-float" />
-                <div className="absolute bottom-10 right-1/4 w-[28rem] h-[28rem] bg-warm-300/15 rounded-full blur-[120px] animate-subtle-float" style={{ animationDelay: '2s' }} />
+                <div className="absolute inset-0 bg-gradient-to-b from-sky-100/60 via-emerald-50/30 to-background" />
+                <div className="absolute top-1/4 left-1/4 w-[32rem] h-[32rem] bg-sky-300/25 rounded-full blur-[140px] animate-subtle-float" />
+                <div className="absolute bottom-10 right-1/4 w-[30rem] h-[30rem] bg-emerald-300/25 rounded-full blur-[140px] animate-subtle-float" style={{ animationDelay: '2s' }} />
                 
-                {/* Three.js 3D Background Canvas */}
-                <div className="absolute top-10 right-0 w-full max-w-xl h-[450px] opacity-60 hidden lg:block">
+                {/* Three.js 3D Background Canvas (Borboleta Ulysses 3D) */}
+                <div className="absolute top-6 right-0 w-full max-w-xl h-[450px] opacity-95 hidden lg:block pointer-events-auto">
                     <Hero3DCanvas />
                 </div>
             </div>
@@ -79,7 +79,7 @@ const HeroSection: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 {/* Rectangular Banner Carousel */}
                 <div
-                    className="relative w-full h-[280px] sm:h-[380px] md:h-[440px] lg:h-[480px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-warm-200/80 bg-warm-900 group mb-12 select-none"
+                    className="relative w-full h-[280px] sm:h-[380px] md:h-[440px] lg:h-[480px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-sky-100/80 bg-warm-900 group mb-12 select-none"
                     onMouseEnter={() => setIsPaused(true)}
                     onMouseLeave={() => setIsPaused(false)}
                     aria-label="Carrossel de imagens de cuidados paliativos"
@@ -107,7 +107,7 @@ const HeroSection: React.FC = () => {
                                 {/* Slide caption */}
                                 <div className="absolute bottom-6 sm:bottom-8 left-6 sm:left-10 right-20 sm:right-28 text-white z-20 animate-fade-in">
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-xs sm:text-sm font-medium mb-2.5 text-white shadow-sm">
-                                        <Sparkles size={14} className="text-secondary" />
+                                        <Sparkles size={14} className="text-amber-300" />
                                         {slide.tag}
                                     </span>
                                     <p className="text-base sm:text-xl md:text-2xl font-semibold tracking-tight text-white drop-shadow-md max-w-2xl leading-snug">
@@ -155,13 +155,13 @@ const HeroSection: React.FC = () => {
 
                 {/* Welcome / Presentation Content */}
                 <div className="text-center max-w-4xl mx-auto animate-slide-up">
-                    <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/90 backdrop-blur-md border border-warm-200 text-primary font-medium text-sm mb-6 shadow-sm hover:scale-105 transition-transform">
-                        <Heart size={16} className="fill-primary" />
+                    <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/95 backdrop-blur-md border border-sky-200 text-sky-800 font-semibold text-sm mb-6 shadow-sm hover:scale-105 transition-transform">
+                        <Heart size={16} className="fill-sky-500 text-sky-600" />
                         <span>Projeto de Doutorado em Enfermagem</span>
                     </div>
 
                     <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-warm-900 leading-[1.2] mb-6 tracking-tight">
-                        Aprender cuidados paliativos é cuidar da pessoa em sua <span className="gradient-text">integralidade.</span>
+                        Aprender cuidados paliativos é cuidar da pessoa em sua <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-teal-600 to-emerald-600">integralidade.</span>
                     </h1>
 
                     <p className="text-lg sm:text-xl text-warm-700 font-light mb-8 max-w-2xl mx-auto leading-relaxed">
@@ -178,8 +178,8 @@ const HeroSection: React.FC = () => {
                             <Award size={14} className="text-amber-600" />
                             <span>Certificado com Autenticação</span>
                         </div>
-                        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-blue-50 text-blue-800 border border-blue-200/80 rounded-full text-xs font-bold shadow-xs">
-                            <GraduationCap size={14} className="text-blue-600" />
+                        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-sky-50 text-sky-800 border border-sky-200/80 rounded-full text-xs font-bold shadow-xs">
+                            <GraduationCap size={14} className="text-sky-600" />
                             <span>6 Módulos Baseados em Evidências</span>
                         </div>
                     </div>
@@ -187,7 +187,7 @@ const HeroSection: React.FC = () => {
                     <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
                         <Link
                             to="/modulos"
-                            className="w-full sm:w-auto flex justify-center items-center gap-2 px-8 py-4 bg-primary text-white rounded-full font-bold text-lg shadow-xl hover:shadow-primary/40 hover:bg-sage-700 transition-all btn-shimmer interactive-btn group"
+                            className="w-full sm:w-auto flex justify-center items-center gap-2 px-8 py-4 bg-gradient-to-r from-sky-600 via-teal-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 text-white rounded-full font-bold text-lg shadow-xl hover:shadow-sky-500/25 transition-all btn-shimmer interactive-btn group"
                         >
                             <span>Iniciar aprendizagem</span>
                             <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
@@ -195,9 +195,9 @@ const HeroSection: React.FC = () => {
 
                         <Link
                             to="/apresentacao"
-                            className="w-full sm:w-auto flex justify-center items-center gap-2 px-8 py-4 bg-white text-warm-800 rounded-full font-bold text-lg shadow-md hover:shadow-xl border border-warm-200/80 hover:border-primary/40 transition-all interactive-btn group"
+                            className="w-full sm:w-auto flex justify-center items-center gap-2 px-8 py-4 bg-white/90 text-warm-900 rounded-full font-bold text-lg shadow-md hover:shadow-xl border border-sky-200/80 hover:border-sky-400 transition-all interactive-btn group"
                         >
-                            <Play size={20} className="text-secondary group-hover:scale-110 transition-transform" />
+                            <Play size={20} className="text-sky-600 group-hover:scale-110 transition-transform" />
                             <span>Ver apresentação</span>
                         </Link>
                     </div>

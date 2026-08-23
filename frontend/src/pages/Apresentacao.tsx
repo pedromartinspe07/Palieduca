@@ -95,22 +95,22 @@ const Apresentacao: React.FC = () => {
             {/* ═══ 1. HERO BANNER DE BOAS-VINDAS ═══ */}
             <section className="relative py-16 lg:py-24 px-4 overflow-hidden border-b border-warm-100">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none">
-                    <div className="absolute top-10 left-10 w-96 h-96 bg-emerald-300/15 rounded-full blur-[120px] animate-subtle-float" />
-                    <div className="absolute bottom-10 right-10 w-[26rem] h-[26rem] bg-amber-300/15 rounded-full blur-[120px] animate-subtle-float" style={{ animationDelay: '2s' }} />
+                    <div className="absolute top-10 left-10 w-[30rem] h-[30rem] bg-sky-300/20 rounded-full blur-[130px] animate-subtle-float" />
+                    <div className="absolute bottom-10 right-10 w-[30rem] h-[30rem] bg-emerald-300/20 rounded-full blur-[130px] animate-subtle-float" style={{ animationDelay: '2s' }} />
                 </div>
 
                 <div className="max-w-4xl mx-auto text-center relative z-10 animate-fade-in">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 backdrop-blur-md border border-warm-200 text-primary font-bold text-xs mb-6 shadow-xs hover:scale-105 transition-transform">
-                        <Sparkles size={15} className="text-secondary" />
-                        <span>Ambiente Virtual de Aprendizagem Interativo</span>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/95 backdrop-blur-md border border-sky-200 text-sky-800 font-bold text-xs mb-6 shadow-xs hover:scale-105 transition-transform">
+                        <Sparkles size={15} className="text-sky-500" />
+                        <span>Ambiente Virtual de Aprendizagem Humanizado</span>
                     </div>
 
                     <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-warm-900 mb-6 tracking-tight font-display">
-                        Apresentação do <span className="text-primary">Palieduca</span>
+                        Apresentação do <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-teal-600 to-emerald-600">Palieduca</span>
                     </h1>
 
                     <p className="text-lg sm:text-xl text-warm-700 leading-relaxed font-light max-w-3xl mx-auto mb-8">
-                        Bem-vindo(a) ao <strong className="font-bold text-primary">Palieduca</strong>! Uma plataforma educacional desenvolvida para apoiar e aprofundar o ensino e a aprendizagem em cuidados paliativos, unindo ciência, acolhimento e humanização.
+                        Bem-vindo(a) ao <strong className="font-bold text-sky-700">Palieduca</strong>! Uma plataforma educacional desenvolvida para apoiar e aprofundar o ensino e a aprendizagem em cuidados paliativos, unindo ciência, empatia e esperança.
                     </p>
 
                     {/* Badges de Destaque */}
@@ -119,12 +119,12 @@ const Apresentacao: React.FC = () => {
                             <CheckCircle2 size={14} className="text-emerald-600" />
                             Projeto UFPB / Doutorado
                         </span>
-                        <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-xs font-bold shadow-xs">
-                            <Award size={14} className="text-amber-600" />
+                        <span className="flex items-center gap-1.5 px-3 py-1 bg-sky-50 text-sky-800 border border-sky-200 rounded-full text-xs font-bold shadow-xs">
+                            <Award size={14} className="text-sky-600" />
                             Metodologias Ativas de Ensino
                         </span>
-                        <span className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-800 border border-blue-200 rounded-full text-xs font-bold shadow-xs">
-                            <GraduationCap size={14} className="text-blue-600" />
+                        <span className="flex items-center gap-1.5 px-3 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded-full text-xs font-bold shadow-xs">
+                            <GraduationCap size={14} className="text-teal-600" />
                             Acesso 100% Livre e Gratuito
                         </span>
                     </div>
@@ -134,7 +134,7 @@ const Apresentacao: React.FC = () => {
             {/* ═══ 2. PÚBLICO-ALVO (CARDS 3D GLOW) ═══ */}
             <section id="publico-alvo" className="py-20 px-4 max-w-7xl mx-auto scroll-mt-24">
                 <div className="text-center max-w-3xl mx-auto mb-14">
-                    <span className="text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">
+                    <span className="text-xs font-extrabold uppercase tracking-widest text-sky-700 bg-sky-50 border border-sky-200 px-3.5 py-1 rounded-full">
                         Para quem foi feito
                     </span>
                     <h2 className="text-3xl sm:text-4xl font-bold text-warm-900 mt-3 mb-4">Público-Alvo</h2>
@@ -148,25 +148,25 @@ const Apresentacao: React.FC = () => {
                         {
                             title: "Estudantes de Graduação",
                             desc: "Alunos de Enfermagem e demais cursos de saúde em busca de competências práticas, estudo de casos clínicos e fundamentação ética.",
-                            icon: <BookOpen className="text-emerald-600" size={30} />,
-                            bg: "from-emerald-50/50 to-white",
-                            border: "border-emerald-200/70",
+                            icon: <BookOpen className="text-sky-600" size={30} />,
+                            bg: "from-sky-50/70 via-white to-white",
+                            border: "border-sky-200/80 hover:border-sky-400",
                             badge: "Graduação"
                         },
                         {
                             title: "Docentes & Preceptores",
                             desc: "Professores que desejam material complementar confiável, metodologias ativas, quizzes e recursos visuais para sala de aula.",
-                            icon: <BrainCircuit className="text-primary" size={30} />,
-                            bg: "from-sage-50/50 to-white",
-                            border: "border-sage-200/70",
+                            icon: <BrainCircuit className="text-teal-600" size={30} />,
+                            bg: "from-teal-50/70 via-white to-white",
+                            border: "border-teal-200/80 hover:border-teal-400",
                             badge: "Docência"
                         },
                         {
                             title: "Profissionais de Saúde",
                             desc: "Enfermeiros, médicos e equipes multidisciplinares que buscam atualização contínua e aprimoramento no manejo humanizado da dor e sintomas.",
-                            icon: <Users className="text-amber-600" size={30} />,
-                            bg: "from-amber-50/50 to-white",
-                            border: "border-amber-200/70",
+                            icon: <Users className="text-emerald-600" size={30} />,
+                            bg: "from-emerald-50/70 via-white to-white",
+                            border: "border-emerald-200/80 hover:border-emerald-400",
                             badge: "Assistência"
                         },
                     ].map(item => (

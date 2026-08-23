@@ -36,10 +36,10 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
             className="h-full flex flex-col animate-slide-up group"
         >
             <div
-                className={`rounded-[2rem] overflow-hidden flex flex-col h-full bg-white border transition-all duration-300 ${
+                className={`rounded-[20px] overflow-hidden flex flex-col h-full bg-white border transition-all duration-300 ${
                     isCompleted
                         ? 'border-amber-300 shadow-[0_10px_30px_-10px_rgba(245,158,11,0.25)]'
-                        : 'border-warm-200/80 shadow-md hover:shadow-2xl hover:border-primary/40'
+                        : 'border-slate-200 shadow-sm hover:shadow-xl hover:border-teal-500/40 hover:-translate-y-1'
                 }`}
                 style={{ animationDelay: `${delay}s` }}
             >
@@ -72,7 +72,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
                                 <span>100% Concluído</span>
                             </div>
                         ) : (
-                            <div className="bg-white/90 text-warm-900 px-3 py-1 rounded-full border border-warm-200/80">
+                            <div className="bg-white/90 text-slate-800 px-3 py-1 rounded-full border border-slate-200">
                                 {progress > 0 ? `${progress}%` : 'Não iniciado'}
                             </div>
                         )}
@@ -82,41 +82,41 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
                 {/* Corpo do Card */}
                 <div className="p-6 flex flex-col flex-1 bg-white">
                     {/* Barra de Progresso Suave */}
-                    <div className="w-full bg-warm-100 rounded-full h-2 mb-4 overflow-hidden shadow-inner">
+                    <div className="w-full bg-slate-100 rounded-full h-2 mb-4 overflow-hidden shadow-inner">
                         <div
                             className={`h-full rounded-full transition-all duration-1000 ease-out ${
                                 isCompleted
                                     ? 'bg-gradient-to-r from-amber-400 to-emerald-500'
-                                    : 'bg-gradient-to-r from-primary to-emerald-400'
+                                    : 'bg-gradient-to-r from-teal-500 to-emerald-500'
                             }`}
                             style={{ width: `${progress}%` }}
                         />
                     </div>
 
                     {/* Meta Info (Tempo de Leitura) */}
-                    <div className="flex items-center gap-3 text-xs font-semibold text-warm-500 mb-2.5">
-                        <span className="flex items-center gap-1">
-                            <Clock size={13} className="text-primary" />
+                    <div className="flex items-center gap-3 text-xs font-semibold text-slate-500 mb-2.5">
+                        <span className="flex items-center gap-1 text-teal-700">
+                            <Clock size={13} className="text-teal-600" />
                             <span>{estimatedMinutes} min de estudo</span>
                         </span>
                         <span>•</span>
-                        <span className="text-warm-600 font-medium">Interativo</span>
+                        <span className="text-slate-500 font-medium">Interativo</span>
                     </div>
 
-                    <h3 className="text-xl font-extrabold text-warm-900 mb-2 leading-snug group-hover:text-primary transition-colors">
+                    <h3 className="text-xl font-extrabold text-[#0F172A] mb-2 leading-snug group-hover:text-teal-700 transition-colors">
                         {title}
                     </h3>
-                    <p className="text-xs sm:text-sm text-warm-600 mb-5 flex-grow font-light leading-relaxed line-clamp-3">
+                    <p className="text-xs sm:text-sm text-[#64748B] mb-5 flex-grow font-normal leading-relaxed line-clamp-3">
                         {description}
                     </p>
 
                     {/* Recursos Disponíveis */}
                     {resources && resources.length > 0 && (
                         <div className="mb-6">
-                            <div className="text-[10px] font-bold text-warm-400 uppercase tracking-wider mb-2">Recursos Inclusos</div>
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Recursos Inclusos</div>
                             <div className="flex flex-wrap gap-1.5">
                                 {resources.map((res, index) => (
-                                    <span key={index} className="px-2.5 py-0.5 bg-warm-50 text-warm-700 text-[11px] font-bold rounded-lg border border-warm-200">
+                                    <span key={index} className="px-2.5 py-0.5 bg-slate-50 text-slate-700 text-[11px] font-medium rounded-lg border border-slate-200">
                                         {res}
                                     </span>
                                 ))}
@@ -131,8 +131,8 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
                             isCompleted
                                 ? 'bg-amber-50 border border-amber-300 text-amber-900 hover:bg-amber-100 hover:shadow-md'
                                 : progress > 0
-                                ? 'bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-white hover:shadow-md'
-                                : 'bg-warm-100 border border-warm-200 text-warm-800 hover:bg-primary hover:text-white hover:border-primary'
+                                ? 'bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-600 hover:text-white hover:shadow-md'
+                                : 'bg-slate-50 border border-slate-200 text-slate-800 hover:bg-teal-600 hover:text-white hover:border-teal-600'
                         }`}
                     >
                         <span>

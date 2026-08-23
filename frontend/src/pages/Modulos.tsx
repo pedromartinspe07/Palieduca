@@ -114,26 +114,57 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
 
     if (blocks && blocks.length > 0) {
         return (
-            <main className="min-h-screen pb-20 bg-background overflow-x-hidden pt-20">
-                {blocks.map(block => (
-                    <BlockRenderer key={block.id} block={block} isEditing={false} onUpdate={() => {}} onSelect={() => {}} isSelected={false} />
-                ))}
+            <main className="min-h-screen pb-20 bg-gradient-to-b from-[#F0FDF4]/60 via-[#F8FAFC] to-[#F8FAFC] overflow-x-hidden pt-20 relative">
+                {/* Backdrop Blobs de Luz Difusa (Esmeralda & Azul-Sereno) */}
+                <div 
+                    className="absolute pointer-events-none rounded-full"
+                    style={{
+                        width: '450px',
+                        height: '450px',
+                        background: '#A7F3D0',
+                        filter: 'blur(140px)',
+                        opacity: 0.35,
+                        top: '40px',
+                        left: '20px',
+                    }} 
+                />
+                <div 
+                    className="absolute pointer-events-none rounded-full"
+                    style={{
+                        width: '500px',
+                        height: '500px',
+                        background: '#BAE6FD',
+                        filter: 'blur(140px)',
+                        opacity: 0.30,
+                        top: '80px',
+                        right: '20px',
+                    }} 
+                />
+                <div className="relative z-10">
+                    {blocks.map(block => (
+                        <BlockRenderer key={block.id} block={block} isEditing={false} onUpdate={() => {}} onSelect={() => {}} isSelected={false} />
+                    ))}
+                </div>
             </main>
         );
     }
 
     return (
-        <main className={`min-h-screen pt-32 pb-20 px-4 bg-background ${isEditing ? 'pointer-events-auto' : ''}`}>
-            <div className="max-w-[85rem] mx-auto">
+        <main className={`min-h-screen pt-32 pb-20 px-4 bg-gradient-to-b from-sky-50/60 via-emerald-50/30 to-background relative overflow-hidden ${isEditing ? 'pointer-events-auto' : ''}`}>
+            {/* Orbes de luz suaves de acolhimento */}
+            <div className="absolute top-20 left-1/4 w-[32rem] h-[32rem] bg-sky-300/15 rounded-full blur-[140px] pointer-events-none" />
+            <div className="absolute top-1/2 right-1/4 w-[30rem] h-[30rem] bg-emerald-300/15 rounded-full blur-[140px] pointer-events-none" />
+
+            <div className="max-w-[85rem] mx-auto relative z-10">
                 <div className="flex items-center gap-3 mb-8">
-                    <div className="bg-gradient-to-r from-primary to-secondary text-white p-3 rounded-xl shadow-md">
+                    <div className="bg-gradient-to-tr from-sky-600 via-teal-600 to-emerald-600 text-white p-3 rounded-2xl shadow-md">
                         <LayoutDashboard size={28} />
                     </div>
                     <h1 
                         contentEditable={isEditing}
                         suppressContentEditableWarning={true}
                         onBlur={(e) => handleTextChange('title', e.currentTarget.innerText)}
-                        className={`text-3xl font-bold text-warm-900 ${editableClass}`}
+                        className={`text-3xl font-extrabold text-warm-900 ${editableClass}`}
                     >
                         {content.title || 'Módulos de Aprendizagem'}
                     </h1>

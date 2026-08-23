@@ -85,17 +85,23 @@ const Biblioteca: React.FC<BibliotecaProps> = ({ isEditing, initialContent }) =>
     ];
 
     return (
-        <main className="min-h-screen pb-20 bg-background overflow-x-hidden pt-28 px-4">
-            {blocksToRender.map(block => (
-                <BlockRenderer 
-                    key={block.id} 
-                    block={block} 
-                    isEditing={false} 
-                    onUpdate={() => {}} 
-                    onSelect={() => {}} 
-                    isSelected={false} 
-                />
-            ))}
+        <main className="min-h-screen pb-20 bg-gradient-to-b from-sky-50/60 via-emerald-50/30 to-background overflow-x-hidden pt-28 px-4 relative">
+            {/* Orbes de acolhimento visual */}
+            <div className="absolute top-20 left-1/4 w-[30rem] h-[30rem] bg-sky-300/15 rounded-full blur-[140px] pointer-events-none" />
+            <div className="absolute top-1/2 right-1/4 w-[30rem] h-[30rem] bg-emerald-300/15 rounded-full blur-[140px] pointer-events-none" />
+
+            <div className="relative z-10">
+                {blocksToRender.map(block => (
+                    <BlockRenderer 
+                        key={block.id} 
+                        block={block} 
+                        isEditing={false} 
+                        onUpdate={() => {}} 
+                        onSelect={() => {}} 
+                        isSelected={false} 
+                    />
+                ))}
+            </div>
         </main>
     );
 };

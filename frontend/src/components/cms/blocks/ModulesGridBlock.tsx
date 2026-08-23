@@ -36,64 +36,72 @@ const ModulesGridBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, 
         onUpdate(block.id, { data: { ...block.data, [field]: text } });
     };
 
+    const editableClass = isEditing ? 'outline-dashed outline-2 outline-teal-500/50 outline-offset-4 rounded cursor-text' : '';
+
     return (
         <div 
             onClick={(e) => {
                 e.stopPropagation();
                 onSelect(block.id);
             }}
-            className={`relative w-full py-12 px-6 transition-all duration-200 ${
+            className={`relative w-full py-14 px-4 sm:px-6 lg:px-8 transition-all duration-200 ${
                 isEditing ? 'cursor-pointer' : ''
             } ${
-                isSelected ? 'ring-4 ring-primary ring-inset z-10 rounded-xl' : 'hover:ring-2 hover:ring-blue-400/50 hover:ring-inset rounded-xl'
+                isSelected ? 'ring-4 ring-teal-500 ring-inset z-10 rounded-3xl' : ''
             }`}
             style={{ backgroundColor: bgColor }}
         >
             <div className="max-w-[85rem] mx-auto">
-                <div className="mb-10 text-center sm:text-left">
+                <div className="mb-12 text-left">
                     <h2 
                         contentEditable={isEditing}
                         suppressContentEditableWarning={true}
                         onBlur={(e) => handleTextChange('title', e.currentTarget.innerText)}
-                        className="text-3xl font-bold text-warm-900 mb-4 outline-none"
+                        className={`text-3xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight mb-3 outline-none ${editableClass}`}
                     >
-                        {title || 'Módulos de Aprendizagem'}
+                        {title || 'Explore Nossos Módulos'}
                     </h2>
                     
                     <p 
                         contentEditable={isEditing}
                         suppressContentEditableWarning={true}
                         onBlur={(e) => handleTextChange('intro', e.currentTarget.innerText)}
-                        className="text-lg text-warm-600 max-w-3xl outline-none"
+                        className={`text-base sm:text-lg text-[#64748B] max-w-3xl leading-relaxed outline-none font-normal ${editableClass}`}
                     >
-                        {intro || 'Bem-vindo à área de módulos. Escolha um módulo abaixo para começar a aprender.'}
+                        {intro || 'Acesse o conteúdo selecionado por especialistas.'}
                     </p>
                 </div>
 
-                {/* Grid is uneditable directly, sealed by magic */}
+                {/* Grid de Cards dos Módulos */}
                 <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ${isEditing ? 'pointer-events-none opacity-90' : ''}`}>
                     {loading
                         ? Array.from({ length: 3 }).map((_, i) => <ModuleCardSkeleton key={i} />)
-                        : modules.map(module => (
-                            <div key={module.id} className="scale-95 origin-top">
-                                <ModuleCard 
-                                    id={module.slug_id}
-                                    title={module.title}
-                                    description={module.description}
-                                    icon={iconMap[module.icon_name] || <Stethoscope size={24} />}
-                                    progress={module.progress}
-                                    resources={module.resources.split(',').map((s: string) => s.trim())}
-                                    image={module.image_url}
-                                    delay={module.delay / 10}
-                                />
-                            </div>
-                        ))
+                        : modules.map((module, idx) => {
+                            const levels = ['Fundamentos', 'Comunicação', 'Controle de Sintomas', 'Apoio & Família', 'Acolhimento', 'Bioética & Decisões'];
+                            const times = [15, 20, 25, 20, 15, 30];
+                            return (
+                                <div key={module.id} className="h-full">
+                                    <ModuleCard 
+                                        id={module.slug_id}
+                                        title={module.title}
+                                        description={module.description}
+                                        icon={iconMap[module.icon_name] || <Stethoscope size={24} />}
+                                        progress={module.progress}
+                                        resources={module.resources.split(',').map((s: string) => s.trim())}
+                                        image={module.image_url}
+                                        delay={(module.delay || idx * 1.5) / 10}
+                                        level={levels[idx % levels.length]}
+                                        estimatedMinutes={times[idx % times.length]}
+                                    />
+                                </div>
+                            );
+                        })
                     }
                 </div>
             </div>
 
             {isSelected && (
-                <div className="absolute top-3 right-3 bg-primary text-white text-xs px-2 py-1 rounded-md font-bold shadow">
+                <div className="absolute top-4 right-4 bg-teal-700 text-white text-xs px-3 py-1.5 rounded-xl font-bold shadow-md z-20">
                     Grid de Módulos
                 </div>
             )}

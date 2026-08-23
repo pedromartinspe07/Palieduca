@@ -44,12 +44,12 @@ const Header: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-20">
 
-                    <Link to="/" className="flex items-center gap-2 group">
-                        <div className="bg-gradient-to-tr from-primary to-secondary p-2 rounded-xl text-white shadow-lg transform group-hover:scale-105 transition-transform">
+                    <Link to="/" className="flex items-center gap-2.5 group">
+                        <div className="bg-gradient-to-tr from-sky-600 via-teal-600 to-emerald-600 p-2 rounded-xl text-white shadow-lg transform group-hover:scale-105 transition-transform">
                             <HeartPulse size={28} strokeWidth={2.5} />
                         </div>
-                        <span className="font-bold text-2xl tracking-tight text-warm-900 group-hover:text-primary transition-colors">
-                            Pali<span className="text-primary">educa</span>
+                        <span className="font-extrabold text-2xl tracking-tight text-warm-900 group-hover:text-sky-700 transition-colors">
+                            Pali<span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-emerald-600">educa</span>
                         </span>
                     </Link>
 
@@ -60,9 +60,9 @@ const Header: React.FC = () => {
                                 <Link
                                     key={item.label}
                                     to={item.to}
-                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
-                                        ? 'text-primary bg-warm-50 border border-warm-200'
-                                        : 'text-warm-700 hover:text-primary hover:bg-warm-50'
+                                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${isActive
+                                        ? 'text-sky-700 bg-sky-50 border border-sky-200 shadow-2xs'
+                                        : 'text-warm-700 hover:text-sky-700 hover:bg-sky-50/50'
                                         }`}
                                 >
                                     {item.icon}
@@ -77,17 +77,17 @@ const Header: React.FC = () => {
                         {user ? (
                             <button 
                                 onClick={() => navigate('/perfil')} 
-                                className="flex items-center gap-2.5 pl-1.5 pr-4 py-1 bg-sage-100/90 text-sage-900 hover:bg-sage-200 rounded-full font-bold shadow-xs hover:shadow-sm transition-all border border-sage-300/90 text-xs cursor-pointer shrink-0"
+                                className="flex items-center gap-2.5 pl-1.5 pr-4 py-1 bg-sky-50 text-sky-900 hover:bg-sky-100 rounded-full font-bold shadow-xs hover:shadow-sm transition-all border border-sky-200 text-xs cursor-pointer shrink-0"
                                 title={`Ver perfil de ${user.nome}`}
                             >
                                 {user.foto_url ? (
                                     <img 
                                         src={getFullMediaUrl(user.foto_url)} 
                                         alt={user.nome} 
-                                        className="w-7 h-7 rounded-full object-cover object-center aspect-square shrink-0 border border-primary/30 shadow-2xs"
+                                        className="w-7 h-7 rounded-full object-cover object-center aspect-square shrink-0 border border-sky-300 shadow-2xs"
                                     />
                                 ) : (
-                                    <div className="w-7 h-7 rounded-full bg-sage-200/90 text-sage-800 flex items-center justify-center shrink-0 border border-sage-300">
+                                    <div className="w-7 h-7 rounded-full bg-sky-200 text-sky-800 flex items-center justify-center shrink-0 border border-sky-300">
                                         <User size={15} />
                                     </div>
                                 )}
@@ -95,11 +95,11 @@ const Header: React.FC = () => {
                             </button>
                         ) : (
                             <div className="flex items-center gap-2.5">
-                                <span className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50/90 text-amber-800 border border-amber-200 rounded-full text-[11px] font-bold shadow-2xs" title="Você está navegando em modo de demonstração como Visitante">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                <span className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1 bg-sky-50 text-sky-800 border border-sky-200 rounded-full text-[11px] font-bold shadow-2xs" title="Você está navegando em modo de demonstração como Visitante">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
                                     Visitante
                                 </span>
-                                <button onClick={() => navigate('/login')} className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-bold shadow-md hover:shadow-lg interactive-btn text-xs cursor-pointer">
+                                <button onClick={() => navigate('/login')} className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-sky-600 via-teal-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 text-white rounded-full font-bold shadow-md hover:shadow-lg interactive-btn text-xs cursor-pointer">
                                     <User size={15} />
                                     <span>Entrar</span>
                                 </button>
