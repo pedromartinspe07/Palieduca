@@ -7,8 +7,8 @@ import BlockRenderer from '../components/cms/blocks/BlockRenderer';
 import type { BlockData } from '../components/cms/blocks/types';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://127.0.0.1:8000'
-  : 'https://palieduca.onrender.com';
+    ? 'http://127.0.0.1:8000'
+    : 'https://palieduca.onrender.com';
 
 const iconMap: Record<string, React.ReactNode> = {
     'Stethoscope': <Stethoscope size={24} />,
@@ -76,7 +76,7 @@ const Home: React.FC = () => {
         return (
             <main className="min-h-screen pb-20 bg-background overflow-x-hidden pt-20">
                 {blocks.map(block => (
-                    <BlockRenderer key={block.id} block={block} isEditing={false} onUpdate={() => {}} onSelect={() => {}} isSelected={false} />
+                    <BlockRenderer key={block.id} block={block} isEditing={false} onUpdate={() => { }} onSelect={() => { }} isSelected={false} />
                 ))}
             </main>
         );
@@ -115,7 +115,7 @@ const Home: React.FC = () => {
                                 const times = [15, 20, 25, 20, 15, 30];
                                 return (
                                     <div id={module.slug_id} key={module.id} className="scroll-mt-24">
-                                        <ModuleCard 
+                                        <ModuleCard
                                             id={module.slug_id}
                                             title={module.title}
                                             description={module.description}
