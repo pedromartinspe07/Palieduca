@@ -4,6 +4,7 @@ import { Loader2, ArrowLeft, BookOpen, CheckCircle2, Circle, Sparkles, MonitorPl
 import BlockRenderer from '../components/cms/blocks/BlockRenderer';
 import { useAuth } from '../context/AuthContext';
 import { getModuleIcon } from '../utils/iconUtils';
+import { getGuestId, getGuestCompletedActivities, toggleGuestActivityLocal, setGuestCompletedActivities } from '../utils/guestStorage';
 import ConfettiCelebration from '../components/effects/ConfettiCelebration';
 import BotanicalBackground from '../components/effects/BotanicalBackground';
 import '../index.css';
@@ -66,7 +67,7 @@ const ModuleViewer: React.FC = () => {
                 }
             }
 
-            // Busca progresso do aluno se estiver logado
+            // Busca progresso do aluno logado ou visitante
             if (token) {
                 const progRes = await fetch(`${API_URL}/api/progress`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -74,6 +75,24 @@ const ModuleViewer: React.FC = () => {
                 if (progRes.ok) {
                     const progData = await progRes.json();
                     setCompletedActivities(new Set(progData.completed_activities || []));
+                }
+            } else {
+                // Modo Visitante: recupera do localStorage e sincroniza com backend por IP / guest_id
+                const localCompleted = getGuestCompletedActivities();
+                setCompletedActivities(localCompleted);
+
+                try {
+                    const guestId = getGuestId();
+                    const guestProgRes = await fetch(`${API_URL}/api/guest/progress?guest_id=${guestId}`);
+                    if (guestProgRes.ok) {
+                        const guestProgData = await guestProgRes.json();
+                        const serverCompleted = new Set<string>(guestProgData.completed_activities || []);
+                        const merged = new Set<string>([...Array.from(localCompleted), ...Array.from(serverCompleted)]);
+                        setCompletedActivities(merged);
+                        setGuestCompletedActivities(merged);
+                    }
+                } catch (guestErr) {
+                    console.warn('Progresso de visitante carregado localmente:', guestErr);
                 }
             }
         } catch (err) {
@@ -89,12 +108,6 @@ const ModuleViewer: React.FC = () => {
     }, [slug_id, fetchModuleData]);
 
     const toggleActivity = async (activityId: string) => {
-        if (!token || !user) {
-            // Em vez de redirecionar bruscamente, abre o modal explicativo do modo Visitante
-            setShowGuestModal(true);
-            return;
-        }
-
         const isCurrentlyCompleted = completedActivities.has(activityId);
         const newStatus = !isCurrentlyCompleted;
 
@@ -111,21 +124,42 @@ const ModuleViewer: React.FC = () => {
             return next;
         });
 
-        try {
-            await fetch(`${API_URL}/api/progress/toggle`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    module_slug: slug_id,
-                    activity_id: activityId,
-                    completed: newStatus
-                })
-            });
-        } catch (err) {
-            console.error('Erro ao alternar atividade:', err);
+        if (token && user) {
+            try {
+                await fetch(`${API_URL}/api/progress/toggle`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        module_slug: slug_id,
+                        activity_id: activityId,
+                        completed: newStatus
+                    })
+                });
+            } catch (err) {
+                console.error('Erro ao alternar atividade do aluno:', err);
+            }
+        } else {
+            // Visitante: salva localmente no navegador e envia ao backend por IP/guest_id
+            toggleGuestActivityLocal(activityId, newStatus);
+            try {
+                await fetch(`${API_URL}/api/guest/progress/toggle`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        guest_id: getGuestId(),
+                        module_slug: slug_id,
+                        activity_id: activityId,
+                        completed: newStatus
+                    })
+                });
+            } catch (err) {
+                console.error('Erro ao alternar atividade do visitante:', err);
+            }
         }
     };
 
@@ -219,7 +253,7 @@ const ModuleViewer: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Card de Progresso do Aluno (Logado) */}
+                {/* Card de Progresso (Aluno Logado ou Visitante) */}
                 {user ? (
                     <div className={`p-5 rounded-3xl border shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all ${
                         isModuleFinished
@@ -260,31 +294,59 @@ const ModuleViewer: React.FC = () => {
                         </div>
                     </div>
                 ) : (
-                    /* Banner do Modo Visitante (Demonstração) */
-                    <div className="p-5 sm:p-6 rounded-3xl border border-amber-200/90 bg-gradient-to-r from-amber-50/90 via-orange-50/50 to-white shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-3.5">
-                            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 shadow-xs">
-                                <Sparkles size={24} />
+                    /* Banner e Card de Progresso do Visitante (Salvo no Navegador e IP) */
+                    <div className={`p-5 rounded-3xl border shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all ${
+                        isModuleFinished
+                            ? 'bg-gradient-to-r from-amber-50 via-emerald-50 to-teal-50 border-amber-300'
+                            : 'bg-white border-warm-200'
+                    }`}>
+                        <div className="flex items-center gap-3.5 w-full sm:w-auto">
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-xs ${
+                                isModuleFinished ? 'bg-gradient-to-tr from-amber-400 to-amber-500 text-warm-950 animate-bounce' : 'bg-sky-100 text-sky-700'
+                            }`}>
+                                {isModuleFinished ? <Award size={28} /> : <Sparkles size={24} />}
                             </div>
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-extrabold uppercase tracking-wider bg-amber-200/90 text-amber-900 px-2.5 py-0.5 rounded-full">
-                                        Modo Visitante (Demonstração)
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-warm-500">
+                                        Seu Progresso no Módulo
+                                    </h4>
+                                    <span className="text-[10px] font-extrabold uppercase bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full border border-sky-200">
+                                        Modo Visitante
                                     </span>
                                 </div>
-                                <p className="text-xs text-warm-700 mt-1 max-w-xl leading-relaxed font-light">
-                                    Você está explorando o conteúdo do módulo livremente. Para marcar atividades concluídas, salvar seu progresso acadêmico e emitir certificados, crie uma conta gratuita.
+                                <p className="text-sm font-extrabold text-warm-900 mt-0.5">
+                                    {completedCount} de {totalActivities} atividades concluídas ({progressPercentage}%)
+                                </p>
+                                <p className="text-[11px] text-warm-500 font-medium">
+                                    💾 Respostas e progresso salvos no seu aparelho
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                            <button
-                                type="button"
-                                onClick={() => navigate('/login')}
-                                className="px-4 py-2 bg-primary text-white rounded-xl font-bold text-xs shadow-sm hover:bg-sage-700 transition-all cursor-pointer"
-                            >
-                                Entrar / Cadastrar
-                            </button>
+
+                        {/* Barra de Progresso Visual e CTA de Certificado */}
+                        <div className="w-full sm:w-72 flex flex-col items-end gap-2">
+                            <div className="w-full bg-warm-100 rounded-full h-3 overflow-hidden border border-warm-200 shadow-inner">
+                                <div 
+                                    className={`h-full transition-all duration-500 rounded-full ${
+                                        isModuleFinished 
+                                            ? 'bg-gradient-to-r from-amber-400 via-emerald-400 to-teal-500' 
+                                            : 'bg-gradient-to-r from-sky-500 to-teal-600'
+                                    }`}
+                                    style={{ width: `${progressPercentage}%` }}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between w-full">
+                                <span className="text-[11px] font-bold text-warm-600">
+                                    {isModuleFinished ? '🎉 100% Concluído!' : `${progressPercentage}% Concluído`}
+                                </span>
+                                <button
+                                    onClick={() => navigate('/login')}
+                                    className="text-[11px] font-bold text-sky-700 hover:text-sky-900 underline cursor-pointer"
+                                >
+                                    {isModuleFinished ? 'Cadastrar para Certificado' : 'Salvar no Perfil'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -328,33 +390,31 @@ const ModuleViewer: React.FC = () => {
                                                     {index + 1}
                                                 </span>
                                                 <span className="uppercase tracking-wider text-[11px]">
-                                                    {block.type === 'quiz' ? 'Quiz / Avaliação' : 'Leitura / Conteúdo'}
+                                                    {block.type === 'quiz' || block.type === 'QuizBlock' ? 'Quiz / Avaliação' : 'Leitura / Conteúdo'}
                                                 </span>
                                             </div>
 
-                                            {/* Botão de Marcar como Concluído */}
-                                            {user && (
-                                                <button
-                                                    onClick={() => toggleActivity(block.id)}
-                                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
-                                                        isBlockCompleted
-                                                            ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300'
-                                                            : 'bg-warm-100 text-warm-700 hover:bg-primary/10 hover:text-primary border border-warm-300'
-                                                    }`}
-                                                >
-                                                    {isBlockCompleted ? (
-                                                        <>
-                                                            <CheckCircle2 size={15} className="text-emerald-600" />
-                                                            <span>Concluído</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Circle size={15} className="text-warm-400" />
-                                                            <span>Marcar como Concluído</span>
-                                                        </>
-                                                    )}
-                                                </button>
-                                            )}
+                                            {/* Botão de Marcar como Concluído (Habilitado para Alunos e Visitantes) */}
+                                            <button
+                                                onClick={() => toggleActivity(block.id)}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                                                    isBlockCompleted
+                                                        ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300'
+                                                        : 'bg-warm-100 text-warm-700 hover:bg-primary/10 hover:text-primary border border-warm-300'
+                                                }`}
+                                            >
+                                                {isBlockCompleted ? (
+                                                    <>
+                                                        <CheckCircle2 size={15} className="text-emerald-600" />
+                                                        <span>Concluído</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Circle size={15} className="text-warm-400" />
+                                                        <span>Marcar como Concluído</span>
+                                                    </>
+                                                )}
+                                            </button>
                                         </div>
 
                                         <BlockRenderer 

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { syncGuestWithServer } from '../utils/guestStorage';
 
 export interface User {
     id: number;
@@ -73,6 +74,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(newUser);
         localStorage.setItem('palieduca_token', newToken);
         localStorage.setItem('palieduca_user', JSON.stringify(newUser));
+
+        // Sincroniza dados acumulados como visitante para a conta do aluno
+        syncGuestWithServer(newToken).catch(err => console.warn('Sincronização de visitante pós-login:', err));
     };
 
     const updateUser = (updatedData: Partial<User>) => {

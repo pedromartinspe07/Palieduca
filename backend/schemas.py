@@ -133,12 +133,40 @@ class ActivityToggleRequest(BaseModel):
     activity_id: str
     completed: bool
 
+class GuestActivityToggleRequest(BaseModel):
+    guest_id: str
+    module_slug: str
+    activity_id: str
+    completed: bool
+
 class ActivityProgressResponse(BaseModel):
     completed_activities: list[str] # Lista de IDs concluídos
     module_progress: dict[str, dict] # { "fundamentos": { "completed": 2, "total": 4, "percentage": 50 } }
     overall_percentage: int # Porcentagem global do curso
     total_completed: int
     total_activities: int
+
+# Schemas de Quizzes (Visitantes e Alunos)
+class QuizAnswerSubmitRequest(BaseModel):
+    guest_id: Optional[str] = None
+    module_slug: Optional[str] = None
+    block_id: str
+    question_index: int
+    selected_option: int
+    is_correct: bool
+
+class QuizAnswerItem(BaseModel):
+    block_id: str
+    question_index: int
+    selected_option: int
+    is_correct: bool
+    answered_at: Optional[str] = None
+
+class GuestSyncRequest(BaseModel):
+    guest_id: Optional[str] = None
+    completed_activities: Optional[list[str]] = []
+    quiz_answers: Optional[list[dict]] = []
+
 
 # Schemas de Gestão da Dona / Admin
 class StudentMetricItem(BaseModel):

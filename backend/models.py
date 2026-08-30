@@ -75,3 +75,42 @@ class UserActivityProgress(Base):
     activity_id = Column(String, index=True) # ID do bloco ou quiz
     completed = Column(Boolean, default=False)
     completed_at = Column(String, nullable=True) # Data ISO de conclusão
+
+class GuestActivityProgress(Base):
+    __tablename__ = "guest_activity_progress"
+
+    id = Column(Integer, primary_key=True, index=True)
+    guest_id = Column(String, index=True) # UUID do navegador / localStorage
+    ip_address = Column(String, index=True) # IP do visitante (computador ou celular)
+    user_agent = Column(String, nullable=True) # Navegador / aparelho
+    module_slug = Column(String, index=True)
+    activity_id = Column(String, index=True)
+    completed = Column(Boolean, default=False)
+    completed_at = Column(String, nullable=True)
+    updated_at = Column(String, nullable=True)
+
+class GuestQuizAnswer(Base):
+    __tablename__ = "guest_quiz_answers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    guest_id = Column(String, index=True)
+    ip_address = Column(String, index=True)
+    module_slug = Column(String, index=True, nullable=True)
+    block_id = Column(String, index=True)
+    question_index = Column(Integer)
+    selected_option = Column(Integer)
+    is_correct = Column(Boolean)
+    answered_at = Column(String, nullable=True)
+
+class UserQuizAnswer(Base):
+    __tablename__ = "user_quiz_answers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True)
+    module_slug = Column(String, index=True, nullable=True)
+    block_id = Column(String, index=True)
+    question_index = Column(Integer)
+    selected_option = Column(Integer)
+    is_correct = Column(Boolean)
+    answered_at = Column(String, nullable=True)
+

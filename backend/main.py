@@ -1434,6 +1434,17 @@ def get_module_activity_ids(module_slug: str, db: Session) -> list[str]:
 
     return list(set(activity_ids))
 
+def get_client_ip(request: Request) -> str:
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    real_ip = request.headers.get("x-real-ip")
+    if real_ip:
+        return real_ip.strip()
+    if request.client and request.client.host:
+        return request.client.host
+    return "127.0.0.1"
+
 @app.get("/api/progress", response_model=schemas.ActivityProgressResponse)
 def get_user_progress(
     db: Session = Depends(get_db),
@@ -1510,6 +1521,369 @@ def toggle_activity_progress(
 
     db.commit()
     return {"message": "Progresso atualizado com sucesso!", "activity_id": data.activity_id, "completed": data.completed}
+
+# ================================
+# Endpoints do Modo Visitante (IP & Navegador)
+# ================================
+
+@app.get("/api/guest/progress", response_model=schemas.ActivityProgressResponse)
+def get_guest_progress(
+    request: Request,
+    guest_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    client_ip = get_client_ip(request)
+    
+    query = db.query(models.GuestActivityProgress).filter(models.GuestActivityProgress.completed == True)
+    if guest_id:
+        query = query.filter(
+            (models.GuestActivityProgress.guest_id == guest_id) | 
+            (models.GuestActivityProgress.ip_address == client_ip)
+        )
+    else:
+        query = query.filter(models.GuestActivityProgress.ip_address == client_ip)
+        
+    guest_records = query.all()
+    completed_ids = set(r.activity_id for r in guest_records)
+
+    modules = db.query(models.Module).all()
+    module_progress = {}
+    total_activities_sum = 0
+    total_completed_sum = 0
+
+    for mod in modules:
+        act_ids = get_module_activity_ids(mod.slug_id, db)
+        completed_in_mod = [aid for aid in act_ids if aid in completed_ids]
+        
+        mod_total = len(act_ids)
+        mod_done = len(completed_in_mod)
+        mod_pct = round((mod_done / mod_total) * 100) if mod_total > 0 else 0
+        
+        module_progress[mod.slug_id] = {
+            "completed": mod_done,
+            "total": mod_total,
+            "percentage": mod_pct
+        }
+        
+        total_activities_sum += mod_total
+        total_completed_sum += mod_done
+
+    overall_pct = round((total_completed_sum / total_activities_sum) * 100) if total_activities_sum > 0 else 0
+
+    return {
+        "completed_activities": list(completed_ids),
+        "module_progress": module_progress,
+        "overall_percentage": overall_pct,
+        "total_completed": total_completed_sum,
+        "total_activities": total_activities_sum
+    }
+
+@app.post("/api/guest/progress/toggle")
+def toggle_guest_progress(
+    data: schemas.GuestActivityToggleRequest,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    client_ip = get_client_ip(request)
+    user_agent = request.headers.get("user-agent", "")
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    progress_entry = db.query(models.GuestActivityProgress).filter(
+        models.GuestActivityProgress.guest_id == data.guest_id,
+        models.GuestActivityProgress.activity_id == data.activity_id
+    ).first()
+
+    if not progress_entry and client_ip:
+        progress_entry = db.query(models.GuestActivityProgress).filter(
+            models.GuestActivityProgress.ip_address == client_ip,
+            models.GuestActivityProgress.activity_id == data.activity_id
+        ).first()
+
+    if data.completed:
+        if not progress_entry:
+            progress_entry = models.GuestActivityProgress(
+                guest_id=data.guest_id,
+                ip_address=client_ip,
+                user_agent=user_agent,
+                module_slug=data.module_slug,
+                activity_id=data.activity_id,
+                completed=True,
+                completed_at=now_str,
+                updated_at=now_str
+            )
+            db.add(progress_entry)
+        else:
+            progress_entry.guest_id = data.guest_id
+            progress_entry.ip_address = client_ip
+            progress_entry.user_agent = user_agent
+            progress_entry.completed = True
+            progress_entry.completed_at = now_str
+            progress_entry.updated_at = now_str
+    else:
+        if progress_entry:
+            progress_entry.completed = False
+            progress_entry.updated_at = now_str
+
+    db.commit()
+    return {"message": "Progresso de visitante salvo com sucesso!", "activity_id": data.activity_id, "completed": data.completed}
+
+# ================================
+# Endpoints de Quizzes (Visitantes e Alunos)
+# ================================
+
+@app.post("/api/guest/quiz/answer")
+def save_guest_quiz_answer(
+    data: schemas.QuizAnswerSubmitRequest,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    client_ip = get_client_ip(request)
+    guest_id = data.guest_id or "guest"
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    entry = db.query(models.GuestQuizAnswer).filter(
+        models.GuestQuizAnswer.guest_id == guest_id,
+        models.GuestQuizAnswer.block_id == data.block_id,
+        models.GuestQuizAnswer.question_index == data.question_index
+    ).first()
+
+    if not entry and client_ip:
+        entry = db.query(models.GuestQuizAnswer).filter(
+            models.GuestQuizAnswer.ip_address == client_ip,
+            models.GuestQuizAnswer.block_id == data.block_id,
+            models.GuestQuizAnswer.question_index == data.question_index
+        ).first()
+
+    if not entry:
+        entry = models.GuestQuizAnswer(
+            guest_id=guest_id,
+            ip_address=client_ip,
+            module_slug=data.module_slug,
+            block_id=data.block_id,
+            question_index=data.question_index,
+            selected_option=data.selected_option,
+            is_correct=data.is_correct,
+            answered_at=now_str
+        )
+        db.add(entry)
+    else:
+        entry.guest_id = guest_id
+        entry.ip_address = client_ip
+        entry.module_slug = data.module_slug or entry.module_slug
+        entry.selected_option = data.selected_option
+        entry.is_correct = data.is_correct
+        entry.answered_at = now_str
+
+    db.commit()
+    return {"message": "Resposta salva com sucesso!", "is_correct": data.is_correct}
+
+@app.get("/api/guest/quiz/answers")
+def get_guest_quiz_answers(
+    request: Request,
+    guest_id: Optional[str] = Query(None),
+    block_id: Optional[str] = Query(None),
+    module_slug: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    client_ip = get_client_ip(request)
+    query = db.query(models.GuestQuizAnswer)
+
+    if guest_id:
+        query = query.filter((models.GuestQuizAnswer.guest_id == guest_id) | (models.GuestQuizAnswer.ip_address == client_ip))
+    else:
+        query = query.filter(models.GuestQuizAnswer.ip_address == client_ip)
+
+    if block_id:
+        query = query.filter(models.GuestQuizAnswer.block_id == block_id)
+    if module_slug:
+        query = query.filter(models.GuestQuizAnswer.module_slug == module_slug)
+
+    answers = query.all()
+    return [
+        {
+            "block_id": a.block_id,
+            "question_index": a.question_index,
+            "selected_option": a.selected_option,
+            "is_correct": a.is_correct,
+            "answered_at": a.answered_at
+        }
+        for a in answers
+    ]
+
+@app.post("/api/quiz/answer")
+def save_user_quiz_answer(
+    data: schemas.QuizAnswerSubmitRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    entry = db.query(models.UserQuizAnswer).filter(
+        models.UserQuizAnswer.user_id == current_user.id,
+        models.UserQuizAnswer.block_id == data.block_id,
+        models.UserQuizAnswer.question_index == data.question_index
+    ).first()
+
+    if not entry:
+        entry = models.UserQuizAnswer(
+            user_id=current_user.id,
+            module_slug=data.module_slug,
+            block_id=data.block_id,
+            question_index=data.question_index,
+            selected_option=data.selected_option,
+            is_correct=data.is_correct,
+            answered_at=now_str
+        )
+        db.add(entry)
+    else:
+        entry.module_slug = data.module_slug or entry.module_slug
+        entry.selected_option = data.selected_option
+        entry.is_correct = data.is_correct
+        entry.answered_at = now_str
+
+    db.commit()
+    return {"message": "Resposta salva com sucesso!", "is_correct": data.is_correct}
+
+@app.get("/api/quiz/answers")
+def get_user_quiz_answers(
+    block_id: Optional[str] = Query(None),
+    module_slug: Optional[str] = Query(None),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    query = db.query(models.UserQuizAnswer).filter(models.UserQuizAnswer.user_id == current_user.id)
+    if block_id:
+        query = query.filter(models.UserQuizAnswer.block_id == block_id)
+    if module_slug:
+        query = query.filter(models.UserQuizAnswer.module_slug == module_slug)
+
+    answers = query.all()
+    return [
+        {
+            "block_id": a.block_id,
+            "question_index": a.question_index,
+            "selected_option": a.selected_option,
+            "is_correct": a.is_correct,
+            "answered_at": a.answered_at
+        }
+        for a in answers
+    ]
+
+@app.post("/api/progress/sync-guest")
+def sync_guest_progress(
+    data: schemas.GuestSyncRequest,
+    request: Request,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    client_ip = get_client_ip(request)
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    synced_act_count = 0
+    synced_quiz_count = 0
+
+    # 1. Sincroniza atividades passadas no body
+    for act_id in (data.completed_activities or []):
+        exists = db.query(models.UserActivityProgress).filter(
+            models.UserActivityProgress.user_id == current_user.id,
+            models.UserActivityProgress.activity_id == act_id
+        ).first()
+        if not exists:
+            db.add(models.UserActivityProgress(
+                user_id=current_user.id,
+                activity_id=act_id,
+                completed=True,
+                completed_at=now_str
+            ))
+            synced_act_count += 1
+        elif not exists.completed:
+            exists.completed = True
+            exists.completed_at = now_str
+            synced_act_count += 1
+
+    # 2. Sincroniza atividades do GuestActivityProgress do guest_id ou IP
+    guest_query = db.query(models.GuestActivityProgress).filter(models.GuestActivityProgress.completed == True)
+    if data.guest_id:
+        guest_query = guest_query.filter(
+            (models.GuestActivityProgress.guest_id == data.guest_id) | 
+            (models.GuestActivityProgress.ip_address == client_ip)
+        )
+    else:
+        guest_query = guest_query.filter(models.GuestActivityProgress.ip_address == client_ip)
+    
+    for g_rec in guest_query.all():
+        exists = db.query(models.UserActivityProgress).filter(
+            models.UserActivityProgress.user_id == current_user.id,
+            models.UserActivityProgress.activity_id == g_rec.activity_id
+        ).first()
+        if not exists:
+            db.add(models.UserActivityProgress(
+                user_id=current_user.id,
+                module_slug=g_rec.module_slug,
+                activity_id=g_rec.activity_id,
+                completed=True,
+                completed_at=g_rec.completed_at or now_str
+            ))
+            synced_act_count += 1
+        elif not exists.completed:
+            exists.completed = True
+            synced_act_count += 1
+
+    # 3. Sincroniza quizzes passados no body
+    for q in (data.quiz_answers or []):
+        b_id = q.get("block_id")
+        q_idx = q.get("question_index")
+        if b_id is not None and q_idx is not None:
+            entry = db.query(models.UserQuizAnswer).filter(
+                models.UserQuizAnswer.user_id == current_user.id,
+                models.UserQuizAnswer.block_id == b_id,
+                models.UserQuizAnswer.question_index == q_idx
+            ).first()
+            if not entry:
+                db.add(models.UserQuizAnswer(
+                    user_id=current_user.id,
+                    module_slug=q.get("module_slug"),
+                    block_id=b_id,
+                    question_index=q_idx,
+                    selected_option=q.get("selected_option", 0),
+                    is_correct=q.get("is_correct", False),
+                    answered_at=q.get("answered_at", now_str)
+                ))
+                synced_quiz_count += 1
+
+    # 4. Sincroniza quizzes do GuestQuizAnswer
+    guest_quiz_query = db.query(models.GuestQuizAnswer)
+    if data.guest_id:
+        guest_quiz_query = guest_quiz_query.filter(
+            (models.GuestQuizAnswer.guest_id == data.guest_id) |
+            (models.GuestQuizAnswer.ip_address == client_ip)
+        )
+    else:
+        guest_quiz_query = guest_quiz_query.filter(models.GuestQuizAnswer.ip_address == client_ip)
+
+    for g_q in guest_quiz_query.all():
+        entry = db.query(models.UserQuizAnswer).filter(
+            models.UserQuizAnswer.user_id == current_user.id,
+            models.UserQuizAnswer.block_id == g_q.block_id,
+            models.UserQuizAnswer.question_index == g_q.question_index
+        ).first()
+        if not entry:
+            db.add(models.UserQuizAnswer(
+                user_id=current_user.id,
+                module_slug=g_q.module_slug,
+                block_id=g_q.block_id,
+                question_index=g_q.question_index,
+                selected_option=g_q.selected_option,
+                is_correct=g_q.is_correct,
+                answered_at=g_q.answered_at or now_str
+            ))
+            synced_quiz_count += 1
+
+    db.commit()
+    return {
+        "message": "Progresso e respostas de visitante sincronizados com sucesso!",
+        "synced_activities": synced_act_count,
+        "synced_quiz_answers": synced_quiz_count
+    }
+
 
 # ================================
 # Painel da Dona: Métricas & Gestão

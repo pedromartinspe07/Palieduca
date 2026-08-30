@@ -88,7 +88,7 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
             .catch(err => console.error(err))
             .finally(() => setLoadingModules(false));
 
-        // Fetch Real User Progress
+        // Fetch Real User / Guest Progress
         if (token) {
             fetch(`${API_URL}/api/progress`, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -99,7 +99,19 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
                     setModuleProgressMap(data.module_progress);
                 }
             })
-            .catch(err => console.error('Erro ao buscar progresso:', err));
+            .catch(err => console.error('Erro ao buscar progresso do aluno:', err));
+        } else {
+            // Modo Visitante: busca progresso associado ao IP / guest_id
+            const guestId = localStorage.getItem('palieduca_guest_id');
+            const guestQuery = guestId ? `?guest_id=${guestId}` : '';
+            fetch(`${API_URL}/api/guest/progress${guestQuery}`)
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data && data.module_progress) {
+                    setModuleProgressMap(data.module_progress);
+                }
+            })
+            .catch(err => console.warn('Erro ao buscar progresso do visitante:', err));
         }
     }, [isEditing, initialContent, token]);
 

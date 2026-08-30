@@ -38,10 +38,10 @@ const AnimatedRoutes: React.FC = () => {
         <Route path="/login" element={token ? <Navigate to="/perfil" /> : <Login />} />
         <Route path="/register" element={token ? <Navigate to="/perfil" /> : <Register />} />
         <Route path="/perfil" element={<ProtectedRoute allowedRoles={['aluno', 'dona', 'desenvolvedor', 'professor', 'moderador', 'suporte']}><Perfil /></ProtectedRoute>} />
-        <Route path="/modulos" element={<ProtectedRoute><Modulos /></ProtectedRoute>} />
-        <Route path="/modulo/:slug_id" element={<ProtectedRoute><ModuleViewer /></ProtectedRoute>} />
-        <Route path="/biblioteca" element={<ProtectedRoute><Biblioteca /></ProtectedRoute>} />
-        <Route path="/glossario" element={<ProtectedRoute><Glossario /></ProtectedRoute>} />
+        <Route path="/modulos" element={<Modulos />} />
+        <Route path="/modulo/:slug_id" element={<ModuleViewer />} />
+        <Route path="/biblioteca" element={<Biblioteca />} />
+        <Route path="/glossario" element={<Glossario />} />
         <Route path="/editor" element={<ProtectedRoute allowedRoles={['dona', 'desenvolvedor', 'professor']}><Editor /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
