@@ -14,7 +14,13 @@ import ModuleViewer from './pages/ModuleViewer';
 import Biblioteca from './pages/Biblioteca';
 import Glossario from './pages/Glossario';
 import Editor from './pages/Editor';
+import ValidarCertificado from './pages/ValidarCertificado';
+import TermosDeUso from './pages/TermosDeUso';
+import Privacidade from './pages/Privacidade';
+import Contato from './pages/Contato';
+import SimuladoProficiencia from './pages/SimuladoProficiencia';
 import Footer from './components/Footer';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 import ProtectedRoute from './components/ProtectedRoute';
 import SiteIntroPreloader from './components/preloader/SiteIntroPreloader';
 import useAnchorScroll from './hooks/useAnchorScroll';
@@ -42,6 +48,12 @@ const AnimatedRoutes: React.FC = () => {
         <Route path="/modulo/:slug_id" element={<ModuleViewer />} />
         <Route path="/biblioteca" element={<Biblioteca />} />
         <Route path="/glossario" element={<Glossario />} />
+        <Route path="/validar" element={<ValidarCertificado />} />
+        <Route path="/validar/:code" element={<ValidarCertificado />} />
+        <Route path="/termos" element={<TermosDeUso />} />
+        <Route path="/privacidade" element={<Privacidade />} />
+        <Route path="/contato" element={<Contato />} />
+        <Route path="/simulado" element={<SimuladoProficiencia />} />
         <Route path="/editor" element={<ProtectedRoute allowedRoles={['dona', 'desenvolvedor', 'professor']}><Editor /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -63,7 +75,7 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-background relative selection:bg-primary/30">
+      <div className="min-h-screen flex flex-col bg-background dark:bg-[#0b1329] text-warm-900 dark:text-slate-100 relative selection:bg-primary/30 transition-colors duration-300">
         <SiteIntroPreloader />
         <Header />
         <main className="flex-grow">
@@ -72,6 +84,7 @@ const App: React.FC = () => {
         <Footer />
         <FontSizeControl />
         <ChatBox />
+        <PWAInstallPrompt />
       </div>
     </Router>
   );

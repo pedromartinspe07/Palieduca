@@ -117,10 +117,10 @@ const TextBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
                             handleTextChange(); 
                         }}
                         onInput={handleTextChange}
-                        className="flex-1 min-w-0 prose prose-warm rich-text-content max-w-none outline-none transition-all duration-150"
+                        className="flex-1 min-w-0 prose prose-warm dark:prose-invert text-slate-800 dark:text-slate-200 rich-text-content max-w-none outline-none transition-all duration-150"
                         style={{ 
                             fontSize: `${fontSize}px`, 
-                            color: textColor,
+                            color: (!block.styles?.textColor || block.styles?.textColor === '#374151') ? undefined : textColor,
                             fontFamily: fontFamily === 'serif' ? 'Georgia, Cambria, "Times New Roman", Times, serif' :
                                         fontFamily === 'mono' ? 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' :
                                         fontFamily === 'rounded' ? '"Outfit", "Poppins", sans-serif' :

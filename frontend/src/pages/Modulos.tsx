@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import ModuleCardSkeleton from '../components/ModuleCardSkeleton';
 import ModuleCard from '../components/ModuleCard';
-import { Stethoscope, Users, HeartPulse, Brain, HeartHandshake, Scale, Leaf } from 'lucide-react';
+import { Stethoscope, Users, HeartPulse, Brain, HeartHandshake, Scale, Leaf, GraduationCap, ChevronRight } from 'lucide-react';
 import BlockRenderer from '../components/cms/blocks/BlockRenderer';
 import type { BlockData } from '../components/cms/blocks/types';
 import BotanicalBackground from '../components/effects/BotanicalBackground';
@@ -139,10 +140,10 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
         <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true} className="pt-28 pb-12 px-4 sm:px-6 lg:px-8">
             <main className="max-w-6xl mx-auto">
                 {/* Hero Banner do Módulo (Glassmorphism Botânico) */}
-                <div className="p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/80 backdrop-blur-2xl mb-12 text-center relative overflow-hidden">
+                <div className="p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 dark:border-slate-800 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/85 dark:bg-slate-900/85 backdrop-blur-2xl text-center relative overflow-hidden">
                     {/* Badge Botânica */}
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200/80 font-bold text-xs mb-5 shadow-2xs">
-                        <Leaf size={13} className="text-teal-600" />
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/60 font-bold text-xs mb-5 shadow-2xs">
+                        <Leaf size={13} className="text-teal-600 dark:text-teal-400" />
                         <span>Trilhas de Aprendizagem &amp; Formação Humanizada</span>
                     </div>
 
@@ -151,20 +152,20 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
                         contentEditable={isEditing}
                         suppressContentEditableWarning={true}
                         onBlur={(e) => handleTextChange('title', e.currentTarget.innerText)}
-                        className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] mb-4 tracking-tight font-display ${editableClass}`}
+                        className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] dark:text-slate-50 mb-4 tracking-tight font-display ${editableClass}`}
                     >
                         Módulos <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0284c7] via-[#0d9488] to-[#0f766e]">de Cuidados Paliativos</span>
                     </h1>
 
                     {/* Subtítulo */}
                     {loadingContent ? (
-                        <div className="animate-pulse h-6 bg-slate-200 rounded-xl w-3/4 max-w-2xl mx-auto"></div>
+                        <div className="animate-pulse h-6 bg-slate-200 dark:bg-slate-700 rounded-xl w-3/4 max-w-2xl mx-auto"></div>
                     ) : (
                         <p 
                             contentEditable={isEditing}
                             suppressContentEditableWarning={true}
                             onBlur={(e) => handleTextChange('intro', e.currentTarget.innerText)}
-                            className={`text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed ${editableClass}`}
+                            className={`text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed ${editableClass}`}
                         >
                             {content.intro || 'Explore trilhas interativas baseadas em evidências científicas, casos clínicos e metodologias ativas para aprofundar sua prática em cuidados paliativos.'}
                         </p>
@@ -197,6 +198,34 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
                             );
                         })
                     }
+                </div>
+
+                {/* Banner do Simulado Geral de Proficiência */}
+                <div className="mt-12 bg-gradient-to-r from-teal-900 via-warm-900 to-teal-950 p-7 sm:p-9 rounded-[32px] text-white shadow-xl border border-teal-700/40 flex flex-col md:flex-row items-center justify-between gap-6 animate-fade-in">
+                    <div className="flex items-center gap-4 text-center md:text-left">
+                        <div className="w-14 h-14 rounded-2xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300 shrink-0">
+                            <GraduationCap size={32} />
+                        </div>
+                        <div>
+                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-teal-300 bg-teal-500/20 px-2.5 py-0.5 rounded-full border border-teal-400/30">
+                                Avaliação Integrada &bull; UFPB
+                            </span>
+                            <h3 className="text-xl sm:text-2xl font-black text-white mt-1">
+                                Simulado Geral de Proficiência
+                            </h3>
+                            <p className="text-xs sm:text-sm text-teal-100/80 mt-1 max-w-xl">
+                                Teste seus conhecimentos clínicos e bioéticos em 10 questões comentadas pela coordenação e receba o selo de proficiência da UFPB.
+                            </p>
+                        </div>
+                    </div>
+
+                    <Link
+                        to="/simulado"
+                        className="px-6 py-3.5 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-teal-950 font-black rounded-2xl shadow-lg transition-transform hover:scale-105 text-xs whitespace-nowrap cursor-pointer flex items-center gap-2"
+                    >
+                        <span>Iniciar Simulado</span>
+                        <ChevronRight size={16} />
+                    </Link>
                 </div>
             </main>
         </BotanicalBackground>

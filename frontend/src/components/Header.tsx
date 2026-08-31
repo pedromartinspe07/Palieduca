@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { User, HeartPulse, BookOpen, LayoutDashboard, Type, MessageSquare, Info, Menu, X } from 'lucide-react';
+import { User, BookOpen, LayoutDashboard, Type, MessageSquare, Info, Menu, X, Smartphone, Download } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import SearchBar from './SearchBar';
 import { useAuth } from '../context/AuthContext';
-import { getFullMediaUrl } from '../utils/mediaUtils';
+import UserAvatar from './UserAvatar';
+import ThemeToggle from './ThemeToggle';
+import { triggerGlobalPWAInstall } from './PWAInstallPrompt';
+import { ButterflyIcon } from './ButterflyLogo';
 
 const NAV_ITEMS = [
     { to: "/", icon: <LayoutDashboard size={18} />, label: "Início" },
@@ -25,44 +28,50 @@ const Header: React.FC = () => {
     }, [location]);
 
     useEffect(() => {
-        const onScroll = () => setScrolled(window.scrollY > 12);
-        window.addEventListener('scroll', onScroll, { passive: true });
-        return () => window.removeEventListener('scroll', onScroll);
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const getDisplayName = (fullName: string) => {
-        if (!fullName) return 'Perfil';
-        const parts = fullName.trim().split(/\s+/);
-        if (parts[0].toLowerCase().startsWith('prof') || parts[0].toLowerCase().startsWith('dr')) {
-            return parts.length > 1 ? `${parts[0]} ${parts[1]}` : parts[0];
+    const getDisplayName = (nome: string) => {
+        if (!nome) return 'Aluno';
+        const parts = nome.trim().split(' ');
+        if (parts[0].toLowerCase().startsWith('prof')) {
+            return parts.slice(0, 3).join(' ');
         }
         return parts[0];
     };
 
     return (
-        <header className={`fixed top-0 w-full z-50 glass-nav transition-all duration-300 ${scrolled ? 'shadow-md bg-white/90 border-b border-warm-200' : 'bg-white/75 border-b border-white/50'}`}>
+        <header
+            className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${scrolled
+                ? 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-xs py-3 border-b border-warm-100 dark:border-slate-800'
+                : 'bg-transparent py-4'
+                }`}
+        >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-20">
-
+                <div className="flex items-center justify-between">
                     <Link to="/" className="flex items-center gap-2.5 group">
-                        <div className="bg-gradient-to-tr from-sky-600 via-teal-600 to-emerald-600 p-2 rounded-xl text-white shadow-lg transform group-hover:scale-105 transition-transform">
-                            <HeartPulse size={28} strokeWidth={2.5} />
+                        <div className="bg-gradient-to-br from-teal-50 to-sky-50 dark:from-teal-950/70 dark:to-sky-950/70 p-2 rounded-2xl text-teal-600 dark:text-teal-300 border border-teal-200/80 dark:border-teal-800/60 shadow-2xs group-hover:shadow-md group-hover:scale-105 transition-all duration-300">
+                            <ButterflyIcon size={26} className="text-teal-700 dark:text-teal-300" />
                         </div>
-                        <span className="font-extrabold text-2xl tracking-tight text-warm-900 group-hover:text-sky-700 transition-colors">
-                            Pali<span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-emerald-600">educa</span>
+                        <span className="text-2xl font-black tracking-tight text-teal-950 dark:text-teal-50 drop-shadow-xs font-display group-hover:text-teal-700 dark:group-hover:text-teal-300 transition-colors">
+                            Palieduca
                         </span>
                     </Link>
 
-                    <nav className="hidden md:flex items-center gap-1">
+                    <nav className="hidden md:flex items-center gap-1 bg-white/80 dark:bg-slate-900/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-warm-200/60 dark:border-slate-800 shadow-xs">
                         {NAV_ITEMS.map((item) => {
                             const isActive = location.pathname === item.to;
                             return (
                                 <Link
                                     key={item.label}
                                     to={item.to}
-                                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${isActive
-                                        ? 'text-sky-700 bg-sky-50 border border-sky-200 shadow-2xs'
-                                        : 'text-warm-700 hover:text-sky-700 hover:bg-sky-50/50'
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${isActive
+                                        ? 'bg-gradient-to-r from-teal-700 to-sky-700 text-white shadow-xs'
+                                        : 'text-slate-700 dark:text-slate-200 hover:text-teal-800 dark:hover:text-teal-300 hover:bg-slate-100/70 dark:hover:bg-slate-800'
                                         }`}
                                 >
                                     {item.icon}
@@ -72,30 +81,35 @@ const Header: React.FC = () => {
                         })}
                     </nav>
 
-                    <div className="hidden md:flex items-center gap-4">
+                    <div className="hidden md:flex items-center gap-3">
                         <SearchBar />
+                        <ThemeToggle />
+                        <button
+                            onClick={triggerGlobalPWAInstall}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800/60 rounded-full font-bold text-xs shadow-2xs hover:shadow-xs transition-all cursor-pointer shrink-0"
+                            title="Baixar aplicativo Palieduca (PWA)"
+                        >
+                            <Smartphone size={13} />
+                            <span className="hidden lg:inline">App</span>
+                            <Download size={13} />
+                        </button>
                         {user ? (
                             <button 
                                 onClick={() => navigate('/perfil')} 
-                                className="flex items-center gap-2.5 pl-1.5 pr-4 py-1 bg-sky-50 text-sky-900 hover:bg-sky-100 rounded-full font-bold shadow-xs hover:shadow-sm transition-all border border-sky-200 text-xs cursor-pointer shrink-0"
+                                className="flex items-center gap-2 pl-1 pr-3 py-1 bg-sky-50 dark:bg-slate-800 text-sky-900 dark:text-slate-100 hover:bg-sky-100 dark:hover:bg-slate-700 rounded-full font-bold shadow-xs hover:shadow-sm transition-all border border-sky-200 dark:border-slate-700 text-xs cursor-pointer shrink-0"
                                 title={`Ver perfil de ${user.nome}`}
                             >
-                                {user.foto_url ? (
-                                    <img 
-                                        src={getFullMediaUrl(user.foto_url)} 
-                                        alt={user.nome} 
-                                        className="w-7 h-7 rounded-full object-cover object-center aspect-square shrink-0 border border-sky-300 shadow-2xs"
-                                    />
-                                ) : (
-                                    <div className="w-7 h-7 rounded-full bg-sky-200 text-sky-800 flex items-center justify-center shrink-0 border border-sky-300">
-                                        <User size={15} />
-                                    </div>
-                                )}
+                                <UserAvatar 
+                                    fotoUrl={user.foto_url} 
+                                    nome={user.nome} 
+                                    size="xs" 
+                                    borderClassName="border border-sky-300 shadow-2xs" 
+                                />
                                 <span className="whitespace-nowrap">{getDisplayName(user.nome)}</span>
                             </button>
                         ) : (
                             <div className="flex items-center gap-2.5">
-                                <span className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1 bg-sky-50 text-sky-800 border border-sky-200 rounded-full text-[11px] font-bold shadow-2xs" title="Você está navegando em modo de demonstração como Visitante">
+                                <span className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1 bg-sky-50 dark:bg-slate-800 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-slate-700 rounded-full text-[11px] font-bold shadow-2xs" title="Você está navegando em modo de demonstração como Visitante">
                                     <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
                                     Visitante
                                 </span>
@@ -107,13 +121,24 @@ const Header: React.FC = () => {
                         )}
                     </div>
 
-                    <button
-                        className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl text-warm-700 hover:bg-warm-50 transition-colors"
-                        onClick={() => setMenuOpen(prev => !prev)}
-                        aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
-                    >
-                        {menuOpen ? <X size={22} /> : <Menu size={22} />}
-                    </button>
+                    <div className="md:hidden flex items-center gap-2">
+                        <button
+                            onClick={triggerGlobalPWAInstall}
+                            className="flex items-center justify-center p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all cursor-pointer shadow-2xs"
+                            title="Baixar App Palieduca (PWA)"
+                            aria-label="Baixar aplicativo Palieduca"
+                        >
+                            <Download size={16} />
+                        </button>
+                        <ThemeToggle />
+                        <button
+                            className="flex items-center justify-center w-10 h-10 rounded-xl text-warm-700 dark:text-slate-200 hover:bg-warm-50 dark:hover:bg-slate-800 transition-colors"
+                            onClick={() => setMenuOpen(prev => !prev)}
+                            aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
+                        >
+                            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -121,7 +146,7 @@ const Header: React.FC = () => {
                 className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${menuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
                     }`}
             >
-                <div className="bg-white/90 backdrop-blur-xl border-t border-warm-100 px-4 py-3 space-y-1 shadow-lg">
+                <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-warm-100 dark:border-slate-800 px-4 py-3 space-y-1 shadow-lg">
                     {NAV_ITEMS.map((item) => {
                         const isActive = location.pathname === item.to;
                         return (
@@ -129,8 +154,8 @@ const Header: React.FC = () => {
                                 key={item.label}
                                 to={item.to}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${isActive
-                                    ? 'text-primary bg-warm-50 border border-warm-100'
-                                    : 'text-warm-700 hover:text-primary hover:bg-warm-50'
+                                    ? 'text-primary dark:text-teal-400 bg-warm-50 dark:bg-slate-800 border border-warm-100 dark:border-slate-700'
+                                    : 'text-warm-700 dark:text-slate-200 hover:text-primary hover:bg-warm-50 dark:hover:bg-slate-800'
                                     }`}
                             >
                                 {item.icon}
@@ -139,18 +164,37 @@ const Header: React.FC = () => {
                         );
                     })}
 
-                    <div className="pt-3 border-t border-warm-100 flex gap-2">
+                    <div className="pt-2 pb-1">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setMenuOpen(false);
+                                triggerGlobalPWAInstall();
+                            }}
+                            className="w-full flex items-center justify-between px-3.5 py-2.5 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/50 dark:to-teal-950/50 text-emerald-900 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-800/60 rounded-2xl text-xs font-bold shadow-2xs hover:shadow-xs transition-all cursor-pointer"
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <div className="p-1.5 bg-emerald-600 text-white rounded-xl shadow-2xs">
+                                    <Smartphone size={15} />
+                                </div>
+                                <div className="text-left">
+                                    <div className="font-extrabold text-xs">Baixar Aplicativo</div>
+                                    <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-normal">Instalar no celular (PWA)</div>
+                                </div>
+                            </div>
+                            <Download size={16} className="text-emerald-700 dark:text-emerald-400 shrink-0" />
+                        </button>
+                    </div>
+
+                    <div className="pt-2 border-t border-warm-100 dark:border-slate-800 flex gap-2">
                         {user ? (
-                            <button onClick={() => navigate('/perfil')} className="flex-1 flex items-center justify-center gap-2.5 py-2.5 px-4 bg-sage-100 text-sage-800 rounded-full font-bold shadow-sm text-xs border border-sage-300">
-                                {user.foto_url ? (
-                                    <img 
-                                        src={getFullMediaUrl(user.foto_url)} 
-                                        alt={user.nome} 
-                                        className="w-6 h-6 rounded-full object-cover object-center aspect-square shrink-0"
-                                    />
-                                ) : (
-                                    <User size={16} />
-                                )}
+                            <button onClick={() => navigate('/perfil')} className="flex-1 flex items-center justify-center gap-2 py-2 px-4 bg-sky-50 dark:bg-slate-800 text-sky-800 dark:text-slate-200 rounded-full font-bold shadow-xs text-xs border border-sky-200 dark:border-slate-700">
+                                <UserAvatar 
+                                    fotoUrl={user.foto_url} 
+                                    nome={user.nome} 
+                                    size="xs" 
+                                    borderClassName="border border-sky-300" 
+                                />
                                 <span className="whitespace-nowrap">{getDisplayName(user.nome)}</span>
                             </button>
                         ) : (

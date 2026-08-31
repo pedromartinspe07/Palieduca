@@ -6,7 +6,7 @@ import {
     LayoutList, Play, Crop, RotateCcw, RotateCw, Monitor, Tablet, Smartphone,
     AlertCircle, RefreshCw, AlignLeft, AlignCenter, AlignRight, AlignJustify,
     Underline, Strikethrough, Pipette, Sparkles, Wand2, Search, Check, Plus,
-    CheckCheck, ExternalLink, Link as LinkIcon, History, BookOpen
+    CheckCheck, ExternalLink, Link as LinkIcon, History, BookOpen, Stethoscope
 } from 'lucide-react';
 import BlockRenderer from './blocks/BlockRenderer';
 import MediaLibrary from './MediaLibrary';
@@ -15,6 +15,7 @@ import VersionHistoryPanel from './VersionHistoryPanel';
 import WixFloatingToolbar from './WixFloatingToolbar';
 import type { BlockData } from './blocks/types';
 import { getModuleIcon } from '../../utils/iconUtils';
+import { playPublishSound, playSaveDraftSound } from '../../utils/soundUtils';
 
 const API_URL = import.meta.env.VITE_API_URL ||
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -36,6 +37,46 @@ const BLOCK_TEMPLATES: { type: BlockData['type']; label: string; icon: React.Rea
             cards: [
                 { id: '1', icon_name: 'HeartHandshake', iconColor: '#059669', iconBg: '#ecfdf5', badge: 'Conceito 1', title: 'Acolhimento', description: 'Princípios do cuidado paliativo e acolhimento humanizado.' },
                 { id: '2', icon_name: 'MessageSquare', iconColor: '#d97706', iconBg: '#fef3c7', badge: 'Conceito 2', title: 'Comunicação', description: 'Técnicas de escuta ativa e diálogo empático.' }
+            ]
+        }
+    },
+    {
+        type: 'ClinicalCaseBlock',
+        label: 'Caso Clínico / Decisão',
+        icon: <Stethoscope size={20} className="text-teal-600" />,
+        description: 'Simulação clínica com tomada de decisão e desfecho',
+        defaultData: {
+            patient_name: 'Dona Maria de Lourdes, 72 anos',
+            patient_age_gender: 'Feminino, 72 anos',
+            diagnosis: 'Neoplasia pulmonar avançada em cuidados paliativos exclusivos',
+            setting: 'Enfermaria de Cuidados Paliativos',
+            clinical_scenario: 'Paciente com queixa súbita de dispneia moderada em repouso (FR: 28 irpm, SpO2: 89%), dor torácica grau 7/10 e ansiedade. O acompanhante solicita auxílio imediato da enfermagem.',
+            vitals: {
+                pa: '130/80 mmHg',
+                fc: '102 bpm',
+                fr: '28 irpm',
+                dor: '7/10',
+                spo2: '89%',
+                consciencia: 'Lúcida e ansiosa'
+            },
+            decision_prompt: 'Como enfermeiro(a) responsável, qual é a sua conduta imediata e prioritária?',
+            decisions: [
+                {
+                    id: 'conduta-1',
+                    label: 'Elevar a cabeceira do leito a 45° (Fowler), oxigenoterapia sob cateter nasal em baixo fluxo, administrar morfina em baixas doses conforme protocolo e acolher o familiar.',
+                    rating: 'optimal',
+                    outcome_title: 'Desfecho Excelente: Conforto e Alívio da Dispneia',
+                    outcome_description: 'A paciente apresentou alívio rápido do sofrimento respiratório, estabilização da saturação em 93% e redução da dor.',
+                    scientific_rationale: 'A morfina é o padrão-ouro no controle da dispneia refratária em cuidados paliativos (ANCP / EAPC).'
+                },
+                {
+                    id: 'conduta-2',
+                    label: 'Solicitar intubação orotraqueal e restringir a presença da família no quarto.',
+                    rating: 'inadequate',
+                    outcome_title: 'Desfecho Inadequado: Distanásia e Sofrimento',
+                    outcome_description: 'Medidas invasivas desproporcionais violam as diretrizes de conforto e dignidade dos cuidados paliativos.',
+                    scientific_rationale: 'Procedimentos invasivos desproporcionais caracterizam obstinação terapêutica.'
+                }
             ]
         }
     }
@@ -271,7 +312,12 @@ const ModuleContentEditor: React.FC = () => {
             setIsDirty(false);
             localStorage.removeItem(`palieduca_draft_mod_${selectedModuleSlug}`);
             setHasLocalDraft(false);
-            if (publish) setShowPublishModal(false);
+            if (publish) {
+                setShowPublishModal(false);
+                playPublishSound();
+            } else {
+                playSaveDraftSound();
+            }
             showToast(publish ? 'Módulo publicado ao vivo!' : 'Rascunho salvo!');
         } catch (error) {
             console.error(error);
@@ -284,6 +330,8 @@ const ModuleContentEditor: React.FC = () => {
         if (!template) return;
         const newBlock: BlockData = { id: `block-${Date.now()}`, type, data: { ...template.defaultData } };
         setBlocksWithHistory(prev => [...prev, newBlock]);
+        setSelectedBlockId(newBlock.id);
+        setRightSidebarTab('properties');
     };
 
     const updateBlock = (id: string, updates: Partial<BlockData>) => {
@@ -716,8 +764,8 @@ const ModuleContentEditor: React.FC = () => {
 
                 {/* ─── CENTER CANVAS ─── */}
                 <div
-                    className="flex-1 overflow-y-auto relative flex justify-center p-3 sm:p-6"
-                    style={{ background: 'radial-gradient(circle, #e5e7eb 1px, transparent 1px)', backgroundSize: '20px 20px' }}
+                    className="flex-1 overflow-y-auto relative flex justify-center p-3 sm:p-6 bg-[#faf9f6] dark:bg-[#080d1a] transition-colors duration-300"
+                    style={{ backgroundImage: 'radial-gradient(circle, rgba(148, 163, 184, 0.35) 1px, transparent 1px)', backgroundSize: '24px 24px' }}
                     onClick={() => setSelectedBlockId(null)}
                 >
                     {loading ? (
@@ -729,8 +777,8 @@ const ModuleContentEditor: React.FC = () => {
                         <div className={`transition-all duration-300 ${deviceView === 'desktop'
                                 ? 'max-w-5xl w-full flex flex-col gap-3 pb-32'
                                 : deviceView === 'tablet'
-                                    ? 'w-[768px] max-w-full bg-white rounded-3xl shadow-2xl border-4 border-warm-300 p-4 sm:p-6 min-h-[850px] my-auto flex flex-col gap-3 pb-32'
-                                    : 'w-[390px] max-w-full bg-white rounded-[40px] shadow-2xl border-[10px] border-warm-900 p-3 sm:p-4 min-h-[750px] my-auto relative flex flex-col gap-3 pb-32 overflow-hidden'
+                                    ? 'w-[768px] max-w-full bg-white dark:bg-[#0b1329] rounded-3xl shadow-2xl border-4 border-warm-300 dark:border-slate-700 p-4 sm:p-6 min-h-[850px] my-auto flex flex-col gap-3 pb-32'
+                                    : 'w-[390px] max-w-full bg-white dark:bg-[#0b1329] rounded-[40px] shadow-2xl border-[10px] border-warm-900 dark:border-slate-800 p-3 sm:p-4 min-h-[750px] my-auto relative flex flex-col gap-3 pb-32 overflow-hidden'
                             }`}>
                             {/* Smartphone Notch */}
                             {deviceView === 'mobile' && (
@@ -1610,6 +1658,335 @@ const ModuleContentEditor: React.FC = () => {
                                             >
                                                 + Adicionar Pergunta
                                             </button>
+                                        </div>
+                                    )}
+
+                                    {/* ClinicalCaseBlock Properties */}
+                                    {selectedBlock.type === 'ClinicalCaseBlock' && (
+                                        <div className="space-y-5 text-left">
+                                            {/* 1. Dados do Paciente */}
+                                            <div className="space-y-3 p-3.5 bg-warm-50/80 rounded-2xl border border-warm-200">
+                                                <div className="flex items-center gap-1.5 text-xs font-bold text-warm-900 border-b border-warm-200/80 pb-1.5">
+                                                    <span>👤 Dados do Paciente e Local</span>
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-[11px] font-bold text-warm-700 mb-1">Nome e Idade do Paciente</label>
+                                                    <input
+                                                        type="text"
+                                                        value={selectedBlock.data?.patient_name || ''}
+                                                        onChange={e => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, patient_name: e.target.value } })}
+                                                        className="w-full bg-white border border-warm-300 rounded-xl p-2 text-xs font-bold"
+                                                        placeholder="Ex: Dona Maria de Lourdes, 72 anos"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-[11px] font-bold text-warm-700 mb-1">Local / Unidade de Atendimento</label>
+                                                    <input
+                                                        type="text"
+                                                        value={selectedBlock.data?.setting || ''}
+                                                        onChange={e => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, setting: e.target.value } })}
+                                                        className="w-full bg-white border border-warm-300 rounded-xl p-2 text-xs"
+                                                        placeholder="Ex: Enfermaria de Cuidados Paliativos ou Domicílio"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-[11px] font-bold text-warm-700 mb-1">Diagnóstico e Histórico de Base</label>
+                                                    <input
+                                                        type="text"
+                                                        value={selectedBlock.data?.diagnosis || ''}
+                                                        onChange={e => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, diagnosis: e.target.value } })}
+                                                        className="w-full bg-white border border-warm-300 rounded-xl p-2 text-xs"
+                                                        placeholder="Ex: Neoplasia pulmonar avançada em cuidados paliativos"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* 2. Sinais Vitais do Paciente */}
+                                            <div className="space-y-3 p-3.5 bg-warm-50/80 rounded-2xl border border-warm-200">
+                                                <div className="flex items-center justify-between text-xs font-bold text-warm-900 border-b border-warm-200/80 pb-1.5">
+                                                    <span className="flex items-center gap-1.5">
+                                                        <span>🩺 Sinais Vitais no Leito</span>
+                                                    </span>
+                                                    <span className="text-[10px] text-teal-700 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-full font-bold">
+                                                        Prontuário
+                                                    </span>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-2.5">
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-warm-600 mb-0.5">P.A. (Pressão)</label>
+                                                        <input
+                                                            type="text"
+                                                            value={selectedBlock.data?.vitals?.pa || ''}
+                                                            onChange={e => {
+                                                                const vitals = { ...(selectedBlock.data?.vitals || {}), pa: e.target.value };
+                                                                updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, vitals } });
+                                                            }}
+                                                            className="w-full bg-white border border-warm-300 rounded-lg px-2 py-1.5 text-xs font-bold text-warm-800"
+                                                            placeholder="130/80 mmHg"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-warm-600 mb-0.5">F.C. (Cardíaca)</label>
+                                                        <input
+                                                            type="text"
+                                                            value={selectedBlock.data?.vitals?.fc || ''}
+                                                            onChange={e => {
+                                                                const vitals = { ...(selectedBlock.data?.vitals || {}), fc: e.target.value };
+                                                                updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, vitals } });
+                                                            }}
+                                                            className="w-full bg-white border border-warm-300 rounded-lg px-2 py-1.5 text-xs font-bold text-warm-800"
+                                                            placeholder="102 bpm"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-warm-600 mb-0.5">F.R. (Respiratória)</label>
+                                                        <input
+                                                            type="text"
+                                                            value={selectedBlock.data?.vitals?.fr || ''}
+                                                            onChange={e => {
+                                                                const vitals = { ...(selectedBlock.data?.vitals || {}), fr: e.target.value };
+                                                                updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, vitals } });
+                                                            }}
+                                                            className="w-full bg-white border border-warm-300 rounded-lg px-2 py-1.5 text-xs font-bold text-rose-700"
+                                                            placeholder="28 irpm"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-warm-600 mb-0.5">Dor (EVA 0-10)</label>
+                                                        <input
+                                                            type="text"
+                                                            value={selectedBlock.data?.vitals?.dor || ''}
+                                                            onChange={e => {
+                                                                const vitals = { ...(selectedBlock.data?.vitals || {}), dor: e.target.value };
+                                                                updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, vitals } });
+                                                            }}
+                                                            className="w-full bg-white border border-warm-300 rounded-lg px-2 py-1.5 text-xs font-bold text-rose-700"
+                                                            placeholder="7/10"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-warm-600 mb-0.5">SpO2 (Saturação)</label>
+                                                        <input
+                                                            type="text"
+                                                            value={selectedBlock.data?.vitals?.spo2 || ''}
+                                                            onChange={e => {
+                                                                const vitals = { ...(selectedBlock.data?.vitals || {}), spo2: e.target.value };
+                                                                updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, vitals } });
+                                                            }}
+                                                            className="w-full bg-white border border-warm-300 rounded-lg px-2 py-1.5 text-xs font-bold text-warm-800"
+                                                            placeholder="89%"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-warm-600 mb-0.5">Consciência</label>
+                                                        <input
+                                                            type="text"
+                                                            value={selectedBlock.data?.vitals?.consciencia || ''}
+                                                            onChange={e => {
+                                                                const vitals = { ...(selectedBlock.data?.vitals || {}), consciencia: e.target.value };
+                                                                updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, vitals } });
+                                                            }}
+                                                            className="w-full bg-white border border-warm-300 rounded-lg px-2 py-1.5 text-xs font-bold text-warm-800"
+                                                            placeholder="Lúcida e ansiosa"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* 3. Situação Clínica e Pergunta */}
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-warm-700 mb-1">Cenário / Descrição da Situação no Leito</label>
+                                                    <textarea
+                                                        rows={4}
+                                                        value={selectedBlock.data?.clinical_scenario || ''}
+                                                        onChange={e => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, clinical_scenario: e.target.value } })}
+                                                        className="w-full bg-white border border-warm-300 rounded-xl p-2.5 text-xs leading-relaxed"
+                                                        placeholder="Descreva detalhadamente a situação clínica e o sofrimento do paciente..."
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-xs font-bold text-warm-700 mb-1">Pergunta de Tomada de Decisão</label>
+                                                    <input
+                                                        type="text"
+                                                        value={selectedBlock.data?.decision_prompt || ''}
+                                                        onChange={e => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, decision_prompt: e.target.value } })}
+                                                        className="w-full bg-white border border-warm-300 rounded-xl p-2.5 text-xs font-bold text-teal-800"
+                                                        placeholder="Ex: Como enfermeiro(a) responsável, qual é a sua conduta imediata e prioritária?"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* 4. Opções de Conduta e Desfechos com Letras */}
+                                            <div className="pt-3 border-t border-warm-200 space-y-3">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-xs font-black text-warm-800 uppercase tracking-wider">
+                                                        Opções de Conduta (Letras A, B, C...)
+                                                    </span>
+                                                    <span className="text-[10px] text-warm-400 font-bold">
+                                                        {selectedBlock.data?.decisions?.length || 0} Condutas
+                                                    </span>
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    {selectedBlock.data?.decisions?.map((dec: any, dIdx: number) => {
+                                                        const letter = String.fromCharCode(65 + dIdx); // A, B, C, D...
+                                                        return (
+                                                            <div key={dec.id || dIdx} className="p-3.5 bg-white border-2 border-warm-200/90 rounded-2xl shadow-xs space-y-3">
+                                                                
+                                                                {/* Cabeçalho da Opção com Letra em Destaque */}
+                                                                <div className="flex justify-between items-center border-b border-warm-100 pb-2">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="w-6 h-6 rounded-full bg-teal-700 text-white font-extrabold text-xs flex items-center justify-center shadow-2xs">
+                                                                            {letter}
+                                                                        </span>
+                                                                        <span className="text-xs font-extrabold text-warm-900">
+                                                                            Conduta {letter} (Opção {letter})
+                                                                        </span>
+                                                                    </div>
+
+                                                                    <div className="flex items-center gap-2">
+                                                                        <select
+                                                                            value={dec.rating || 'optimal'}
+                                                                            onChange={e => {
+                                                                                const decs = [...(selectedBlock.data?.decisions || [])];
+                                                                                decs[dIdx].rating = e.target.value;
+                                                                                updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, decisions: decs } });
+                                                                            }}
+                                                                            className={`text-[11px] font-bold rounded-lg px-2 py-1 border transition-all ${
+                                                                                dec.rating === 'optimal'
+                                                                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                                                                    : dec.rating === 'acceptable'
+                                                                                    ? 'bg-amber-50 text-amber-800 border-amber-300'
+                                                                                    : 'bg-rose-50 text-rose-800 border-rose-300'
+                                                                            }`}
+                                                                        >
+                                                                            <option value="optimal">✨ Padrão-Ouro (Correta)</option>
+                                                                            <option value="acceptable">⚠️ Parcialmente Adequada</option>
+                                                                            <option value="inadequate">❌ Inadequada / Errada</option>
+                                                                        </select>
+
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                const decs = [...(selectedBlock.data?.decisions || [])];
+                                                                                decs.splice(dIdx, 1);
+                                                                                updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, decisions: decs } });
+                                                                            }}
+                                                                            className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                                                                            title={`Excluir Conduta ${letter}`}
+                                                                        >
+                                                                            <Trash2 size={14} />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Texto da Opção / Procedimento */}
+                                                                <div>
+                                                                    <label className="block text-[10px] font-bold text-warm-600 mb-0.5">
+                                                                        Texto da Opção {letter} (O que o aluno lê para escolher)
+                                                                    </label>
+                                                                    <textarea
+                                                                        rows={2}
+                                                                        value={dec.label || ''}
+                                                                        onChange={e => {
+                                                                            const decs = [...(selectedBlock.data?.decisions || [])];
+                                                                            decs[dIdx].label = e.target.value;
+                                                                            updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, decisions: decs } });
+                                                                        }}
+                                                                        className="w-full bg-warm-50/70 border border-warm-300 rounded-lg p-2 text-xs font-medium"
+                                                                        placeholder={`Descreva a conduta da Opção ${letter}...`}
+                                                                    />
+                                                                </div>
+
+                                                                {/* Título do Desfecho */}
+                                                                <div>
+                                                                    <label className="block text-[10px] font-bold text-warm-600 mb-0.5">
+                                                                        Título do Desfecho (Ex: Desfecho: Alívio da Dor)
+                                                                    </label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={dec.outcome_title || ''}
+                                                                        onChange={e => {
+                                                                            const decs = [...(selectedBlock.data?.decisions || [])];
+                                                                            decs[dIdx].outcome_title = e.target.value;
+                                                                            updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, decisions: decs } });
+                                                                        }}
+                                                                        className="w-full bg-warm-50/70 border border-warm-300 rounded-lg p-2 text-xs font-bold"
+                                                                        placeholder="Título do desfecho clínico..."
+                                                                    />
+                                                                </div>
+
+                                                                {/* Evolução do Paciente */}
+                                                                <div>
+                                                                    <label className="block text-[10px] font-bold text-warm-600 mb-0.5">
+                                                                        Evolução do Paciente (O que aconteceu após essa conduta)
+                                                                    </label>
+                                                                    <textarea
+                                                                        rows={2}
+                                                                        value={dec.outcome_description || ''}
+                                                                        onChange={e => {
+                                                                            const decs = [...(selectedBlock.data?.decisions || [])];
+                                                                            decs[dIdx].outcome_description = e.target.value;
+                                                                            updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, decisions: decs } });
+                                                                        }}
+                                                                        className="w-full bg-warm-50/70 border border-warm-300 rounded-lg p-2 text-xs"
+                                                                        placeholder="Explique o que aconteceu com o paciente..."
+                                                                    />
+                                                                </div>
+
+                                                                {/* Justificativa Científica */}
+                                                                <div>
+                                                                    <label className="block text-[10px] font-bold text-warm-600 mb-0.5">
+                                                                        Fundamentação Científica &amp; Bioética (Orientações da Professora)
+                                                                    </label>
+                                                                    <textarea
+                                                                        rows={2}
+                                                                        value={dec.scientific_rationale || ''}
+                                                                        onChange={e => {
+                                                                            const decs = [...(selectedBlock.data?.decisions || [])];
+                                                                            decs[dIdx].scientific_rationale = e.target.value;
+                                                                            updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, decisions: decs } });
+                                                                        }}
+                                                                        className="w-full bg-warm-50/70 border border-warm-300 rounded-lg p-2 text-[11px] text-warm-700"
+                                                                        placeholder="Diretrizes da ANCP / COFEN e referências científicas..."
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const currentCount = selectedBlock.data?.decisions?.length || 0;
+                                                            const nextLetter = String.fromCharCode(65 + currentCount);
+                                                            const decs = [...(selectedBlock.data?.decisions || []), {
+                                                                id: `conduta-${Date.now()}`,
+                                                                label: `Nova conduta de enfermagem (Opção ${nextLetter})`,
+                                                                rating: 'acceptable',
+                                                                outcome_title: `Desfecho da Conduta ${nextLetter}`,
+                                                                outcome_description: 'Evolução clínica do paciente após essa escolha...',
+                                                                scientific_rationale: 'Fundamentação científica e referências...'
+                                                            }];
+                                                            updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, decisions: decs } });
+                                                        }}
+                                                        className="w-full py-2.5 bg-teal-50 text-teal-800 border-2 border-dashed border-teal-300 font-bold text-xs rounded-xl hover:bg-teal-100 transition-all flex items-center justify-center gap-1.5"
+                                                    >
+                                                        <span>+ Adicionar Nova Conduta (Letra {String.fromCharCode(65 + (selectedBlock.data?.decisions?.length || 0))})</span>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
 

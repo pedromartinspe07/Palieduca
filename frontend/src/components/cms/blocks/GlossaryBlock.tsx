@@ -79,11 +79,11 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
             }`}
         >
             {/* Header Hero Banner (Glassmorphism Acolhedor) */}
-            <div className="p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/80 backdrop-blur-2xl mb-12 text-center relative overflow-hidden">
+            <div className="p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 dark:border-slate-800 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/85 dark:bg-slate-900/85 backdrop-blur-2xl mb-12 text-center relative overflow-hidden">
                 
                 {/* Badge Botânica */}
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200/80 font-bold text-xs mb-5 shadow-2xs">
-                    <Leaf size={13} className="text-teal-600" />
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/60 font-bold text-xs mb-5 shadow-2xs">
+                    <Leaf size={13} className="text-teal-600 dark:text-teal-400" />
                     <span>Dicionário Terminológico e Conceitual</span>
                 </div>
 
@@ -92,7 +92,7 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}
                     onBlur={(e) => handleUpdateField('title', e.currentTarget.innerText)}
-                    className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] mb-4 tracking-tight font-display ${editableClass}`}
+                    className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] dark:text-slate-50 mb-4 tracking-tight font-display ${editableClass}`}
                 >
                     {isEditing ? title : (
                         <>Glossário <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0284c7] via-[#0d9488] to-[#0f766e]">de Cuidados Paliativos</span></>
@@ -104,7 +104,7 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}
                     onBlur={(e) => handleUpdateField('subtitle', e.currentTarget.innerText)}
-                    className={`text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed ${editableClass}`}
+                    className={`text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed ${editableClass}`}
                 >
                     {subtitle}
                 </p>
@@ -118,7 +118,7 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Pesquisar termo ou conceito (ex: Ortotanásia, Dor Total, PPS...)"
-                            className="w-full pl-11 pr-4 py-3.5 bg-white/90 border border-slate-200/80 rounded-full text-sm font-medium text-slate-800 shadow-2xs focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400 focus:bg-white outline-none transition-all"
+                            className="w-full pl-11 pr-4 py-3.5 bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 rounded-full text-sm font-medium text-slate-800 dark:text-slate-100 placeholder:text-slate-400 shadow-2xs focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400 focus:bg-white dark:focus:bg-slate-800 outline-none transition-all"
                         />
                     </div>
 
@@ -132,7 +132,7 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
                                 className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                                     selectedLetter === letter
                                         ? 'bg-gradient-to-r from-teal-600 to-sky-600 text-white shadow-xs scale-105'
-                                        : 'bg-white/90 text-slate-600 border border-slate-200/70 hover:bg-sky-50 hover:text-sky-800'
+                                        : 'bg-white/90 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700 hover:bg-sky-50 dark:hover:bg-slate-700 hover:text-sky-800 dark:hover:text-sky-300'
                                 }`}
                             >
                                 {letter}
@@ -145,7 +145,7 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
             {/* Ação de Adicionar no Modo Edição */}
             {isEditing && (
                 <div className="flex justify-between items-center mb-6 px-2">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         {terms.length} Termos no Glossário
                     </span>
                     <button
@@ -168,7 +168,7 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
 
                         return (
                             <Tilt3DCard key={item.id} maxTilt={5}>
-                                <div className="p-7 rounded-[28px] bg-white/90 backdrop-blur-xl border border-white/90 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.05)] hover:shadow-2xl hover:border-sky-300/60 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-full group relative">
+                                <div className="p-7 rounded-[28px] bg-white/90 dark:bg-slate-900/85 backdrop-blur-xl border border-white/90 dark:border-slate-800 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.05)] hover:shadow-2xl hover:border-sky-300/60 dark:hover:border-sky-500/50 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-full group relative">
                                     {isEditing && (
                                         <button
                                             type="button"
@@ -187,7 +187,7 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
                                                 contentEditable={isEditing}
                                                 suppressContentEditableWarning={true}
                                                 onBlur={(e) => handleUpdateTerm(originalIndex, 'category', e.currentTarget.innerText)}
-                                                className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-sky-100/70 text-sky-800 border border-sky-200/70 ${editableClass}`}
+                                                className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-sky-100/70 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-200/70 dark:border-sky-800/60 ${editableClass}`}
                                             >
                                                 {item.category || 'CONCEITO FUNDAMENTAL'}
                                             </span>
@@ -196,7 +196,7 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
                                                 <button
                                                     type="button"
                                                     onClick={() => copyToClipboard(item.term, item.definition)}
-                                                    className="p-1.5 text-slate-400 hover:text-sky-600 transition-colors rounded-lg hover:bg-sky-50 cursor-pointer"
+                                                    className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors rounded-lg hover:bg-sky-50 dark:hover:bg-slate-800 cursor-pointer"
                                                     title="Copiar definição"
                                                 >
                                                     {copiedTerm === item.term ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
@@ -209,7 +209,7 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
                                             contentEditable={isEditing}
                                             suppressContentEditableWarning={true}
                                             onBlur={(e) => handleUpdateTerm(originalIndex, 'term', e.currentTarget.innerText)}
-                                            className={`font-extrabold text-xl text-[#0f172a] mb-2.5 group-hover:text-teal-700 transition-colors ${editableClass}`}
+                                            className={`font-extrabold text-xl text-[#0f172a] dark:text-slate-100 mb-2.5 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors ${editableClass}`}
                                         >
                                             {item.term}
                                         </h3>
@@ -219,7 +219,7 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
                                             contentEditable={isEditing}
                                             suppressContentEditableWarning={true}
                                             onBlur={(e) => handleUpdateTerm(originalIndex, 'definition', e.currentTarget.innerText)}
-                                            className={`text-slate-600 text-xs sm:text-sm leading-relaxed font-light mb-4 ${editableClass}`}
+                                            className={`text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed font-light mb-4 ${editableClass}`}
                                         >
                                             {item.definition}
                                         </p>
@@ -228,18 +228,18 @@ const GlossaryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onU
                                         {(item.example || isEditing) && (
                                             <div className={`p-3.5 rounded-2xl border text-xs space-y-1 transition-colors ${
                                                 isEven 
-                                                    ? 'bg-[#f5f3ff]/80 border-[#e0e7ff] text-indigo-950' 
-                                                    : 'bg-[#ecfdf5]/80 border-[#d1fae5] text-emerald-950'
+                                                    ? 'bg-[#f5f3ff]/80 dark:bg-purple-950/40 border-[#e0e7ff] dark:border-purple-900/40 text-indigo-950 dark:text-purple-200' 
+                                                    : 'bg-[#ecfdf5]/80 dark:bg-emerald-950/40 border-[#d1fae5] dark:border-emerald-900/40 text-emerald-950 dark:text-emerald-200'
                                             }`}>
-                                                <span className="font-bold flex items-center gap-1.5 text-[11px] text-slate-800">
-                                                    <Leaf size={12} className={isEven ? 'text-indigo-600' : 'text-emerald-600'} />
+                                                <span className="font-bold flex items-center gap-1.5 text-[11px] text-slate-800 dark:text-slate-200">
+                                                    <Leaf size={12} className={isEven ? 'text-indigo-600 dark:text-indigo-400' : 'text-emerald-600 dark:text-emerald-400'} />
                                                     Na prática clínica:
                                                 </span>
                                                 <p
                                                     contentEditable={isEditing}
                                                     suppressContentEditableWarning={true}
                                                     onBlur={(e) => handleUpdateTerm(originalIndex, 'example', e.currentTarget.innerText)}
-                                                    className={`font-light text-[11px] leading-relaxed text-slate-600 ${editableClass}`}
+                                                    className={`font-light text-[11px] leading-relaxed text-slate-600 dark:text-slate-300 ${editableClass}`}
                                                 >
                                                     {item.example || 'Clique para adicionar um exemplo prático de aplicação.'}
                                                 </p>

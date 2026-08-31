@@ -22,32 +22,32 @@ import auth
 
 import seed
 import email_service
+import moderation_bot
 
 load_dotenv()
 
 models.Base.metadata.create_all(bind=engine)
 
-# Migração simples para SQLite (se as colunas não existirem, adiciona)
+# Migração simples para SQLite (se as colunas não existirem, adiciona individualmente)
 with engine.connect() as conn:
-    try:
-        conn.execute(text("ALTER TABLE page_content ADD COLUMN draft_content VARCHAR"))
-        conn.execute(text("ALTER TABLE page_content ADD COLUMN meta_title VARCHAR"))
-        conn.execute(text("ALTER TABLE page_content ADD COLUMN meta_description VARCHAR"))
-        conn.execute(text("ALTER TABLE page_content ADD COLUMN slug VARCHAR"))
-    except Exception:
-        pass
-    try:
-        conn.execute(text("ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT 0"))
-        conn.execute(text("ALTER TABLE users ADD COLUMN verification_code VARCHAR"))
-        conn.execute(text("ALTER TABLE users ADD COLUMN auth_provider VARCHAR DEFAULT 'local'"))
-        conn.execute(text("ALTER TABLE users ADD COLUMN last_password_change VARCHAR"))
-        conn.execute(text("ALTER TABLE users ADD COLUMN foto_url VARCHAR"))
-    except Exception:
-        pass
-    try:
-        conn.commit()
-    except Exception:
-        pass
+    for migration_sql in [
+        "ALTER TABLE page_content ADD COLUMN draft_content VARCHAR",
+        "ALTER TABLE page_content ADD COLUMN meta_title VARCHAR",
+        "ALTER TABLE page_content ADD COLUMN meta_description VARCHAR",
+        "ALTER TABLE page_content ADD COLUMN slug VARCHAR",
+        "ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN verification_code VARCHAR",
+        "ALTER TABLE users ADD COLUMN reset_password_code VARCHAR",
+        "ALTER TABLE users ADD COLUMN auth_provider VARCHAR DEFAULT 'local'",
+        "ALTER TABLE users ADD COLUMN last_password_change VARCHAR",
+        "ALTER TABLE users ADD COLUMN foto_url VARCHAR",
+        "ALTER TABLE users ADD COLUMN completion_email_sent BOOLEAN DEFAULT 0",
+    ]:
+        try:
+            conn.execute(text(migration_sql))
+            conn.commit()
+        except Exception:
+            pass
 
 # Auto-seed inicial para garantir dados no Render mesmo em ambientes voláteis
 seed.seed_users()
@@ -254,6 +254,93 @@ def resend_verification_code(data: schemas.ResendCodeRequest, request: Request, 
     
     email_service.send_verification_email(user.email, user.nome, code)
     return {"message": f"Novo código enviado para {user.email}!"}
+
+@app.post("/api/auth/forgot-password")
+def forgot_password(data: schemas.ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)):
+    client_ip = get_client_ip(request)
+    if not check_rate_limit(f"forgot_{data.email}_{client_ip}", max_requests=4, window_seconds=300):
+        raise HTTPException(
+            status_code=429,
+            detail="Muitas tentativas de recuperação de senha. Por segurança, aguarde 5 minutos antes de tentar novamente."
+        )
+
+    user = db.query(models.User).filter(models.User.email == data.email).first()
+    if not user:
+        # Resposta genérica para segurança contra enumeração
+        return {"message": "Se o e-mail informado estiver cadastrado, enviamos um código de 6 dígitos para redefinição da sua senha."}
+
+    code = email_service.generate_verification_code()
+    user.reset_password_code = code
+    db.commit()
+
+    email_service.send_password_reset_email(user.email, user.nome, code)
+    return {"message": "Se o e-mail informado estiver cadastrado, enviamos um código de 6 dígitos para redefinição da sua senha."}
+
+@app.post("/api/auth/reset-password")
+def reset_password(data: schemas.ResetPasswordRequest, request: Request, db: Session = Depends(get_db)):
+    client_ip = get_client_ip(request)
+    if not check_rate_limit(f"reset_{data.email}_{client_ip}", max_requests=5, window_seconds=300):
+        raise HTTPException(
+            status_code=429,
+            detail="Muitas tentativas de redefinição de senha. Por segurança, aguarde 5 minutos."
+        )
+
+    user = db.query(models.User).filter(models.User.email == data.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+
+    if not user.reset_password_code or user.reset_password_code.strip() != data.code.strip():
+        raise HTTPException(status_code=400, detail="Código de recuperação incorreto ou expirado.")
+
+    if len(data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="A nova senha deve ter pelo menos 6 caracteres.")
+
+    user.senha_hash = auth.get_password_hash(data.new_password)
+    user.reset_password_code = None
+    user.last_password_change = datetime.now().isoformat()
+    user.email_verified = True
+    db.commit()
+    db.refresh(user)
+
+    access_token = auth.create_access_token(data={"sub": user.email, "role": user.cargo})
+    return {
+        "message": "Senha redefinida com sucesso!",
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "nome": user.nome,
+            "cargo": user.cargo,
+            "foto_url": user.foto_url
+        }
+    }
+
+@app.post("/api/contact")
+def send_contact_message(data: schemas.ContactMessageRequest, request: Request):
+    client_ip = get_client_ip(request)
+    if not check_rate_limit(f"contact_{client_ip}", max_requests=3, window_seconds=300):
+        raise HTTPException(
+            status_code=429,
+            detail="Muitas mensagens enviadas recentemente. Para evitar sobrecarga, aguarde 5 minutos antes de enviar uma nova mensagem."
+        )
+
+    if len(data.mensagem.strip()) < 10:
+        raise HTTPException(status_code=400, detail="Por favor, digite uma mensagem com pelo menos 10 caracteres.")
+
+    categoria = data.categoria or "Dúvidas Acadêmicas"
+    email_service.send_contact_form_email(
+        nome=data.nome.strip(),
+        email=data.email.strip(),
+        categoria=categoria.strip(),
+        assunto=data.assunto.strip(),
+        mensagem=data.mensagem.strip()
+    )
+
+    return {
+        "success": True,
+        "message": "Sua mensagem foi enviada com sucesso para a coordenação do Palieduca/UFPB! Responderemos em breve."
+    }
 
 @app.post("/api/auth/login")
 def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -1217,6 +1304,143 @@ def update_interactive_resource(
     db.refresh(db_resource)
     return db_resource
 
+# ==========================================
+# ESPAÇO DE DÚVIDAS & COMENTÁRIOS DAS AULAS (COM MODERAÇÃO AUTOMÁTICA)
+# ==========================================
+
+@app.get("/api/modules/{module_slug}/comments")
+def get_module_comments(module_slug: str, db: Session = Depends(get_db)):
+    """
+    Retorna todos os comentários e respostas aninhadas de um módulo.
+    """
+    all_comments = (
+        db.query(models.ModuleComment)
+        .filter(models.ModuleComment.module_slug == module_slug)
+        .order_by(models.ModuleComment.is_pinned.desc(), models.ModuleComment.id.asc())
+        .all()
+    )
+
+    parent_map = {}
+    top_level = []
+
+    for comment in all_comments:
+        c_dict = {
+            "id": comment.id,
+            "module_slug": comment.module_slug,
+            "user_id": comment.user_id,
+            "author_name": comment.author_name,
+            "author_role": comment.author_role,
+            "author_avatar": comment.author_avatar,
+            "content": comment.content,
+            "created_at": comment.created_at,
+            "is_pinned": comment.is_pinned,
+            "likes_count": comment.likes_count,
+            "parent_id": comment.parent_id,
+            "replies": []
+        }
+        parent_map[comment.id] = c_dict
+
+    for comment in all_comments:
+        c_dict = parent_map[comment.id]
+        if comment.parent_id and comment.parent_id in parent_map:
+            parent_map[comment.parent_id]["replies"].append(c_dict)
+        elif not comment.parent_id:
+            top_level.append(c_dict)
+
+    return top_level
+
+@app.post("/api/modules/{module_slug}/comments")
+def create_module_comment(
+    module_slug: str,
+    payload: schemas.CreateCommentRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Cria uma nova dúvida ou relato no módulo, passando pela verificação do Bot de Moderação Ética.
+    """
+    # 1. Verificação do Bot de Moderação Ética / Anti-Palavrões
+    is_clean, mod_feedback = moderation_bot.check_content(payload.content)
+    if not is_clean:
+        raise HTTPException(
+            status_code=400,
+            detail=mod_feedback
+        )
+
+    # 2. Se for resposta a um comentário existente, valida se o parent existe
+    if payload.parent_id:
+        parent = db.query(models.ModuleComment).filter(models.ModuleComment.id == payload.parent_id).first()
+        if not parent:
+            raise HTTPException(status_code=404, detail="Comentário pai não encontrado.")
+
+    # 3. Criação do comentário no banco
+    now_str = datetime.now().strftime("%d/%m/%Y às %H:%M")
+    new_comment = models.ModuleComment(
+        module_slug=module_slug,
+        user_id=current_user.id,
+        author_name=current_user.nome,
+        author_role=current_user.cargo,
+        author_avatar=current_user.foto_url,
+        content=payload.content.strip(),
+        created_at=now_str,
+        is_pinned=False,
+        likes_count=0,
+        parent_id=payload.parent_id
+    )
+
+    db.add(new_comment)
+    db.commit()
+    db.refresh(new_comment)
+
+    return {
+        "success": True,
+        "message": "Comentário publicado com sucesso!",
+        "comment": {
+            "id": new_comment.id,
+            "module_slug": new_comment.module_slug,
+            "user_id": new_comment.user_id,
+            "author_name": new_comment.author_name,
+            "author_role": new_comment.author_role,
+            "author_avatar": new_comment.author_avatar,
+            "content": new_comment.content,
+            "created_at": new_comment.created_at,
+            "is_pinned": new_comment.is_pinned,
+            "likes_count": new_comment.likes_count,
+            "parent_id": new_comment.parent_id,
+            "replies": []
+        }
+    }
+
+@app.post("/api/comments/{comment_id}/like")
+def like_module_comment(comment_id: int, db: Session = Depends(get_db)):
+    comment = db.query(models.ModuleComment).filter(models.ModuleComment.id == comment_id).first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comentário não encontrado.")
+
+    comment.likes_count = (comment.likes_count or 0) + 1
+    db.commit()
+    return {"success": True, "likes_count": comment.likes_count}
+
+@app.delete("/api/comments/{comment_id}")
+def delete_module_comment(
+    comment_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    comment = db.query(models.ModuleComment).filter(models.ModuleComment.id == comment_id).first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comentário não encontrado.")
+
+    # Autor ou Administradores / Professores podem excluir
+    if comment.user_id != current_user.id and current_user.cargo not in ["dona", "desenvolvedor", "professor", "moderador"]:
+        raise HTTPException(status_code=403, detail="Você não tem permissão para excluir este comentário.")
+
+    # Exclui respostas filhas se houver
+    db.query(models.ModuleComment).filter(models.ModuleComment.parent_id == comment_id).delete()
+    db.delete(comment)
+    db.commit()
+    return {"success": True, "message": "Comentário excluído com sucesso."}
+
 @app.delete("/api/resources/{resource_id}")
 def delete_interactive_resource(
     resource_id: int,
@@ -1434,6 +1658,47 @@ def get_module_activity_ids(module_slug: str, db: Session) -> list[str]:
 
     return list(set(activity_ids))
 
+def check_and_send_completion_email(user: models.User, db: Session, force_send: bool = False) -> dict:
+    """
+    Verifica se o aluno completou 100% do curso e envia o e-mail oficial com o link do certificado.
+    """
+    if not force_send and user.completion_email_sent:
+        return {"sent": False, "reason": "already_sent"}
+
+    modules = db.query(models.Module).all()
+    all_activity_ids = []
+    for m in modules:
+        all_activity_ids.extend(get_module_activity_ids(m.slug_id, db))
+    total_activities = len(all_activity_ids)
+
+    completed_records = db.query(models.UserActivityProgress).filter(
+        models.UserActivityProgress.user_id == user.id,
+        models.UserActivityProgress.completed == True
+    ).all()
+    completed_count = len(completed_records)
+
+    is_eligible = (completed_count >= total_activities and total_activities > 0) or (user.cargo in ["dona", "desenvolvedor", "professor"])
+
+    if not is_eligible:
+        return {"sent": False, "reason": "not_eligible", "completed": completed_count, "total": total_activities}
+
+    year = datetime.now().year
+    certificate_code = f"PALI-{user.id:04d}-{year}-UFPB"
+    verification_url = f"https://palieduca.com.br/validar/{certificate_code}"
+
+    success = email_service.send_completion_congratulations_email(
+        to_email=user.email,
+        user_name=user.nome,
+        certificate_code=certificate_code,
+        verification_url=verification_url
+    )
+
+    if success or force_send:
+        user.completion_email_sent = True
+        db.commit()
+
+    return {"sent": True, "certificate_code": certificate_code, "verification_url": verification_url}
+
 def get_client_ip(request: Request) -> str:
     forwarded_for = request.headers.get("x-forwarded-for")
     if forwarded_for:
@@ -1520,7 +1785,38 @@ def toggle_activity_progress(
             progress_entry.completed = False
 
     db.commit()
-    return {"message": "Progresso atualizado com sucesso!", "activity_id": data.activity_id, "completed": data.completed}
+
+    # Se a atividade foi concluída, verifica se o aluno alcançou 100% para enviar e-mail de congratulações
+    email_result = None
+    if data.completed:
+        email_result = check_and_send_completion_email(current_user, db, force_send=False)
+
+    return {
+        "message": "Progresso atualizado com sucesso!", 
+        "activity_id": data.activity_id, 
+        "completed": data.completed,
+        "completion_email": email_result
+    }
+
+@app.post("/api/progress/send-certificate-email")
+def send_certificate_email_endpoint(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Permite que o próprio aluno solicite o envio/reenvio do e-mail comemorativo do certificado a partir do seu perfil.
+    """
+    result = check_and_send_completion_email(current_user, db, force_send=True)
+    if not result.get("sent"):
+        raise HTTPException(
+            status_code=400,
+            detail="Você ainda não concluiu 100% de todas as atividades necessárias para a emissão do certificado."
+        )
+    return {
+        "success": True,
+        "message": f"E-mail comemorativo com o Certificado Oficial ({result.get('certificate_code')}) enviado com sucesso para {current_user.email}!",
+        "certificate_code": result.get("certificate_code")
+    }
 
 # ================================
 # Endpoints do Modo Visitante (IP & Navegador)
@@ -1884,6 +2180,85 @@ def sync_guest_progress(
         "synced_quiz_answers": synced_quiz_count
     }
 
+
+# ================================
+# Validação Pública de Certificados UFPB
+# ================================
+
+@app.get("/api/certificates/validate/{code}", response_model=schemas.CertificateValidationResponse)
+def validate_certificate(code: str, db: Session = Depends(get_db)):
+    clean_code = code.strip().upper()
+    
+    # Formato esperado: PALI-0001-2026-UFPB ou PALI-1-2026-UFPB
+    match = re.match(r"^PALI-(\d+)-(\d{4})-UFPB$", clean_code)
+    if not match:
+        return {
+            "valid": False,
+            "code": clean_code,
+            "status_label": "CÓDIGO INVÁLIDO",
+            "message": "O formato do código fornecido não corresponde ao padrão oficial de certificados da UFPB (ex: PALI-0001-2026-UFPB)."
+        }
+
+    user_id = int(match.group(1))
+    year = int(match.group(2))
+
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        return {
+            "valid": False,
+            "code": clean_code,
+            "status_label": "NÃO ENCONTRADO",
+            "message": "Nenhum estudante com este registro foi localizado na base de dados do Palieduca/UFPB."
+        }
+
+    # Calcula o total de atividades cadastradas em todos os módulos
+    modules = db.query(models.Module).all()
+    all_activity_ids = []
+    for m in modules:
+        all_activity_ids.extend(get_module_activity_ids(m.slug_id, db))
+    total_activities = len(all_activity_ids)
+
+    # Busca as atividades concluídas pelo usuário
+    completed_records = db.query(models.UserActivityProgress).filter(
+        models.UserActivityProgress.user_id == user.id,
+        models.UserActivityProgress.completed == True
+    ).all()
+    completed_count = len(completed_records)
+
+    is_eligible = (completed_count >= total_activities and total_activities > 0) or (user.cargo in ["dona", "desenvolvedor", "professor"])
+
+    if not is_eligible:
+        return {
+            "valid": False,
+            "code": clean_code,
+            "student_name": user.nome,
+            "student_id": user.id,
+            "status_label": "EM ANDAMENTO / NÃO CONCLUÍDO",
+            "message": f"O estudante completou {completed_count} de {total_activities} atividades. O certificado oficial só é válido após 100% de conclusão."
+        }
+
+    # Data da última conclusão ou ano
+    latest_date_str = None
+    for r in completed_records:
+        if r.completed_at:
+            if not latest_date_str or r.completed_at > latest_date_str:
+                latest_date_str = r.completed_at
+
+    return {
+        "valid": True,
+        "code": clean_code,
+        "student_name": user.nome,
+        "student_id": user.id,
+        "course_name": "Cuidados Paliativos em Enfermagem",
+        "workload_hours": 40,
+        "institution": "Universidade Federal da Paraíba (UFPB)",
+        "department": "Departamento de Enfermagem",
+        "coordinator": "Prof.ª Patrícia Maria de Oliveira Andrade",
+        "issue_date": latest_date_str or f"Ano de {year}",
+        "issue_year": year,
+        "status_label": "AUTENTICADO & VÁLIDO",
+        "message": "Certificado Oficial emitido e autenticado com êxito pela Universidade Federal da Paraíba (UFPB)."
+    }
 
 # ================================
 # Painel da Dona: Métricas & Gestão

@@ -104,12 +104,12 @@ const HeaderBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpd
                             contentEditable={true}
                             suppressContentEditableWarning={true}
                             onBlur={(e) => handleTitleChange(e.currentTarget.innerText)}
-                            className="text-2xl md:text-3xl font-extrabold text-warm-900 leading-tight focus:outline-none focus:bg-white/80 focus:ring-2 focus:ring-primary/40 rounded px-1 -mx-1"
+                            className="text-2xl md:text-3xl font-extrabold text-warm-900 dark:text-slate-50 leading-tight focus:outline-none focus:bg-white/80 dark:focus:bg-slate-800/80 focus:ring-2 focus:ring-primary/40 rounded px-1 -mx-1"
                         >
                             {title}
                         </h1>
                     ) : (
-                        <h1 className="text-2xl md:text-3xl font-extrabold text-warm-900 leading-tight">
+                        <h1 className="text-2xl md:text-3xl font-extrabold text-warm-900 dark:text-slate-50 leading-tight">
                             {title}
                         </h1>
                     )}
@@ -119,13 +119,13 @@ const HeaderBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpd
                             contentEditable={true}
                             suppressContentEditableWarning={true}
                             onBlur={(e) => handleDescChange(e.currentTarget.innerText)}
-                            className="text-warm-600 mt-1.5 text-sm md:text-base leading-relaxed focus:outline-none focus:bg-white/80 focus:ring-2 focus:ring-primary/40 rounded px-1 -mx-1"
+                            className="text-warm-600 dark:text-slate-300 mt-1.5 text-sm md:text-base leading-relaxed focus:outline-none focus:bg-white/80 dark:focus:bg-slate-800/80 focus:ring-2 focus:ring-primary/40 rounded px-1 -mx-1"
                         >
                             {description}
                         </p>
                     ) : (
                         description && (
-                            <p className="text-warm-600 mt-1.5 text-sm md:text-base leading-relaxed">
+                            <p className="text-warm-600 dark:text-slate-300 mt-1.5 text-sm md:text-base leading-relaxed">
                                 {description}
                             </p>
                         )

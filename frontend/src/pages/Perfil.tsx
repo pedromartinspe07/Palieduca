@@ -1,17 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
-    UserCircle, LogOut, Users, BookOpen, Palette, KeyRound, 
+    LogOut, Users, BookOpen, Palette, KeyRound, 
     Lock, X, CheckCircle2, AlertCircle, Loader2, ShieldCheck, Clock, Camera, 
     Trash2, Globe, UploadCloud, Sparkles, Download, Database, RefreshCw, 
-    Award, TrendingUp, Layers, ChevronRight, Crop
+    Award, TrendingUp, Layers, ChevronRight, Crop, GraduationCap
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { parseGoogleDriveUrl, parseZohoWorkDriveUrl, getFullMediaUrl } from '../utils/mediaUtils';
 import CertificateModal from '../components/CertificateModal';
+import AcademicTranscriptModal from '../components/AcademicTranscriptModal';
 import StudentAnalyticsDashboard from '../components/StudentAnalyticsDashboard';
 import ImageCropperModal from '../components/cms/ImageCropperModal';
 import BotanicalBackground from '../components/effects/BotanicalBackground';
+import UserAvatar from '../components/UserAvatar';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://127.0.0.1:8000'
@@ -43,6 +45,7 @@ const Perfil: React.FC = () => {
 
     // Certificate modal
     const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+    const [isTranscriptModalOpen, setIsTranscriptModalOpen] = useState(false);
 
     // Admin & Teacher Analytics State (Dona / Desenvolvedor)
     const [adminMetrics, setAdminMetrics] = useState<any>(null);
@@ -402,17 +405,12 @@ const Perfil: React.FC = () => {
                         
                         {/* Avatar com Botão de Câmera */}
                         <div className="relative mb-4 group cursor-pointer" onClick={() => setIsPhotoModalOpen(true)}>
-                            {resolvedFotoUrl ? (
-                                <img 
-                                    src={resolvedFotoUrl} 
-                                    alt={user.nome} 
-                                    className="w-24 h-24 rounded-full object-cover object-center aspect-square shrink-0 shadow-md border-2 border-primary/40 group-hover:opacity-90 transition-all"
-                                />
-                            ) : (
-                                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary/20 to-primary/10 text-primary flex items-center justify-center shadow-inner border border-primary/20 aspect-square shrink-0">
-                                    <UserCircle size={64} />
-                                </div>
-                            )}
+                            <UserAvatar
+                                fotoUrl={user.foto_url}
+                                nome={user.nome}
+                                size="lg"
+                                borderClassName="border-4 border-primary/30 shadow-md group-hover:opacity-95 transition-all"
+                            />
 
                             {/* Badge de Troca de Foto */}
                             <div 
@@ -623,13 +621,24 @@ const Perfil: React.FC = () => {
                                 </div>
 
                                 {isCertUnlocked && (
-                                    <button
-                                        onClick={() => setIsCertModalOpen(true)}
-                                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-2xl font-bold text-xs shadow-md hover:scale-105 transition-all cursor-pointer shrink-0"
-                                    >
-                                        <Award size={18} />
-                                        <span>Emitir Certificado (40h)</span>
-                                    </button>
+                                    <div className="flex flex-wrap items-center gap-2 shrink-0">
+                                        <button
+                                            onClick={() => setIsCertModalOpen(true)}
+                                            className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-2xl font-bold text-xs shadow-md hover:scale-105 transition-all cursor-pointer"
+                                        >
+                                            <Award size={16} />
+                                            <span>Emitir Certificado (40h)</span>
+                                        </button>
+
+                                        <button
+                                            onClick={() => setIsTranscriptModalOpen(true)}
+                                            className="flex items-center gap-1.5 px-4 py-2.5 bg-warm-100 hover:bg-warm-200 text-warm-800 rounded-2xl font-bold text-xs border border-warm-300 transition-all cursor-pointer"
+                                            title="Visualizar e imprimir Histórico Escolar com discriminação de notas"
+                                        >
+                                            <GraduationCap size={16} className="text-teal-700" />
+                                            <span>Histórico Escolar</span>
+                                        </button>
+                                    </div>
                                 )}
                             </div>
 
@@ -676,6 +685,13 @@ const Perfil: React.FC = () => {
             <CertificateModal 
                 isOpen={isCertModalOpen} 
                 onClose={() => setIsCertModalOpen(false)} 
+            />
+
+            {/* Modal do Histórico Escolar / Boletim Acadêmico */}
+            <AcademicTranscriptModal
+                isOpen={isTranscriptModalOpen}
+                onClose={() => setIsTranscriptModalOpen(false)}
+                studentProgress={studentProgress}
             />
 
             {/* Modal de Foto de Perfil */}

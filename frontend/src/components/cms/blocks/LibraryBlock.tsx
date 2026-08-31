@@ -106,12 +106,12 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
             }`}
         >
             {/* Header Hero Banner (Glassmorphism Acolhedor) */}
-            <div className="p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/80 backdrop-blur-2xl mb-12 text-center relative overflow-hidden">
+            <div className="p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 dark:border-slate-800 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/85 dark:bg-slate-900/85 backdrop-blur-2xl mb-12 text-center relative overflow-hidden">
                 
                 {/* Badge Botânica */}
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200/80 font-bold text-xs mb-5 shadow-2xs">
-                    <Leaf size={13} className="text-teal-600" />
-                    <span>Acervo Científico & Diretrizes Clínicas</span>
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-200/80 dark:border-teal-800/60 font-bold text-xs mb-5 shadow-2xs">
+                    <Leaf size={13} className="text-teal-600 dark:text-teal-400" />
+                    <span>Acervo Científico &amp; Diretrizes Clínicas</span>
                 </div>
 
                 {/* Título com Tipografia Gradiente */}
@@ -119,10 +119,10 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}
                     onBlur={(e) => handleUpdateField('title', e.currentTarget.innerText)}
-                    className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] mb-4 tracking-tight font-display ${editableClass}`}
+                    className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] dark:text-slate-50 mb-4 tracking-tight font-display ${editableClass}`}
                 >
                     {isEditing ? title : (
-                        <>Biblioteca <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0284c7] via-[#0d9488] to-[#0f766e]">Virtual & Acadêmica</span></>
+                        <>Biblioteca <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0284c7] via-[#0d9488] to-[#0f766e]">Virtual &amp; Acadêmica</span></>
                     )}
                 </h1>
 
@@ -131,7 +131,7 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}
                     onBlur={(e) => handleUpdateField('subtitle', e.currentTarget.innerText)}
-                    className={`text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed ${editableClass}`}
+                    className={`text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed ${editableClass}`}
                 >
                     {subtitle}
                 </p>
@@ -145,7 +145,7 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Pesquisar manuais, escalas, diretrizes ou autores..."
-                            className="w-full pl-11 pr-4 py-3.5 bg-white/90 border border-slate-200/80 rounded-full text-sm font-medium text-slate-800 shadow-2xs focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400 focus:bg-white outline-none transition-all"
+                            className="w-full pl-11 pr-4 py-3.5 bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 rounded-full text-sm font-medium text-slate-800 dark:text-slate-100 placeholder:text-slate-400 shadow-2xs focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400 focus:bg-white dark:focus:bg-slate-800 outline-none transition-all"
                         />
                     </div>
 
@@ -159,7 +159,7 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                                     selectedCategory === cat
                                         ? 'bg-gradient-to-r from-teal-600 to-sky-600 text-white shadow-xs scale-105'
-                                        : 'bg-white/90 text-slate-600 border border-slate-200/70 hover:bg-sky-50 hover:text-sky-800'
+                                        : 'bg-white/90 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700 hover:bg-sky-50 dark:hover:bg-slate-700 hover:text-sky-800 dark:hover:text-sky-300'
                                 }`}
                             >
                                 {cat}
@@ -246,7 +246,7 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
 
                         return (
                             <Tilt3DCard key={res.id} maxTilt={5}>
-                                <div className="p-7 rounded-[28px] bg-white/90 backdrop-blur-xl border border-white/90 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.05)] hover:shadow-2xl hover:border-teal-300/60 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-full group relative">
+                                <div className="p-7 rounded-[28px] bg-white/90 dark:bg-slate-900/85 backdrop-blur-xl border border-white/90 dark:border-slate-800 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.05)] hover:shadow-2xl hover:border-teal-300/60 dark:hover:border-teal-500/50 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-full group relative">
                                     {isEditing && (
                                         <button
                                             type="button"
@@ -266,7 +266,7 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                                                     <select
                                                         value={res.category}
                                                         onChange={(e) => handleUpdateItem(cardIndex, 'category', e.target.value)}
-                                                        className="text-[11px] font-bold px-2.5 py-1 rounded-full border bg-teal-50 border-teal-200 text-teal-800 outline-none cursor-pointer"
+                                                        className="text-[11px] font-bold px-2.5 py-1 rounded-full border bg-teal-50 dark:bg-slate-800 border-teal-200 dark:border-slate-700 text-teal-800 dark:text-teal-300 outline-none cursor-pointer"
                                                     >
                                                         {availableCategories.map(c => (
                                                             <option key={c} value={c}>{c}</option>
@@ -276,7 +276,7 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                                                     <select
                                                         value={res.type}
                                                         onChange={(e) => handleUpdateItem(cardIndex, 'type', e.target.value)}
-                                                        className="text-[11px] font-medium px-2 py-1 rounded-full border bg-slate-50 border-slate-200 text-slate-700 outline-none cursor-pointer"
+                                                        className="text-[11px] font-medium px-2 py-1 rounded-full border bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 outline-none cursor-pointer"
                                                     >
                                                         <option value="PDF">PDF</option>
                                                         <option value="Guia Clínico">Guia Clínico</option>
@@ -289,10 +289,10 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                                                 </div>
                                             ) : (
                                                 <div className="flex items-center gap-1.5">
-                                                    <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${res.badgeColor || 'bg-teal-100/70 text-teal-800 border-teal-200/70'}`}>
+                                                    <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${res.badgeColor || 'bg-teal-100/70 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border-teal-200/70 dark:border-teal-800/60'}`}>
                                                         {res.category}
                                                     </span>
-                                                    <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                                                    <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                                                         {res.type}
                                                     </span>
                                                 </div>
@@ -302,7 +302,7 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                                                 contentEditable={isEditing}
                                                 suppressContentEditableWarning={true}
                                                 onBlur={(e) => handleUpdateItem(cardIndex, 'year', e.currentTarget.innerText)}
-                                                className={`text-xs font-bold text-slate-400 ${editableClass}`}
+                                                className={`text-xs font-bold text-slate-400 dark:text-slate-500 ${editableClass}`}
                                             >
                                                 {res.year}
                                             </span>
@@ -313,7 +313,7 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                                             contentEditable={isEditing}
                                             suppressContentEditableWarning={true}
                                             onBlur={(e) => handleUpdateItem(cardIndex, 'title', e.currentTarget.innerText)}
-                                            className={`font-extrabold text-lg text-[#0f172a] mb-1.5 group-hover:text-teal-700 transition-colors leading-snug ${editableClass}`}
+                                            className={`font-extrabold text-lg text-[#0f172a] dark:text-slate-100 mb-1.5 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors leading-snug ${editableClass}`}
                                         >
                                             {res.title}
                                         </h3>
@@ -323,7 +323,7 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                                             contentEditable={isEditing}
                                             suppressContentEditableWarning={true}
                                             onBlur={(e) => handleUpdateItem(cardIndex, 'author', e.currentTarget.innerText)}
-                                            className={`text-xs font-semibold text-teal-700 mb-3 flex items-center gap-1 ${editableClass}`}
+                                            className={`text-xs font-semibold text-teal-700 dark:text-teal-400 mb-3 flex items-center gap-1 ${editableClass}`}
                                         >
                                             <span>✍️</span> {res.author}
                                         </p>
@@ -333,7 +333,7 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                                             contentEditable={isEditing}
                                             suppressContentEditableWarning={true}
                                             onBlur={(e) => handleUpdateItem(cardIndex, 'description', e.currentTarget.innerText)}
-                                            className={`text-slate-600 text-xs sm:text-sm leading-relaxed font-light mb-6 line-clamp-3 ${editableClass}`}
+                                            className={`text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed font-light mb-6 line-clamp-3 ${editableClass}`}
                                         >
                                             {res.description}
                                         </p>
@@ -341,14 +341,14 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
 
                                     {/* Botão de Acesso */}
                                     {isEditing ? (
-                                        <div className="pt-2 border-t border-slate-100">
+                                        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                                             <label className="block text-[10px] font-bold text-slate-500 mb-1">Link de Acesso (URL):</label>
                                             <input
                                                 type="text"
                                                 value={res.url}
                                                 onChange={(e) => handleUpdateItem(cardIndex, 'url', e.target.value)}
                                                 placeholder="https://..."
-                                                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono text-slate-700 outline-none"
+                                                className="w-full text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 font-mono text-slate-700 dark:text-slate-200 outline-none"
                                             />
                                         </div>
                                     ) : (
@@ -356,7 +356,7 @@ const LibraryBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUp
                                             href={res.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-sky-50 to-teal-50 hover:from-teal-600 hover:to-sky-600 hover:text-white text-slate-800 rounded-2xl font-bold text-xs border border-teal-200 hover:border-transparent transition-all duration-300 shadow-2xs group-hover:shadow-md"
+                                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-sky-50 to-teal-50 dark:from-slate-800 dark:to-slate-800 hover:from-teal-600 hover:to-sky-600 dark:hover:from-teal-600 dark:hover:to-sky-600 text-slate-800 dark:text-slate-200 hover:text-white dark:hover:text-white rounded-2xl font-bold text-xs border border-teal-200 dark:border-slate-700 hover:border-transparent transition-all duration-300 shadow-2xs group-hover:shadow-md"
                                         >
                                             <span>Acessar Material</span>
                                             <ExternalLink size={14} />

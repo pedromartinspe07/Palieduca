@@ -7,7 +7,7 @@ import {
     UserCog, Crown, Code2, GraduationCap, ShieldCheck, Headphones,
     Lock, Loader2, Trash2
 } from 'lucide-react';
-import { getFullMediaUrl } from '../utils/mediaUtils';
+import UserAvatar from './UserAvatar';
 
 export interface StudentMetricItem {
     id: number;
@@ -500,13 +500,7 @@ export const StudentAnalyticsDashboard: React.FC<Props> = ({
                                             <span className="text-2xl">{medals[idx]}</span>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
-                                                    {s.foto_url ? (
-                                                        <img src={getFullMediaUrl(s.foto_url)} alt="" className="w-8 h-8 rounded-full object-cover shrink-0 aspect-square" />
-                                                    ) : (
-                                                        <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
-                                                            {s.nome[0]}
-                                                        </div>
-                                                    )}
+                                                    <UserAvatar fotoUrl={s.foto_url} nome={s.nome} size="sm" />
                                                     <div className="truncate">
                                                         <h5 className="font-bold text-warm-900 text-xs truncate">{s.nome}</h5>
                                                         <p className="text-[10px] text-warm-500 truncate">{s.email}</p>
@@ -620,13 +614,7 @@ export const StudentAnalyticsDashboard: React.FC<Props> = ({
                                                 {index + 1}
                                             </td>
                                             <td className="py-3 px-4 font-bold text-warm-900 flex items-center gap-2">
-                                                {s.foto_url ? (
-                                                    <img src={getFullMediaUrl(s.foto_url)} alt="" className="w-6 h-6 rounded-full object-cover shrink-0 aspect-square" />
-                                                ) : (
-                                                    <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px] shrink-0">
-                                                        {s.nome[0]}
-                                                    </div>
-                                                )}
+                                                <UserAvatar fotoUrl={s.foto_url} nome={s.nome} size="xs" />
                                                 <span className="truncate">{s.nome}</span>
                                             </td>
                                             <td className="py-3 px-4 text-warm-600">
@@ -751,13 +739,7 @@ export const StudentAnalyticsDashboard: React.FC<Props> = ({
                                             
                                             {/* Usuário */}
                                             <td className="py-3 px-4 font-bold text-warm-900 flex items-center gap-2.5">
-                                                {u.foto_url ? (
-                                                    <img src={getFullMediaUrl(u.foto_url)} alt="" className="w-7 h-7 rounded-full object-cover shrink-0 aspect-square" />
-                                                ) : (
-                                                    <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
-                                                        {u.nome[0]}
-                                                    </div>
-                                                )}
+                                                <UserAvatar fotoUrl={u.foto_url} nome={u.nome} size="sm" />
                                                 <div className="truncate">
                                                     <span>{u.nome}</span>
                                                     {isCurrentUser && (

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, Text
 from database import Base
 
 class User(Base):
@@ -11,9 +11,11 @@ class User(Base):
     cargo = Column(String, default="aluno")  # 'dona', 'desenvolvedor', 'aluno'
     email_verified = Column(Boolean, default=False)
     verification_code = Column(String, nullable=True)
+    reset_password_code = Column(String, nullable=True) # Código de 6 dígitos para redefinição de senha
     auth_provider = Column(String, default="local") # 'local', 'google'
     last_password_change = Column(String, nullable=True) # ISO string da data da última troca
     foto_url = Column(String, nullable=True) # URL da foto de perfil ou avatar customizado
+    completion_email_sent = Column(Boolean, default=False) # Flag para evitar reenvio duplicado do e-mail de certificado
 
 class Module(Base):
     __tablename__ = "modules"
@@ -113,4 +115,20 @@ class UserQuizAnswer(Base):
     selected_option = Column(Integer)
     is_correct = Column(Boolean)
     answered_at = Column(String, nullable=True)
+
+class ModuleComment(Base):
+    __tablename__ = "module_comments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    module_slug = Column(String, index=True)
+    user_id = Column(Integer, index=True)
+    author_name = Column(String)
+    author_role = Column(String, default="aluno")
+    author_avatar = Column(String, nullable=True)
+    content = Column(Text)
+    created_at = Column(String)
+    is_pinned = Column(Boolean, default=False)
+    likes_count = Column(Integer, default=0)
+    parent_id = Column(Integer, index=True, nullable=True)
+
 

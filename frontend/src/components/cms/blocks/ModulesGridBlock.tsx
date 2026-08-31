@@ -57,7 +57,7 @@ const ModulesGridBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, 
                         contentEditable={isEditing}
                         suppressContentEditableWarning={true}
                         onBlur={(e) => handleTextChange('title', e.currentTarget.innerText)}
-                        className={`text-3xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight mb-3 outline-none ${editableClass}`}
+                        className={`text-3xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-slate-50 tracking-tight mb-3 outline-none ${editableClass}`}
                     >
                         {title || 'Explore Nossos Módulos'}
                     </h2>
@@ -66,7 +66,7 @@ const ModulesGridBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, 
                         contentEditable={isEditing}
                         suppressContentEditableWarning={true}
                         onBlur={(e) => handleTextChange('intro', e.currentTarget.innerText)}
-                        className={`text-base sm:text-lg text-[#64748B] max-w-3xl leading-relaxed outline-none font-normal ${editableClass}`}
+                        className={`text-base sm:text-lg text-[#64748B] dark:text-slate-300 max-w-3xl leading-relaxed outline-none font-normal ${editableClass}`}
                     >
                         {intro || 'Acesse o conteúdo selecionado por especialistas.'}
                     </p>

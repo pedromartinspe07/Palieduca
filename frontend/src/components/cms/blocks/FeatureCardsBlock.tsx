@@ -173,7 +173,7 @@ export const FeatureCardsBlock: React.FC<BlockProps> = ({ block, isEditing, isSe
                                             contentEditable={isEditing}
                                             suppressContentEditableWarning={true}
                                             onBlur={(e) => handleCardChange(idx, 'badge', e.currentTarget.innerText)}
-                                            className="px-3 py-1 bg-warm-100/80 text-warm-700 font-semibold text-xs rounded-full border border-warm-200/60 outline-none"
+                                            className="px-3 py-1 bg-warm-100/80 dark:bg-slate-800 text-warm-700 dark:text-slate-300 font-semibold text-xs rounded-full border border-warm-200/60 dark:border-slate-700 outline-none"
                                         >
                                             {card.badge || 'Etiqueta'}
                                         </span>
@@ -185,7 +185,7 @@ export const FeatureCardsBlock: React.FC<BlockProps> = ({ block, isEditing, isSe
                                     contentEditable={isEditing}
                                     suppressContentEditableWarning={true}
                                     onBlur={(e) => handleCardChange(idx, 'title', e.currentTarget.innerText)}
-                                    className="text-lg font-bold text-warm-900 mb-2.5 outline-none leading-snug"
+                                    className="text-lg font-bold text-warm-900 dark:text-slate-50 mb-2.5 outline-none leading-snug"
                                 >
                                     {card.title || 'Título do Card'}
                                 </h3>
@@ -195,7 +195,7 @@ export const FeatureCardsBlock: React.FC<BlockProps> = ({ block, isEditing, isSe
                                     contentEditable={isEditing}
                                     suppressContentEditableWarning={true}
                                     onBlur={(e) => handleCardChange(idx, 'description', e.currentTarget.innerText)}
-                                    className="text-sm text-warm-600 leading-relaxed outline-none"
+                                    className="text-sm text-warm-600 dark:text-slate-300 leading-relaxed outline-none"
                                 >
                                     {card.description || 'Descrição do conteúdo deste módulo ou área de conhecimento.'}
                                 </p>
@@ -203,7 +203,7 @@ export const FeatureCardsBlock: React.FC<BlockProps> = ({ block, isEditing, isSe
 
                             {/* Delete card button (only in edit mode) */}
                             {isEditing && cards.length > 1 && (
-                                <div className="mt-4 pt-3 border-t border-warm-100 flex justify-end">
+                                <div className="mt-4 pt-3 border-t border-warm-100 dark:border-slate-700 flex justify-end">
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();

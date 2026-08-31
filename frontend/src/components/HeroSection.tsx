@@ -142,31 +142,31 @@ const HeroSection: React.FC = () => {
 
                 {/* Welcome / Presentation Content */}
                 <div className="text-center max-w-4xl mx-auto animate-slide-up">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200/80 font-bold text-xs mb-5 shadow-2xs">
-                        <Heart size={14} className="fill-sky-500 text-sky-600" />
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/60 font-bold text-xs mb-5 shadow-2xs">
+                        <Heart size={14} className="fill-sky-500 text-sky-600 dark:text-sky-400" />
                         <span>Projeto de Doutorado em Enfermagem</span>
                     </div>
 
-                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] leading-[1.2] mb-5 tracking-tight font-display">
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] dark:text-slate-50 leading-[1.2] mb-5 tracking-tight font-display">
                         Aprender cuidados paliativos é cuidar da pessoa em sua <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0284c7] via-[#0d9488] to-[#0f766e]">integralidade.</span>
                     </h1>
 
-                    <p className="text-sm sm:text-base text-slate-600 font-light mb-8 max-w-2xl mx-auto leading-relaxed">
+                    <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 font-light mb-8 max-w-2xl mx-auto leading-relaxed">
                         Plataforma educativa para aprofundar competências em cuidados paliativos, unindo conhecimento científico, ética e humanização no cuidado.
                     </p>
 
                     {/* Badges Flutuantes */}
                     <div className="flex flex-wrap justify-center items-center gap-2.5 mb-8">
-                        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200/80 rounded-full text-xs font-bold shadow-2xs">
-                            <CheckCircle2 size={14} className="text-emerald-600" />
-                            <span>100% Gratuito & Aberto</span>
+                        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 rounded-full text-xs font-bold shadow-2xs">
+                            <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />
+                            <span>100% Gratuito &amp; Aberto</span>
                         </div>
-                        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-amber-50 text-amber-800 border border-amber-200/80 rounded-full text-xs font-bold shadow-2xs">
-                            <Award size={14} className="text-amber-600" />
+                        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 rounded-full text-xs font-bold shadow-2xs">
+                            <Award size={14} className="text-amber-600 dark:text-amber-400" />
                             <span>Certificado com Autenticação</span>
                         </div>
-                        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-sky-50 text-sky-800 border border-sky-200/80 rounded-full text-xs font-bold shadow-2xs">
-                            <GraduationCap size={14} className="text-sky-600" />
+                        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/60 rounded-full text-xs font-bold shadow-2xs">
+                            <GraduationCap size={14} className="text-sky-600 dark:text-sky-400" />
                             <span>6 Módulos Baseados em Evidências</span>
                         </div>
                     </div>
@@ -182,9 +182,9 @@ const HeroSection: React.FC = () => {
 
                         <Link
                             to="/apresentacao"
-                            className="w-full sm:w-auto flex justify-center items-center gap-2 px-8 py-3.5 bg-white/90 text-slate-800 rounded-full font-bold text-sm shadow-2xs hover:shadow-md border border-slate-200 hover:border-sky-300 transition-all interactive-btn group"
+                            className="w-full sm:w-auto flex justify-center items-center gap-2 px-8 py-3.5 bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-100 rounded-full font-bold text-sm shadow-2xs hover:shadow-md border border-slate-200 dark:border-slate-700 hover:border-sky-300 transition-all interactive-btn group"
                         >
-                            <Play size={16} className="text-teal-600 group-hover:scale-110 transition-transform" />
+                            <Play size={16} className="text-teal-600 dark:text-teal-400 group-hover:scale-110 transition-transform" />
                             <span>Ver apresentação</span>
                         </Link>
                     </div>

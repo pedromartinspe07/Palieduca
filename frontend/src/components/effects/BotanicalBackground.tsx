@@ -137,12 +137,12 @@ const BotanicalBackground: React.FC<BotanicalBackgroundProps> = ({
     children
 }) => {
     return (
-        <div className={`relative min-h-screen overflow-x-hidden bg-gradient-to-br from-[#f8f5ff] via-[#e8f6fc] to-[#edfbf4] ${className}`}>
+        <div className={`relative min-h-screen overflow-x-hidden bg-gradient-to-br from-[#f8f5ff] via-[#e8f6fc] to-[#edfbf4] dark:from-[#0b1329] dark:via-[#0f172a] dark:to-[#081e1d] transition-colors duration-300 ${className}`}>
             
             {/* 1. Orbes de Iluminação Ethereal e Luminosidade Botânica */}
-            <div className="absolute top-10 left-8 w-[32rem] h-[32rem] bg-purple-200/40 rounded-full blur-[100px] pointer-events-none animate-subtle-float" />
-            <div className="absolute top-[28%] right-8 w-[34rem] h-[34rem] bg-sky-200/45 rounded-full blur-[110px] pointer-events-none animate-subtle-float" style={{ animationDelay: '2.5s' }} />
-            <div className="absolute top-[62%] left-12 w-[32rem] h-[32rem] bg-emerald-200/40 rounded-full blur-[100px] pointer-events-none animate-subtle-float" style={{ animationDelay: '4.5s' }} />
+            <div className="absolute top-10 left-8 w-[32rem] h-[32rem] bg-purple-200/40 dark:bg-purple-900/20 rounded-full blur-[100px] pointer-events-none animate-subtle-float" />
+            <div className="absolute top-[28%] right-8 w-[34rem] h-[34rem] bg-sky-200/45 dark:bg-sky-900/20 rounded-full blur-[110px] pointer-events-none animate-subtle-float" style={{ animationDelay: '2.5s' }} />
+            <div className="absolute top-[62%] left-12 w-[32rem] h-[32rem] bg-emerald-200/40 dark:bg-emerald-900/20 rounded-full blur-[100px] pointer-events-none animate-subtle-float" style={{ animationDelay: '4.5s' }} />
 
             {/* 2. Folhagens Botânicas Decorativas Laterais (Ramos de Eucalipto & Lavanda) */}
             {showFoliage && (

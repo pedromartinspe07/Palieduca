@@ -97,32 +97,32 @@ const Apresentacao: React.FC = () => {
             <main className="max-w-6xl mx-auto space-y-12">
                 
                 {/* ═══ 1. HERO BANNER DE BOAS-VINDAS ═══ */}
-                <div className="p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/80 backdrop-blur-2xl text-center relative overflow-hidden">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200/80 font-bold text-xs mb-5 shadow-2xs">
-                        <Leaf size={13} className="text-teal-600" />
+                <div className="p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 dark:border-slate-800 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/85 dark:bg-slate-900/85 backdrop-blur-2xl text-center relative overflow-hidden">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/60 font-bold text-xs mb-5 shadow-2xs">
+                        <Leaf size={13} className="text-teal-600 dark:text-teal-400" />
                         <span>Ambiente Virtual de Aprendizagem Humanizado</span>
                     </div>
 
-                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] mb-4 tracking-tight font-display">
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] dark:text-slate-50 mb-4 tracking-tight font-display">
                         Apresentação <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0284c7] via-[#0d9488] to-[#0f766e]">do PaliEduca</span>
                     </h1>
 
-                    <p className="text-sm sm:text-base text-slate-600 max-w-3xl mx-auto leading-relaxed mb-8">
-                        Bem-vindo(a) ao <strong className="font-bold text-teal-800">PaliEduca</strong>! Uma plataforma educacional interativa desenvolvida no âmbito do <strong className="font-semibold text-slate-800">Programa de Pós-Graduação em Enfermagem da UFPB</strong> para capacitar profissionais e estudantes nas melhores práticas dos Cuidados Paliativos.
+                    <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed mb-8">
+                        Bem-vindo(a) ao <strong className="font-bold text-teal-800 dark:text-teal-400">PaliEduca</strong>! Uma plataforma educacional interativa desenvolvida no âmbito do <strong className="font-semibold text-slate-800 dark:text-slate-100">Programa de Pós-Graduação em Enfermagem da UFPB</strong> para capacitar profissionais e estudantes nas melhores práticas dos Cuidados Paliativos.
                     </p>
 
                     {/* Badges de Destaque */}
                     <div className="flex flex-wrap justify-center items-center gap-2.5">
-                        <span className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200/80 rounded-full text-xs font-bold shadow-2xs">
-                            <CheckCircle2 size={14} className="text-emerald-600" />
+                        <span className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 rounded-full text-xs font-bold shadow-2xs">
+                            <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />
                             Projeto UFPB / Doutorado
                         </span>
-                        <span className="flex items-center gap-1.5 px-3.5 py-1.5 bg-sky-50 text-sky-800 border border-sky-200/80 rounded-full text-xs font-bold shadow-2xs">
-                            <Award size={14} className="text-sky-600" />
+                        <span className="flex items-center gap-1.5 px-3.5 py-1.5 bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/60 rounded-full text-xs font-bold shadow-2xs">
+                            <Award size={14} className="text-sky-600 dark:text-sky-400" />
                             Metodologias Ativas de Ensino
                         </span>
-                        <span className="flex items-center gap-1.5 px-3.5 py-1.5 bg-teal-50 text-teal-800 border border-teal-200/80 rounded-full text-xs font-bold shadow-2xs">
-                            <GraduationCap size={14} className="text-teal-600" />
+                        <span className="flex items-center gap-1.5 px-3.5 py-1.5 bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-200/80 dark:border-teal-800/60 rounded-full text-xs font-bold shadow-2xs">
+                            <GraduationCap size={14} className="text-teal-600 dark:text-teal-400" />
                             Acesso 100% Livre e Gratuito
                         </span>
                     </div>
@@ -131,11 +131,11 @@ const Apresentacao: React.FC = () => {
                 {/* ═══ 2. PÚBLICO-ALVO ═══ */}
                 <section id="publico-alvo" className="scroll-mt-28">
                     <div className="text-center max-w-3xl mx-auto mb-10">
-                        <span className="text-[11px] font-extrabold uppercase tracking-widest text-teal-800 bg-teal-50 border border-teal-200/80 px-3.5 py-1 rounded-full">
+                        <span className="text-[11px] font-extrabold uppercase tracking-widest text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 border border-teal-200/80 dark:border-teal-800/60 px-3.5 py-1 rounded-full">
                             Para quem foi feito
                         </span>
-                        <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0f172a] mt-3 mb-2">Público-Alvo</h2>
-                        <p className="text-slate-600 text-xs sm:text-sm">
+                        <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0f172a] dark:text-slate-50 mt-3 mb-2">Público-Alvo</h2>
+                        <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm">
                             Concebido para atender diferentes etapas da jornada formativa na área da saúde.
                         </p>
                     </div>
@@ -145,36 +145,36 @@ const Apresentacao: React.FC = () => {
                             {
                                 title: "Estudantes de Graduação",
                                 desc: "Alunos de Enfermagem e demais cursos de saúde em busca de competências práticas, estudo de casos clínicos e fundamentação ética.",
-                                icon: <BookOpen className="text-sky-600" size={28} />,
+                                icon: <BookOpen className="text-sky-600 dark:text-sky-400" size={28} />,
                                 badge: "Graduação"
                             },
                             {
                                 title: "Docentes & Preceptores",
                                 desc: "Professores que desejam material complementar confiável, metodologias ativas, quizzes e recursos visuais para sala de aula.",
-                                icon: <BrainCircuit className="text-teal-600" size={28} />,
+                                icon: <BrainCircuit className="text-teal-600 dark:text-teal-400" size={28} />,
                                 badge: "Docência"
                             },
                             {
                                 title: "Profissionais de Saúde",
                                 desc: "Enfermeiros, médicos e equipes multidisciplinares que buscam atualização contínua e aprimoramento no manejo humanizado da dor e sintomas.",
-                                icon: <Users className="text-emerald-600" size={28} />,
+                                icon: <Users className="text-emerald-600 dark:text-emerald-400" size={28} />,
                                 badge: "Assistência"
                             },
                         ].map(item => (
                             <Tilt3DCard key={item.title} maxTilt={5}>
-                                <div className="p-7 rounded-[28px] bg-white/90 backdrop-blur-xl border border-white/90 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.05)] hover:shadow-2xl hover:border-sky-300/60 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group">
+                                <div className="p-7 rounded-[28px] bg-white/90 dark:bg-slate-900/85 backdrop-blur-xl border border-white/90 dark:border-slate-800 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.05)] hover:shadow-2xl hover:border-sky-300/60 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group">
                                     <div className="flex items-center justify-between mb-5">
-                                        <div className="p-3.5 bg-sky-50 rounded-2xl border border-sky-100 group-hover:scale-110 transition-transform duration-300">
+                                        <div className="p-3.5 bg-sky-50 dark:bg-sky-950/50 rounded-2xl border border-sky-100 dark:border-sky-800/50 group-hover:scale-110 transition-transform duration-300">
                                             {item.icon}
                                         </div>
-                                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
                                             {item.badge}
                                         </span>
                                     </div>
-                                    <h3 className="font-extrabold text-lg text-[#0f172a] mb-2 group-hover:text-teal-700 transition-colors">
+                                    <h3 className="font-extrabold text-lg text-[#0f172a] dark:text-slate-100 mb-2 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">
                                         {item.title}
                                     </h3>
-                                    <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-light flex-grow">
+                                    <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed font-light flex-grow">
                                         {item.desc}
                                     </p>
                                 </div>

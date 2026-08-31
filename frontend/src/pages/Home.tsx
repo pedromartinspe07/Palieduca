@@ -92,16 +92,16 @@ const Home: React.FC = () => {
 
                 {/* Sobre o Projeto */}
                 <section className="py-16 px-4 max-w-5xl mx-auto relative z-10">
-                    <div className="p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/80 backdrop-blur-2xl text-center relative overflow-hidden">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200/80 font-bold text-xs mb-5 shadow-2xs">
-                            <Leaf size={13} className="text-teal-600" />
+                    <div className="p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 dark:border-slate-800 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/85 dark:bg-slate-900/85 backdrop-blur-2xl text-center relative overflow-hidden">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/60 font-bold text-xs mb-5 shadow-2xs">
+                            <Leaf size={13} className="text-teal-600 dark:text-teal-400" />
                             <span>Produto de Tese de Doutorado</span>
                         </div>
-                        <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f172a] mb-4 tracking-tight font-display">
+                        <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f172a] dark:text-slate-50 mb-4 tracking-tight font-display">
                             Sobre o Projeto <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0284c7] via-[#0d9488] to-[#0f766e]">PaliEduca</span>
                         </h2>
-                        <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-light max-w-3xl mx-auto">
-                            O PaliEduca é um Ambiente Virtual de Aprendizagem desenvolvido no âmbito do <strong className="font-bold text-teal-800">Programa de Pós-Graduação em Enfermagem da UFPB</strong>. O objetivo científico desta plataforma é capacitar profissionais e estudantes nas melhores práticas e na humanização dos Cuidados Paliativos.
+                        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed font-light max-w-3xl mx-auto">
+                            O PaliEduca é um Ambiente Virtual de Aprendizagem desenvolvido no âmbito do <strong className="font-bold text-teal-800 dark:text-teal-400">Programa de Pós-Graduação em Enfermagem da UFPB</strong>. O objetivo científico desta plataforma é capacitar profissionais e estudantes nas melhores práticas e na humanização dos Cuidados Paliativos.
                         </p>
                     </div>
                 </section>
@@ -109,13 +109,13 @@ const Home: React.FC = () => {
                 {/* Trilha de Aprendizagem (Cards) */}
                 <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto relative z-10" id="trilha">
                     <div className="text-center max-w-3xl mx-auto mb-12">
-                        <span className="text-[11px] font-extrabold uppercase tracking-widest text-sky-800 bg-sky-50 border border-sky-200/80 px-3.5 py-1 rounded-full">
+                        <span className="text-[11px] font-extrabold uppercase tracking-widest text-sky-800 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 border border-sky-200/80 dark:border-sky-800/60 px-3.5 py-1 rounded-full">
                             Trilhas de Aprendizagem
                         </span>
-                        <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f172a] mt-3 mb-3">
+                        <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f172a] dark:text-slate-50 mt-3 mb-3">
                             Explore Nossos Módulos
                         </h2>
-                        <p className="text-slate-600 text-sm max-w-2xl mx-auto font-light">
+                        <p className="text-slate-600 dark:text-slate-300 text-sm max-w-2xl mx-auto font-light">
                             Siga os módulos projetados para construir seu conhecimento passo a passo, aliando a teoria à prática humanizada.
                         </p>
                     </div>

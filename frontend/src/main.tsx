@@ -20,3 +20,17 @@ createRoot(document.getElementById('root')!).render(
     </ErrorBoundary>
   </StrictMode>,
 );
+
+// Registro do Service Worker para suporte PWA / Instalação no Celular
+if ('serviceWorker' in navigator && typeof window !== 'undefined') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((reg) => {
+        console.log('📱 Palieduca PWA: Service Worker ativo com escopo:', reg.scope);
+      })
+      .catch((err) => {
+        console.log('Palieduca PWA: Service Worker não carregado:', err);
+      });
+  });
+}
+

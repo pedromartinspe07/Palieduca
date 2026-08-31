@@ -271,6 +271,46 @@ const APP_PAGES: SearchItem[] = [
         keywords: ['perfil', 'minha conta', 'desempenho', 'progresso', 'certificados', 'aluno', 'estatisticas'],
         category: 'Área do Aluno',
         badge: 'Conta'
+    },
+    {
+        id: 'pg-validar',
+        title: 'Validação Pública de Certificados (UFPB)',
+        description: 'Consulte e autentique certificados oficiais emitidos pela Universidade Federal da Paraíba.',
+        type: 'Página',
+        path: '/validar',
+        keywords: ['validar', 'validacao', 'certificado', 'diploma', 'autenticidade', 'ufpb', 'codigo', 'qr code', 'comprovante'],
+        category: 'Institucional',
+        badge: 'Oficial'
+    },
+    {
+        id: 'pg-termos',
+        title: 'Termos de Uso do Palieduca (UFPB)',
+        description: 'Diretrizes acadêmicas, regras de certificação e direitos autorais da plataforma de ensino.',
+        type: 'Página',
+        path: '/termos',
+        keywords: ['termos', 'termos de uso', 'regras', 'certificacao', 'ufpb', 'direitos autorais', 'conduta', 'normas'],
+        category: 'Institucional',
+        badge: 'Legal'
+    },
+    {
+        id: 'pg-privacidade',
+        title: 'Política de Privacidade e LGPD',
+        description: 'Diretrizes de proteção e tratamento de dados pessoais em conformidade com a Lei nº 13.709/2018.',
+        type: 'Página',
+        path: '/privacidade',
+        keywords: ['privacidade', 'lgpd', 'protecao de dados', 'seguranca', 'dados pessoais', 'direitos do titular'],
+        category: 'Institucional',
+        badge: 'LGPD'
+    },
+    {
+        id: 'pg-contato',
+        title: 'Fale Conosco e Suporte Acadêmico',
+        description: 'Canal oficial de atendimento, dúvidas pedagógicas e contato com a coordenação da UFPB.',
+        type: 'Página',
+        path: '/contato',
+        keywords: ['contato', 'fale conosco', 'suporte', 'duvidas', 'coordenacao', 'email', 'patricia andrade', 'secretaria'],
+        category: 'Institucional',
+        badge: 'Suporte'
     }
 ];
 
@@ -446,15 +486,16 @@ export const parseCMSPagesToSearchItems = (pages: any[] = [], modules: any[] = [
                         });
                     }
 
-                    // Case Study blocks
-                    if (block.type === 'CaseStudyBlock' && block.data.title) {
+                    // Case Study & Clinical Case blocks
+                    if ((block.type === 'ClinicalCaseBlock' || block.type === 'CaseStudyBlock') && (block.data.patient_name || block.data.title)) {
+                        const caseTitle = block.data.patient_name || block.data.title;
                         dynamicResults.push({
                             id: `cms-case-${block.id}`,
-                            title: `Caso Clínico: ${block.data.title}`,
-                            description: block.data.summary || block.data.description || `Estudo de caso clínico em ${modTitle}.`,
+                            title: `Caso Clínico: ${caseTitle}`,
+                            description: block.data.diagnosis || block.data.clinical_scenario || `Estudo de caso clínico com tomada de decisão em ${modTitle}.`,
                             type: 'Módulo',
                             path: `/modulo/${slug}`,
-                            keywords: [block.data.title, block.data.summary || '', modTitle, 'caso clinico', 'simulacao'],
+                            keywords: [caseTitle, block.data.diagnosis || '', block.data.clinical_scenario || '', modTitle, 'caso clinico', 'simulacao', 'tomada de decisao', 'conduta'],
                             category: modTitle,
                             badge: 'Caso Clínico'
                         });

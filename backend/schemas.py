@@ -27,6 +27,21 @@ class VerifyEmailRequest(BaseModel):
 class ResendCodeRequest(BaseModel):
     email: EmailStr
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    code: str
+    new_password: str
+
+class ContactMessageRequest(BaseModel):
+    nome: str
+    email: EmailStr
+    assunto: str
+    categoria: Optional[str] = "Dúvidas Acadêmicas"
+    mensagem: str
+
 class UserResponse(UserBase):
     id: int
 
@@ -167,6 +182,23 @@ class GuestSyncRequest(BaseModel):
     completed_activities: Optional[list[str]] = []
     quiz_answers: Optional[list[dict]] = []
 
+# Schema de Validação Pública de Certificados
+class CertificateValidationResponse(BaseModel):
+    valid: bool
+    code: str
+    student_name: Optional[str] = None
+    student_id: Optional[int] = None
+    course_name: str = "Cuidados Paliativos em Enfermagem"
+    workload_hours: int = 40
+    institution: str = "Universidade Federal da Paraíba (UFPB)"
+    department: str = "Departamento de Enfermagem"
+    coordinator: str = "Prof.ª Patrícia Maria de Oliveira Andrade"
+    issue_date: Optional[str] = None
+    issue_year: Optional[int] = None
+    status_label: str
+    message: str
+
+
 
 # Schemas de Gestão da Dona / Admin
 class StudentMetricItem(BaseModel):
@@ -213,3 +245,25 @@ class ImageSearchItem(BaseModel):
     url: str
     thumb_url: str
     author: str
+
+class CreateCommentRequest(BaseModel):
+    content: str
+    parent_id: Optional[int] = None
+
+class CommentResponse(BaseModel):
+    id: int
+    module_slug: str
+    user_id: int
+    author_name: str
+    author_role: str
+    author_avatar: Optional[str] = None
+    content: str
+    created_at: str
+    is_pinned: bool = False
+    likes_count: int = 0
+    parent_id: Optional[int] = None
+    replies: list[dict] = []
+
+    class Config:
+        from_attributes = True
+

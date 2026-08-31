@@ -3,11 +3,34 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Palieduca" />
+  <meta name="application-name" content="Palieduca" />
+
+  <!-- Detecção Imediata de Modo Noturno / Claro (Android, iOS, Windows, Mac, Linux) -->
+  <script>
+    (function() {
+      try {
+        const savedTheme = localStorage.getItem('palieduca-theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark) || (savedTheme === 'system' && systemPrefersDark)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
 
   <!-- SEO Primário -->
-  <title>Palieduca</title>
+  <title>Palieduca — Cuidados Paliativos em Enfermagem UFPB</title>
   <meta name="description"
     content="Plataforma educacional interativa para o ensino de Cuidados Paliativos em Enfermagem. Recursos digitais baseados na Teoria Histórico-Cultural de Vygotsky, desenvolvida para o Doutorado em Enfermagem da UFPB." />
   <meta name="keywords"

@@ -16,6 +16,7 @@ import VersionHistoryPanel from './VersionHistoryPanel';
 import ModuleEditor from './ModuleEditor';
 import WixFloatingToolbar from './WixFloatingToolbar';
 import type { BlockData } from './blocks/types';
+import { playPublishSound, playSaveDraftSound } from '../../utils/soundUtils';
 
 const API_URL =
 import.meta.env.VITE_API_URL ||
@@ -497,7 +498,12 @@ const handleSave = async (publish: boolean = false) => {
         setIsDirty(false);
         localStorage.removeItem(`palieduca_draft_page_${selectedPage}`);
         setHasLocalDraft(false);
-        if (publish) setShowPublishModal(false);
+        if (publish) {
+            setShowPublishModal(false);
+            playPublishSound();
+        } else {
+            playSaveDraftSound();
+        }
         showToast(publish ? 'Publicado com sucesso!' : 'Rascunho salvo!');
     } catch (error) {
         console.error(error);
@@ -1004,16 +1010,16 @@ className="px-3 sm:px-4 py-1.5 text-xs font-bold text-white bg-primary hover:bg-
 
 {/* ─── CENTER CANVAS ─── */}
 <div
-className="flex-1 overflow-y-auto relative flex justify-center p-3 sm:p-6"
-style={{ background: 'radial-gradient(circle, #e5e7eb 1px, transparent 1px)', backgroundSize: '20px 20px' }}
+className="flex-1 overflow-y-auto relative flex justify-center p-3 sm:p-6 bg-[#faf9f6] dark:bg-[#080d1a] transition-colors duration-300"
+style={{ backgroundImage: 'radial-gradient(circle, rgba(148, 163, 184, 0.35) 1px, transparent 1px)', backgroundSize: '24px 24px' }}
 onClick={() => setSelectedBlockId(null)}
 >
 <div className={`transition-all duration-300 ${
     deviceView === 'desktop' 
         ? 'max-w-6xl w-full flex flex-col gap-3 pb-32'
         : deviceView === 'tablet'
-        ? 'w-[768px] max-w-full bg-white rounded-3xl shadow-2xl border-4 border-warm-300 p-4 sm:p-6 min-h-[850px] my-auto flex flex-col gap-3 pb-32'
-        : 'w-[390px] max-w-full bg-white rounded-[40px] shadow-2xl border-[10px] border-warm-900 p-3 sm:p-4 min-h-[750px] my-auto relative flex flex-col gap-3 pb-32 overflow-hidden'
+        ? 'w-[768px] max-w-full bg-white dark:bg-[#0b1329] rounded-3xl shadow-2xl border-4 border-warm-300 dark:border-slate-700 p-4 sm:p-6 min-h-[850px] my-auto flex flex-col gap-3 pb-32'
+        : 'w-[390px] max-w-full bg-white dark:bg-[#0b1329] rounded-[40px] shadow-2xl border-[10px] border-warm-900 dark:border-slate-800 p-3 sm:p-4 min-h-[750px] my-auto relative flex flex-col gap-3 pb-32 overflow-hidden'
 }`}>
 {/* Smartphone Notch / Top bar */}
 {deviceView === 'mobile' && (

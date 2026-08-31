@@ -7,6 +7,8 @@ import { getModuleIcon } from '../utils/iconUtils';
 import { getGuestId, getGuestCompletedActivities, toggleGuestActivityLocal, setGuestCompletedActivities } from '../utils/guestStorage';
 import ConfettiCelebration from '../components/effects/ConfettiCelebration';
 import BotanicalBackground from '../components/effects/BotanicalBackground';
+import ModuleCommentsSection from '../components/ModuleCommentsSection';
+import ModuleAudioPlayer from '../components/ModuleAudioPlayer';
 import '../index.css';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -368,6 +370,9 @@ const ModuleViewer: React.FC = () => {
                             )}
                         </div>
                     </div>
+
+                    {/* Leitor de Voz Acessível da Aula (Web Speech API) */}
+                    <ModuleAudioPlayer blocks={elements} moduleTitle={moduleInfo?.title} />
                     
                     {elements && elements.length > 0 ? (
                         <div className="w-full space-y-8">
@@ -390,7 +395,11 @@ const ModuleViewer: React.FC = () => {
                                                     {index + 1}
                                                 </span>
                                                 <span className="uppercase tracking-wider text-[11px]">
-                                                    {block.type === 'quiz' || block.type === 'QuizBlock' ? 'Quiz / Avaliação' : 'Leitura / Conteúdo'}
+                                                    {block.type === 'quiz' || block.type === 'QuizBlock' 
+                                                        ? 'Quiz / Avaliação' 
+                                                        : block.type === 'ClinicalCaseBlock'
+                                                        ? '🏥 Caso Clínico / Tomada de Decisão'
+                                                        : 'Leitura / Conteúdo'}
                                                 </span>
                                             </div>
 
@@ -435,6 +444,9 @@ const ModuleViewer: React.FC = () => {
                             </p>
                         </div>
                     )}
+
+                    {/* Canal de Dúvidas / Espaço de Diálogo com a Prof.ª Patrícia */}
+                    {slug_id && <ModuleCommentsSection moduleSlug={slug_id} />}
                 </div>
             </div>
 

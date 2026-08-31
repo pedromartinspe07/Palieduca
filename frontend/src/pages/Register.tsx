@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, User, HeartPulse, Loader2, CheckCircle2, ArrowLeft, RefreshCw, KeyRound, Sparkles, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, Loader2, CheckCircle2, ArrowLeft, RefreshCw, KeyRound, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
+import { ButterflyIcon } from '../components/ButterflyLogo';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://127.0.0.1:8000'
@@ -193,9 +194,9 @@ const Register: React.FC = () => {
                 
                 {step === 'register' ? (
                     <>
-                        <div className="text-center mb-8">
-                            <div className="bg-primary/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-primary">
-                                <HeartPulse size={32} />
+                        <div className="text-center mb-8 group cursor-pointer">
+                            <div className="bg-gradient-to-br from-teal-50 to-sky-50 dark:from-teal-950/70 dark:to-sky-950/70 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-teal-600 dark:text-teal-300 border border-teal-200 dark:border-teal-800 shadow-sm group-hover:scale-105 transition-transform duration-300">
+                                <ButterflyIcon size={34} className="text-teal-700 dark:text-teal-300" />
                             </div>
                             <h2 className="text-2xl font-bold text-warm-900">Criar Conta no Palieduca</h2>
                             <p className="text-warm-500 mt-2 text-sm">Acesse módulos exclusivos e recursos interativos</p>

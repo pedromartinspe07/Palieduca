@@ -73,8 +73,7 @@ const HeroBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
             }}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`relative w-full overflow-hidden transition-all duration-300 py-8 sm:py-16 px-4 sm:px-6 ${
+            onDrop={handleDrop}            className={`relative w-full overflow-hidden transition-all duration-300 py-8 sm:py-16 px-4 sm:px-6 bg-transparent ${
                 isEditing ? 'cursor-pointer' : ''
             } ${
                 isSelected ? 'ring-4 ring-teal-500 ring-inset z-10 rounded-3xl' : ''
@@ -82,7 +81,7 @@ const HeroBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
             style={{
                 background: bgImage 
                     ? `url(${getFullMediaUrl(bgImage)}) center/cover no-repeat` 
-                    : 'linear-gradient(180deg, #F0FDF4 0%, #F8FAFC 100%)',
+                    : undefined,
             }}
         >
             {/* 1. Backdrop Blobs de Luz Difusa (Ambient Mesh Gradient) */}
@@ -96,48 +95,50 @@ const HeroBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
                             height: '450px',
                             background: '#A7F3D0',
                             filter: 'blur(140px)',
-                            opacity: 0.35,
+                            opacity: 0.25,
                             top: '-40px',
-                            left: '-40px',
-                        }} 
+                            left: '-60px',
+                            zIndex: 0
+                        }}
                     />
-                    {/* Esfera Difusa Azul-Sereno (Topo Direito) */}
+                    {/* Esfera Difusa Turquesa / Céu (Base Direita) */}
                     <div 
                         className="absolute pointer-events-none rounded-full"
                         style={{
-                            width: '500px',
-                            height: '500px',
+                            width: '400px',
+                            height: '400px',
                             background: '#BAE6FD',
-                            filter: 'blur(140px)',
-                            opacity: 0.30,
-                            top: '-40px',
+                            filter: 'blur(130px)',
+                            opacity: 0.25,
+                            bottom: '-40px',
                             right: '-40px',
-                        }} 
+                            zIndex: 0
+                        }}
                     />
                 </>
             )}
 
             {uploading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm z-30">
+                <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-30">
                     <Loader2 className="animate-spin text-teal-600" size={44} />
                 </div>
             )}
 
             {isDragging && (
                 <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none bg-teal-500/10 backdrop-blur-xs">
-                    <span className="bg-white px-6 py-3 rounded-full font-bold text-teal-700 shadow-2xl text-lg flex items-center gap-2">
+                    <span className="bg-white dark:bg-slate-800 px-6 py-3 rounded-full font-bold text-teal-700 dark:text-teal-400 shadow-2xl text-lg flex items-center gap-2">
                         Solte a Imagem de Fundo Aqui
                     </span>
                 </div>
             )}
 
             {/* 2. Hero Section Estruturada (Card Glassmorphism) */}
-            <div className="hero-wrapper relative z-10 animate-fade-in">
+            <div className="hero-wrapper relative z-10 animate-fade-in p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 dark:border-slate-800 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/85 dark:bg-slate-900/85 backdrop-blur-2xl text-center">
                 <h1 
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}
                     onBlur={(e) => handleTextChange('title', e.currentTarget.innerText)}
-                    className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#0F172A] tracking-tight leading-[1.2] mb-4 ${editableClass}`}
+                    className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#0F172A] dark:text-slate-50 tracking-tight leading-[1.2] mb-4 ${editableClass}`}
                     style={{ outline: 'none' }}
                 >
                     {title || 'Transforme o Conhecimento em Prática'}
@@ -147,7 +148,7 @@ const HeroBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
                     contentEditable={isEditing}
                     suppressContentEditableWarning={true}
                     onBlur={(e) => handleTextChange('subtitle', e.currentTarget.innerText)}
-                    className={`text-base sm:text-lg text-[#475569] font-normal leading-[1.6] max-w-[620px] mx-auto mt-4 mb-8 ${editableClass}`}
+                    className={`text-base sm:text-lg text-slate-600 dark:text-slate-300 font-normal leading-[1.6] max-w-[620px] mx-auto mt-4 mb-8 ${editableClass}`}
                     style={{ outline: 'none' }}
                 >
                     {subtitle || 'Uma plataforma dedicada ao aprimoramento contínuo em cuidados paliativos.'}
@@ -156,7 +157,7 @@ const HeroBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
                 {/* 3. Botão de Ação Primária (CTA) Alinhado à Marca */}
                 <button 
                     type="button" 
-                    className="btn-primary inline-flex items-center justify-center gap-2"
+                    className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-sky-600 via-teal-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 text-white rounded-full font-bold text-sm shadow-md hover:shadow-xl transition-all interactive-btn cursor-pointer"
                 >
                     <span>Explorar Conteúdo</span>
                     <ArrowRight size={18} />
