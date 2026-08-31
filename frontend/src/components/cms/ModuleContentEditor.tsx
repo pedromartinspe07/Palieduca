@@ -6,7 +6,8 @@ import {
     LayoutList, Play, Crop, RotateCcw, RotateCw, Monitor, Tablet, Smartphone,
     AlertCircle, RefreshCw, AlignLeft, AlignCenter, AlignRight, AlignJustify,
     Underline, Strikethrough, Pipette, Sparkles, Wand2, Search, Check, Plus,
-    CheckCheck, ExternalLink, Link as LinkIcon, History, BookOpen, Stethoscope
+    CheckCheck, ExternalLink, Link as LinkIcon, History, BookOpen, Stethoscope,
+    Eye, EyeOff
 } from 'lucide-react';
 import BlockRenderer from './blocks/BlockRenderer';
 import MediaLibrary from './MediaLibrary';
@@ -115,6 +116,10 @@ const ModuleContentEditor: React.FC = () => {
 
     // Right Sidebar Tabs: 'properties' | 'ai' | 'images'
     const [rightSidebarTab, setRightSidebarTab] = useState<'properties' | 'ai' | 'images'>('properties');
+
+    // Mobile States (Bottom Drawer & Preview)
+    const [mobileActiveDrawer, setMobileActiveDrawer] = useState<'blocks' | 'properties' | 'ai' | 'media' | 'history' | null>(null);
+    const [mobilePreviewMode, setMobilePreviewMode] = useState<boolean>(false);
 
     // AI Agent Builder States
     const [aiPrompt, setAiPrompt] = useState('');
@@ -526,115 +531,135 @@ const ModuleContentEditor: React.FC = () => {
     return (
         <div className="bg-[#f0f2f5] h-full flex flex-col overflow-hidden font-sans rounded-xl border border-warm-200 relative">
             {/* ═══ HEADER ═══ */}
-            <div className="h-14 bg-white border-b border-warm-200 flex items-center justify-between px-3 sm:px-6 shrink-0 z-50 gap-2">
-                <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="bg-primary/10 p-1.5 rounded-lg text-primary shrink-0 flex items-center justify-center">
-                        {getModuleIcon(modules.find(m => m.slug_id === selectedModuleSlug)?.icon_name, 20)}
+            <div className="h-14 bg-white dark:bg-slate-900 border-b border-warm-200 dark:border-slate-800 flex items-center justify-between px-2 sm:px-6 shrink-0 z-50 gap-1.5 sm:gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+                    <div className="bg-primary/10 p-1 sm:p-1.5 rounded-lg text-primary shrink-0 flex items-center justify-center">
+                        {getModuleIcon(modules.find(m => m.slug_id === selectedModuleSlug)?.icon_name, 18)}
                     </div>
                     <select
                         value={selectedModuleSlug}
                         onChange={(e) => setSelectedModuleSlug(e.target.value)}
-                        className="bg-warm-50 border border-warm-200 text-warm-900 font-bold rounded-lg px-2 sm:px-3 py-1.5 text-xs sm:text-sm focus:ring-2 focus:ring-primary outline-none max-w-[170px] sm:max-w-none"
+                        className="bg-warm-50 dark:bg-slate-800 border border-warm-200 dark:border-slate-700 text-warm-900 dark:text-slate-100 font-bold rounded-lg px-2 sm:px-3 py-1.5 text-xs sm:text-sm focus:ring-2 focus:ring-primary outline-none max-w-[130px] xs:max-w-[180px] sm:max-w-none truncate"
                     >
                         {modules.map(m => <option key={m.slug_id} value={m.slug_id}>{m.title}</option>)}
                     </select>
                     {isDirty && (
-                        <span className="text-[10px] sm:text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md animate-pulse whitespace-nowrap">
+                        <span className="text-[9px] sm:text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 sm:px-2 py-0.5 rounded-md animate-pulse whitespace-nowrap hidden xs:inline">
                             ● Não salvo
                         </span>
                     )}
                 </div>
 
                 {/* Center: Undo/Redo & Device Switcher */}
-                <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex items-center gap-1 sm:gap-3">
                     {/* Undo / Redo */}
-                    <div className="flex items-center bg-warm-50 p-0.5 sm:p-1 rounded-xl border border-warm-200">
+                    <div className="flex items-center bg-warm-50 dark:bg-slate-800 p-0.5 sm:p-1 rounded-xl border border-warm-200 dark:border-slate-700">
                         <button
+                            type="button"
                             onClick={handleUndo}
                             disabled={history.length === 0}
                             title="Desfazer (Ctrl+Z)"
-                            className="p-1.5 rounded-lg text-warm-600 hover:bg-white hover:text-warm-900 hover:shadow-sm disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-warm-400 transition-all flex items-center gap-1 text-xs"
+                            className="p-1 sm:p-1.5 rounded-lg text-warm-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 disabled:opacity-30 transition-all flex items-center text-xs cursor-pointer"
                         >
-                            <RotateCcw size={15} />
+                            <RotateCcw size={14} />
                         </button>
                         <button
+                            type="button"
                             onClick={handleRedo}
                             disabled={future.length === 0}
                             title="Refazer (Ctrl+Y)"
-                            className="p-1.5 rounded-lg text-warm-600 hover:bg-white hover:text-warm-900 hover:shadow-sm disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-warm-400 transition-all flex items-center gap-1 text-xs"
+                            className="p-1 sm:p-1.5 rounded-lg text-warm-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 disabled:opacity-30 transition-all flex items-center text-xs cursor-pointer"
                         >
-                            <RotateCw size={15} />
+                            <RotateCw size={14} />
                         </button>
                     </div>
 
-                    {/* Device View Selector */}
-                    <div className="flex items-center bg-warm-50 p-0.5 sm:p-1 rounded-xl border border-warm-200">
+                    {/* Device View Selector (Desktop / Tablet / Mobile) */}
+                    <div className="hidden md:flex items-center bg-warm-50 dark:bg-slate-800 p-0.5 sm:p-1 rounded-xl border border-warm-200 dark:border-slate-700">
                         <button
+                            type="button"
                             onClick={() => setDeviceView('desktop')}
                             title="Desktop (Largura total)"
-                            className={`p-1.5 rounded-lg text-xs transition-all ${deviceView === 'desktop' ? 'bg-white text-primary shadow-sm font-bold' : 'text-warm-400 hover:text-warm-700'
-                                }`}
+                            className={`p-1.5 rounded-lg text-xs transition-all cursor-pointer ${deviceView === 'desktop' ? 'bg-white text-primary shadow-sm font-bold' : 'text-warm-400 hover:text-warm-700'}`}
                         >
                             <Monitor size={15} />
                         </button>
                         <button
+                            type="button"
                             onClick={() => setDeviceView('tablet')}
                             title="Tablet (768px)"
-                            className={`p-1.5 rounded-lg text-xs transition-all ${deviceView === 'tablet' ? 'bg-white text-primary shadow-sm font-bold' : 'text-warm-400 hover:text-warm-700'
-                                }`}
+                            className={`p-1.5 rounded-lg text-xs transition-all cursor-pointer ${deviceView === 'tablet' ? 'bg-white text-primary shadow-sm font-bold' : 'text-warm-400 hover:text-warm-700'}`}
                         >
                             <Tablet size={15} />
                         </button>
                         <button
+                            type="button"
                             onClick={() => setDeviceView('mobile')}
                             title="Celular (390px)"
-                            className={`p-1.5 rounded-lg text-xs transition-all ${deviceView === 'mobile' ? 'bg-white text-primary shadow-sm font-bold' : 'text-warm-400 hover:text-warm-700'
-                                }`}
+                            className={`p-1.5 rounded-lg text-xs transition-all cursor-pointer ${deviceView === 'mobile' ? 'bg-white text-primary shadow-sm font-bold' : 'text-warm-400 hover:text-warm-700'}`}
                         >
                             <Smartphone size={15} />
                         </button>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 sm:gap-2">
+                {/* Right: Actions */}
+                <div className="flex items-center gap-1 sm:gap-2">
+                    {/* Mobile Preview Toggle */}
+                    <button
+                        type="button"
+                        onClick={() => setMobilePreviewMode(!mobilePreviewMode)}
+                        className={`md:hidden p-1.5 sm:px-2.5 rounded-lg border text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                            mobilePreviewMode 
+                                ? 'bg-primary text-white border-primary shadow-xs' 
+                                : 'bg-warm-50 dark:bg-slate-800 text-warm-700 dark:text-slate-200 border-warm-200 dark:border-slate-700'
+                        }`}
+                        title={mobilePreviewMode ? "Voltar para Modo de Edição" : "Ver Pré-visualização"}
+                    >
+                        {mobilePreviewMode ? <EyeOff size={14} /> : <Eye size={14} />}
+                        <span className="hidden xs:inline">{mobilePreviewMode ? 'Editar' : 'Prévia'}</span>
+                    </button>
+
                     <button
                         type="button"
                         onClick={() => setRightSidebarTab('ai')}
-                        className={`px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${rightSidebarTab === 'ai'
+                        className={`hidden md:flex px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all items-center gap-1.5 whitespace-nowrap cursor-pointer ${rightSidebarTab === 'ai'
                                 ? 'bg-purple-600 text-white shadow-sm'
                                 : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'
                             }`}
                         title="Abrir Agente Construtor com IA (Qwen 3.6)"
                     >
                         <Wand2 size={14} className={rightSidebarTab === 'ai' ? 'animate-spin' : 'text-purple-600'} />
-                        <span className="hidden md:inline">Agente IA</span>
+                        <span>Agente IA</span>
                     </button>
                     <button
                         type="button"
                         onClick={() => setRightSidebarTab('images')}
-                        className={`px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${rightSidebarTab === 'images'
+                        className={`hidden md:flex px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all items-center gap-1.5 whitespace-nowrap cursor-pointer ${rightSidebarTab === 'images'
                                 ? 'bg-emerald-600 text-white shadow-sm'
                                 : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
                             }`}
                         title="Abrir Banco de Imagens (Unsplash & Web)"
                     >
                         <ImageIcon size={14} className={rightSidebarTab === 'images' ? '' : 'text-emerald-600'} />
-                        <span className="hidden md:inline">Imagens</span>
+                        <span>Imagens</span>
                     </button>
-                    <div className="h-5 w-px bg-warm-200 hidden sm:block" />
+                    <div className="h-5 w-px bg-warm-200 hidden md:block" />
                     <button
+                        type="button"
                         onClick={() => handleSave(false)}
                         disabled={!isDirty || saving}
-                        className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-warm-700 bg-white border border-warm-200 rounded-lg hover:bg-warm-50 disabled:opacity-40 transition-colors whitespace-nowrap"
+                        className="hidden sm:inline-flex px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-warm-700 bg-white border border-warm-200 rounded-lg hover:bg-warm-50 disabled:opacity-40 transition-colors whitespace-nowrap cursor-pointer"
                     >
                         {saving ? 'Salvando...' : 'Salvar Rascunho'}
                     </button>
                     <button
+                        type="button"
                         onClick={() => setShowPublishModal(true)}
                         disabled={saving}
-                        className="px-3 sm:px-4 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary-dark rounded-lg shadow-md transition-all flex items-center gap-1.5 whitespace-nowrap"
+                        className="px-2.5 sm:px-4 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary-dark rounded-lg shadow-md transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
                     >
-                        <Save size={14} /> Atualizar Aula
+                        <Save size={14} /> <span className="hidden xs:inline">Atualizar Aula</span><span className="xs:hidden">Salvar</span>
                     </button>
                 </div>
             </div>
@@ -667,7 +692,7 @@ const ModuleContentEditor: React.FC = () => {
             <div className="flex-1 flex overflow-hidden min-h-0">
 
                 {/* ─── LEFT SIDEBAR (CANVA STYLE) ─── */}
-                <div className="flex shrink-0 h-full">
+                <div className="hidden md:flex shrink-0 h-full">
                     <div className="w-[72px] bg-warm-900 flex flex-col items-center py-4 gap-4 z-50 shadow-md">
                         <button
                             onClick={() => setLeftSidebarTab(leftSidebarTab === 'blocos' ? null : 'blocos')}
@@ -764,7 +789,7 @@ const ModuleContentEditor: React.FC = () => {
 
                 {/* ─── CENTER CANVAS ─── */}
                 <div
-                    className="flex-1 overflow-y-auto relative flex justify-center p-3 sm:p-6 bg-[#faf9f6] dark:bg-[#080d1a] transition-colors duration-300"
+                    className="flex-1 overflow-y-auto relative flex justify-center p-2 sm:p-6 pb-28 md:pb-8 bg-[#faf9f6] dark:bg-[#080d1a] transition-colors duration-300"
                     style={{ backgroundImage: 'radial-gradient(circle, rgba(148, 163, 184, 0.35) 1px, transparent 1px)', backgroundSize: '24px 24px' }}
                     onClick={() => setSelectedBlockId(null)}
                 >
@@ -775,10 +800,10 @@ const ModuleContentEditor: React.FC = () => {
                         </div>
                     ) : (
                         <div className={`transition-all duration-300 ${deviceView === 'desktop'
-                                ? 'max-w-5xl w-full flex flex-col gap-3 pb-32'
+                                ? 'max-w-5xl w-full flex flex-col gap-4 pb-32'
                                 : deviceView === 'tablet'
-                                    ? 'w-[768px] max-w-full bg-white dark:bg-[#0b1329] rounded-3xl shadow-2xl border-4 border-warm-300 dark:border-slate-700 p-4 sm:p-6 min-h-[850px] my-auto flex flex-col gap-3 pb-32'
-                                    : 'w-[390px] max-w-full bg-white dark:bg-[#0b1329] rounded-[40px] shadow-2xl border-[10px] border-warm-900 dark:border-slate-800 p-3 sm:p-4 min-h-[750px] my-auto relative flex flex-col gap-3 pb-32 overflow-hidden'
+                                    ? 'w-[768px] max-w-full bg-white dark:bg-[#0b1329] rounded-3xl shadow-2xl border-4 border-warm-300 dark:border-slate-700 p-4 sm:p-6 min-h-[850px] my-auto flex flex-col gap-4 pb-32'
+                                    : 'w-[390px] max-w-full bg-white dark:bg-[#0b1329] rounded-[40px] shadow-2xl border-[10px] border-warm-900 dark:border-slate-800 p-3 sm:p-4 min-h-[750px] my-auto relative flex flex-col gap-4 pb-32 overflow-hidden'
                             }`}>
                             {/* Smartphone Notch */}
                             {deviceView === 'mobile' && (
@@ -787,13 +812,13 @@ const ModuleContentEditor: React.FC = () => {
 
                             {/* Banner do Cabeçalho do Módulo (Visualizado pelos alunos) */}
                             {selectedModuleSlug && (
-                                <div className="glassmorphism p-5 sm:p-7 rounded-3xl border border-warm-200 shadow-sm bg-white/95 mb-2">
-                                    <div className="flex items-center gap-4">
-                                        <div className="bg-primary/10 p-3.5 sm:p-4 rounded-2xl text-primary shrink-0 shadow-xs">
-                                            {getModuleIcon(modules.find(m => m.slug_id === selectedModuleSlug)?.icon_name, 32)}
+                                <div className="glassmorphism p-4 sm:p-7 rounded-3xl border border-warm-200 shadow-sm bg-white/95 mb-2">
+                                    <div className="flex items-center gap-3 sm:gap-4">
+                                        <div className="bg-primary/10 p-3 sm:p-4 rounded-2xl text-primary shrink-0 shadow-xs">
+                                            {getModuleIcon(modules.find(m => m.slug_id === selectedModuleSlug)?.icon_name, 28)}
                                         </div>
                                         <div>
-                                            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-warm-900">
+                                            <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-warm-900">
                                                 {modules.find(m => m.slug_id === selectedModuleSlug)?.title || 'Conteúdo do Módulo'}
                                             </h1>
                                             {modules.find(m => m.slug_id === selectedModuleSlug)?.description && (
@@ -806,22 +831,97 @@ const ModuleContentEditor: React.FC = () => {
                                 </div>
                             )}
 
-                            {blocks.map((block) => (
-                                <BlockRenderer
-                                    key={block.id}
-                                    block={block}
-                                    isEditing={true}
-                                    isSelected={selectedBlockId === block.id}
-                                    onSelect={setSelectedBlockId}
-                                    onUpdate={updateBlock}
-                                />
+                            {blocks.map((block, bIdx) => (
+                                <div key={block.id} className="relative group/mobile-block w-full">
+                                    {/* Mobile Quick Action Overlay Bar */}
+                                    {!mobilePreviewMode && (
+                                        <div className="md:hidden mb-1.5 flex items-center justify-between bg-white/90 dark:bg-slate-800/90 backdrop-blur-xs px-3 py-1.5 rounded-2xl border border-warm-200 dark:border-slate-700 shadow-xs">
+                                            <span className="font-extrabold text-warm-800 dark:text-slate-200 flex items-center gap-1.5 text-[11px] truncate max-w-[130px]">
+                                                <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px] font-black shrink-0">
+                                                    {bIdx + 1}
+                                                </span>
+                                                <span className="truncate">
+                                                    {BLOCK_TEMPLATES.find(t => t.type === block.type)?.label || block.type}
+                                                </span>
+                                            </span>
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); moveBlock(block.id, 'up'); }}
+                                                    disabled={bIdx === 0}
+                                                    className="p-1.5 rounded-lg bg-warm-100 dark:bg-slate-700 text-warm-700 dark:text-slate-200 disabled:opacity-20 transition-all cursor-pointer"
+                                                    title="Subir Bloco"
+                                                >
+                                                    <ChevronUp size={14} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); moveBlock(block.id, 'down'); }}
+                                                    disabled={bIdx === blocks.length - 1}
+                                                    className="p-1.5 rounded-lg bg-warm-100 dark:bg-slate-700 text-warm-700 dark:text-slate-200 disabled:opacity-20 transition-all cursor-pointer"
+                                                    title="Descer Bloco"
+                                                >
+                                                    <ChevronDown size={14} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { 
+                                                        e.stopPropagation(); 
+                                                        setSelectedBlockId(block.id);
+                                                        setMobileActiveDrawer('properties');
+                                                    }}
+                                                    className="px-2.5 py-1 rounded-lg bg-primary text-white font-extrabold flex items-center gap-1 shadow-xs text-[11px] cursor-pointer"
+                                                    title="Editar Propriedades no Celular"
+                                                >
+                                                    <Settings size={12} /> Editar
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); duplicateBlock(block.id); }}
+                                                    className="p-1.5 rounded-lg bg-warm-100 dark:bg-slate-700 text-warm-700 dark:text-slate-200 transition-all cursor-pointer"
+                                                    title="Duplicar"
+                                                >
+                                                    <Copy size={13} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); deleteBlock(block.id); }}
+                                                    className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all cursor-pointer"
+                                                    title="Excluir"
+                                                >
+                                                    <Trash2 size={13} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedBlockId(block.id);
+                                        }}
+                                        className={`rounded-3xl transition-all cursor-pointer ${
+                                            selectedBlockId === block.id 
+                                                ? 'ring-3 ring-primary ring-offset-2 shadow-xl' 
+                                                : ''
+                                        }`}
+                                    >
+                                        <BlockRenderer
+                                            block={block}
+                                            isEditing={!mobilePreviewMode}
+                                            isSelected={selectedBlockId === block.id}
+                                            onSelect={setSelectedBlockId}
+                                            onUpdate={updateBlock}
+                                        />
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     )}
                 </div>
 
-                {/* ─── RIGHT SIDEBAR (3 TABS) ─── */}
-                <div className="w-84 sm:w-96 bg-white border-l border-warm-200 flex flex-col z-40 shrink-0 shadow-lg">
+                {/* ─── RIGHT SIDEBAR (3 TABS) (DESKTOP) ─── */}
+                <div className="hidden md:flex w-84 sm:w-96 bg-white border-l border-warm-200 flex-col z-40 shrink-0 shadow-lg">
                     {/* Tab Bar Header */}
                     <div className="flex items-center border-b border-warm-200 bg-warm-50/70 p-1.5 gap-1 shrink-0">
                         <button
@@ -2410,6 +2510,332 @@ const ModuleContentEditor: React.FC = () => {
                     }}
                 />
             )}
+            {/* ═══ MOBILE BOTTOM NAVIGATION BAR (md:hidden) ═══ */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-warm-200 dark:border-slate-800 flex items-center justify-around px-2 z-40 shadow-2xl">
+                <button
+                    type="button"
+                    onClick={() => setMobileActiveDrawer(mobileActiveDrawer === 'blocks' ? null : 'blocks')}
+                    className={`flex flex-col items-center justify-center gap-1 py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
+                        mobileActiveDrawer === 'blocks' ? 'text-primary font-bold' : 'text-warm-600 dark:text-slate-400'
+                    }`}
+                >
+                    <Plus size={18} className="p-0.5 rounded-full bg-primary/10 text-primary" />
+                    <span className="text-[10px]">Novo Bloco</span>
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => {
+                        if (!selectedBlockId && blocks.length > 0) {
+                            setSelectedBlockId(blocks[0].id);
+                        }
+                        setMobileActiveDrawer(mobileActiveDrawer === 'properties' ? null : 'properties');
+                    }}
+                    className={`flex flex-col items-center justify-center gap-1 py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
+                        mobileActiveDrawer === 'properties' ? 'text-primary font-bold' : 'text-warm-600 dark:text-slate-400'
+                    }`}
+                >
+                    <Settings size={18} className={selectedBlockId ? 'text-primary' : ''} />
+                    <span className="text-[10px]">Propriedades</span>
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => setMobileActiveDrawer(mobileActiveDrawer === 'ai' ? null : 'ai')}
+                    className={`flex flex-col items-center justify-center gap-1 py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
+                        mobileActiveDrawer === 'ai' ? 'text-purple-600 font-bold' : 'text-warm-600 dark:text-slate-400'
+                    }`}
+                >
+                    <Wand2 size={18} className="text-purple-600" />
+                    <span className="text-[10px]">Agente IA</span>
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => setMobileActiveDrawer(mobileActiveDrawer === 'media' ? null : 'media')}
+                    className={`flex flex-col items-center justify-center gap-1 py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
+                        mobileActiveDrawer === 'media' ? 'text-emerald-600 font-bold' : 'text-warm-600 dark:text-slate-400'
+                    }`}
+                >
+                    <ImageIcon size={18} className="text-emerald-600" />
+                    <span className="text-[10px]">Fotos/Mídia</span>
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => setShowPublishModal(true)}
+                    className="flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl bg-primary text-white font-bold shadow-md cursor-pointer active:scale-95 transition-transform"
+                >
+                    <Save size={16} />
+                    <span className="text-[10px]">Publicar</span>
+                </button>
+            </div>
+
+            {/* ═══ MOBILE BOTTOM DRAWER / BOTTOM SHEET MODAL (md:hidden) ═══ */}
+            {mobileActiveDrawer && (
+                <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end animate-fade-in">
+                    {/* Backdrop */}
+                    <div 
+                        className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity" 
+                        onClick={() => setMobileActiveDrawer(null)} 
+                    />
+
+                    {/* Sliding Panel */}
+                    <div className="relative bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl border-t border-warm-200 dark:border-slate-800 max-h-[82vh] flex flex-col z-10 animate-slide-up overflow-hidden">
+                        {/* Drag Handle */}
+                        <div className="pt-2.5 pb-1 flex justify-center shrink-0">
+                            <div className="w-12 h-1.5 bg-warm-300 dark:bg-slate-700 rounded-full" />
+                        </div>
+
+                        {/* Drawer Header */}
+                        <div className="px-4 py-2.5 border-b border-warm-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+                            <div className="flex items-center gap-2">
+                                {mobileActiveDrawer === 'blocks' && (
+                                    <div className="flex items-center gap-2">
+                                        <Layers size={18} className="text-primary" />
+                                        <h3 className="font-extrabold text-sm text-warm-900 dark:text-white">Adicionar Novo Bloco na Aula</h3>
+                                    </div>
+                                )}
+                                {mobileActiveDrawer === 'properties' && (
+                                    <div className="flex items-center gap-2">
+                                        <Settings size={18} className="text-primary" />
+                                        <h3 className="font-extrabold text-sm text-warm-900 dark:text-white">
+                                            {selectedBlock ? `Editar: ${BLOCK_TEMPLATES.find(t => t.type === selectedBlock.type)?.label || selectedBlock.type}` : 'Propriedades do Bloco'}
+                                        </h3>
+                                    </div>
+                                )}
+                                {mobileActiveDrawer === 'ai' && (
+                                    <div className="flex items-center gap-2">
+                                        <Wand2 size={18} className="text-purple-600" />
+                                        <h3 className="font-extrabold text-sm text-warm-900 dark:text-white">Criador com Inteligência Artificial</h3>
+                                    </div>
+                                )}
+                                {mobileActiveDrawer === 'media' && (
+                                    <div className="flex items-center gap-2">
+                                        <ImageIcon size={18} className="text-emerald-600" />
+                                        <h3 className="font-extrabold text-sm text-warm-900 dark:text-white">Fotos & Banco de Imagens</h3>
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setMobileActiveDrawer(null)}
+                                className="p-1.5 text-warm-500 hover:text-warm-800 dark:text-slate-400 dark:hover:text-white rounded-full bg-warm-100 dark:bg-slate-800 cursor-pointer"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {/* Drawer Content */}
+                        <div className="p-4 overflow-y-auto flex-1 custom-scrollbar pb-10">
+                            {mobileActiveDrawer === 'blocks' && (
+                                <div className="grid grid-cols-1 gap-2.5 pb-6">
+                                    <p className="text-xs text-warm-500 mb-1">Toque em qualquer recurso abaixo para inseri-lo na aula:</p>
+                                    {BLOCK_TEMPLATES.map(tmpl => (
+                                        <button
+                                            key={tmpl.type}
+                                            type="button"
+                                            onClick={() => {
+                                                addBlock(tmpl.type);
+                                                setMobileActiveDrawer(null);
+                                                showToast(`✨ Bloco ${tmpl.label} adicionado!`);
+                                            }}
+                                            className="flex items-center gap-3.5 p-3.5 bg-warm-50 dark:bg-slate-800 border border-warm-200 dark:border-slate-700 rounded-2xl hover:border-primary/50 text-left active:scale-98 transition-all cursor-pointer shadow-xs"
+                                        >
+                                            <div className="bg-white dark:bg-slate-700 p-2.5 rounded-xl text-primary shadow-xs shrink-0">
+                                                {tmpl.icon}
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-extrabold text-warm-900 dark:text-white">{tmpl.label}</h4>
+                                                <p className="text-xs text-warm-500 dark:text-slate-400 leading-tight">{tmpl.description}</p>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {mobileActiveDrawer === 'properties' && (
+                                <div className="pb-6">
+                                    {!selectedBlock ? (
+                                        <div className="text-center py-6 space-y-3">
+                                            <p className="text-xs text-warm-500">Selecione um bloco da aula para editar:</p>
+                                            <div className="space-y-2 max-h-60 overflow-y-auto">
+                                                {blocks.map((b, idx) => (
+                                                    <button
+                                                        key={b.id}
+                                                        type="button"
+                                                        onClick={() => setSelectedBlockId(b.id)}
+                                                        className="w-full p-2.5 rounded-xl bg-warm-50 dark:bg-slate-800 border border-warm-200 dark:border-slate-700 text-left font-bold text-xs flex items-center justify-between"
+                                                    >
+                                                        <span>{idx + 1}. {BLOCK_TEMPLATES.find(t => t.type === b.type)?.label || b.type}</span>
+                                                        <Settings size={14} className="text-primary" />
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between bg-primary/5 p-2.5 rounded-xl border border-primary/20">
+                                                <span className="text-xs font-bold text-primary">
+                                                    Editando: {BLOCK_TEMPLATES.find(t => t.type === selectedBlock.type)?.label || selectedBlock.type}
+                                                </span>
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => moveBlock(selectedBlock.id, 'up')}
+                                                        disabled={selectedBlockIndex === 0}
+                                                        className="p-1 rounded bg-white border border-warm-200 text-warm-600 disabled:opacity-30 text-xs"
+                                                    >
+                                                        <ChevronUp size={14} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => moveBlock(selectedBlock.id, 'down')}
+                                                        disabled={selectedBlockIndex === blocks.length - 1}
+                                                        className="p-1 rounded bg-white border border-warm-200 text-warm-600 disabled:opacity-30 text-xs"
+                                                    >
+                                                        <ChevronDown size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Quiz question/options editing if QuizBlock */}
+                                            {selectedBlock.type === 'QuizBlock' && (
+                                                <div className="space-y-3">
+                                                    <label className="block text-xs font-bold text-warm-700">Título do Quiz</label>
+                                                    <input
+                                                        type="text"
+                                                        value={selectedBlock.data?.title || ''}
+                                                        onChange={(e) => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, title: e.target.value } })}
+                                                        className="w-full bg-warm-50 border border-warm-200 rounded-xl px-3 py-2 text-xs"
+                                                        placeholder="Título do Quiz"
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* TextBlock quick typography or content */}
+                                            {selectedBlock.type === 'TextBlock' && (
+                                                <div className="space-y-3">
+                                                    <label className="block text-xs font-bold text-warm-700">Tamanho do Texto</label>
+                                                    <div className="flex gap-1.5">
+                                                        {[14, 16, 20, 24, 30].map(sz => (
+                                                            <button
+                                                                key={sz}
+                                                                type="button"
+                                                                onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, fontSize: sz } })}
+                                                                className={`flex-1 py-1.5 rounded-lg border text-xs font-bold ${
+                                                                    (selectedBlock.styles?.fontSize ?? 16) === sz
+                                                                        ? 'bg-primary text-white border-primary'
+                                                                        : 'bg-warm-50 border-warm-200 text-warm-700'
+                                                                }`}
+                                                            >
+                                                                {sz}px
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Button to delete block */}
+                                            <div className="pt-4 border-t border-warm-100">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        deleteBlock(selectedBlock.id);
+                                                        setMobileActiveDrawer(null);
+                                                    }}
+                                                    className="w-full py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold rounded-xl text-xs border border-rose-200 flex justify-center items-center gap-1.5"
+                                                >
+                                                    <Trash2 size={14} /> Excluir Este Bloco
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {mobileActiveDrawer === 'ai' && (
+                                <div className="space-y-3 pb-6">
+                                    <div className="bg-purple-50 border border-purple-200 p-3 rounded-2xl">
+                                        <p className="text-xs font-bold text-purple-900 mb-1 flex items-center gap-1.5">
+                                            <Sparkles size={14} className="text-purple-600" /> Agente IA de Criação de Aulas
+                                        </p>
+                                        <p className="text-[11px] text-purple-700">Digite o tema da aula para gerar o conteúdo automaticamente.</p>
+                                    </div>
+                                    <textarea
+                                        value={aiPrompt}
+                                        onChange={(e) => setAiPrompt(e.target.value)}
+                                        placeholder="Ex: Crie uma aula completa sobre Comunicação de Más Notícias..."
+                                        className="w-full bg-warm-50 border border-warm-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-purple-400 outline-none h-24 resize-none"
+                                        disabled={isAiGenerating}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            await handleAiGenerate();
+                                            setMobileActiveDrawer(null);
+                                        }}
+                                        disabled={!aiPrompt.trim() || isAiGenerating}
+                                        className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-md disabled:opacity-40"
+                                    >
+                                        {isAiGenerating ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
+                                        <span>{isAiGenerating ? 'Criando Conteúdo com IA...' : 'Gerar Conteúdo Agora'}</span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {mobileActiveDrawer === 'media' && (
+                                <div className="space-y-3 pb-6">
+                                    <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl">
+                                        <p className="text-xs font-bold text-emerald-900 mb-1 flex items-center gap-1.5">
+                                            <ImageIcon size={14} className="text-emerald-600" /> Banco de Imagens Médicas
+                                        </p>
+                                        <p className="text-[11px] text-emerald-700">Pesquise fotos de saúde e cuidados paliativos para ilustrar sua aula.</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={imageSearchQuery}
+                                            onChange={(e) => setImageSearchQuery(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && fetchHealthcareImages(imageSearchQuery, imageCategory)}
+                                            placeholder="Buscar: médico, idoso, paciente..."
+                                            className="flex-1 bg-warm-50 border border-warm-200 rounded-xl px-3 py-2 text-xs"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => fetchHealthcareImages(imageSearchQuery, imageCategory)}
+                                            className="px-3 py-2 bg-emerald-600 text-white font-bold rounded-xl text-xs"
+                                        >
+                                            Buscar
+                                        </button>
+                                    </div>
+                                    {imageResults.length > 0 && (
+                                        <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+                                            {imageResults.slice(0, 6).map((img) => (
+                                                <div key={img.id} className="relative rounded-xl overflow-hidden border border-warm-200 group">
+                                                    <img src={img.thumb_url || img.url} alt={img.title} className="w-full h-24 object-cover" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            handleInsertImageAsBlock(img);
+                                                            setMobileActiveDrawer(null);
+                                                        }}
+                                                        className="absolute inset-0 bg-black/50 text-white font-bold text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity"
+                                                    >
+                                                        + Inserir
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* FLOATING RICH TEXT TOOLBAR FOR TEXT SELECTION */}
             <WixFloatingToolbar />
         </div>

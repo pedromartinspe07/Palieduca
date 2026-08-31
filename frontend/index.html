@@ -59,12 +59,6 @@
   <meta name="twitter:image"
     content="https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&q=80&w=1200" />
 
-  <!-- VLibras: Widget de Acessibilidade para LIBRAS (Língua Brasileira de Sinais) -->
-  <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
-  <script>
-    new window.VLibras.Widget('https://vlibras.gov.br/app');
-  </script>
-
   <!-- Script SPA para GitHub Pages com URLs Limpas (Sem '#') -->
   <script type="text/javascript">
     (function (l) {
@@ -81,7 +75,7 @@
 </head>
 
 <body>
-  <!-- VLibras DOM Target -->
+  <!-- VLibras: Widget de Acessibilidade para LIBRAS (Língua Brasileira de Sinais) -->
   <div vw class="enabled">
     <div vw-access-button class="active"></div>
     <div vw-plugin-wrapper>
@@ -90,6 +84,23 @@
   </div>
 
   <div id="root"></div>
+  
+  <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+  <script>
+    (function() {
+      function initWidget() {
+        if (window.VLibras && typeof window.VLibras.Widget === 'function') {
+          new window.VLibras.Widget('https://vlibras.gov.br/app');
+        }
+      }
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        initWidget();
+      } else {
+        window.addEventListener('DOMContentLoaded', initWidget);
+        window.addEventListener('load', initWidget);
+      }
+    })();
+  </script>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 

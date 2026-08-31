@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'r
 import Header from './components/Header';
 import ChatBox from './components/ChatBox';
 import FontSizeControl from './components/FontSizeControl';
+import VLibras from './components/VLibras';
 import Home from './pages/Home';
 import Apresentacao from './pages/Apresentacao';
 import NotFound from './pages/NotFound';
@@ -83,6 +84,7 @@ const App: React.FC = () => {
         </main>
         <Footer />
         <FontSizeControl />
+        <VLibras />
         <ChatBox />
         <PWAInstallPrompt />
       </div>

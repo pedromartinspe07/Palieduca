@@ -429,3 +429,18 @@
     animation: butterfly-gentle-bob 2.5s ease-in-out infinite;
 }
 
+/* ═══ VLIBRAS ACCESSIBILITY WIDGET FIXES ═══ */
+[vw] {
+    position: fixed !important;
+    z-index: 99999 !important;
+}
+
+[vw-access-button] {
+    z-index: 99999 !important;
+    cursor: pointer !important;
+}
+
+[vw-plugin-wrapper] {
+    z-index: 99999 !important;
+}
+
