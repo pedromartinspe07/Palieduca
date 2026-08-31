@@ -3,6 +3,7 @@ import re
 import shutil
 import uuid
 import json
+import urllib.parse
 from datetime import datetime
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Form, Request, Header, Query
@@ -2820,6 +2821,47 @@ def export_students_csv(
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename=Alunos_Palieduca_{datetime.now().strftime('%Y%m%d')}.csv"}
     )
+
+# ================================
+# Sintetizador de Voz Natural (TTS)
+# ================================
+
+@app.get("/api/tts")
+async def get_tts_audio(text: str = Query(..., max_length=1500), lang: str = "pt-BR"):
+    """
+    Sintetizador de Voz Natural em Português do Brasil (pt-BR).
+    Retorna fluxo de áudio MPEG em tempo real para o navegador.
+    """
+    clean_text = text.strip()
+    if not clean_text:
+        raise HTTPException(status_code=400, detail="Texto vazio para síntese")
+    
+    encoded = urllib.parse.quote(clean_text)
+    tts_url = f"https://translate.google.com/translate_tts?ie=UTF-8&tl={lang}&client=tw-ob&q={encoded}"
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "*/*",
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+    }
+    
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        try:
+            resp = await client.get(tts_url, headers=headers)
+            if resp.status_code == 200:
+                return Response(
+                    content=resp.content,
+                    media_type="audio/mpeg",
+                    headers={
+                        "Content-Type": "audio/mpeg",
+                        "Cache-Control": "public, max-age=86400",
+                        "Accept-Ranges": "bytes"
+                    }
+                )
+            else:
+                raise HTTPException(status_code=resp.status_code, detail="Falha na resposta do serviço de voz")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Erro ao sintetizar áudio: {str(e)}")
 
 # ================================
 # Backup de Seguranca em 1 Clique
