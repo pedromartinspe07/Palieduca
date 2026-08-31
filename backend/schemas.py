@@ -231,12 +231,25 @@ class AdminDashboardMetrics(BaseModel):
 # Schemas do Agente IA Construtor de Páginas e Imagens
 class AIGenerateBlocksRequest(BaseModel):
     prompt: str
-    target_type: Optional[str] = "full_page" # "full_page", "cards", "quiz", "text", "hero", "flashcard"
+    target_type: Optional[str] = "full_page" # "full_page", "cards", "quiz", "text", "hero", "flashcard", "clinical_case"
     context_module: Optional[str] = None
+    level: Optional[str] = "graduacao_pos"
 
 class AIGenerateBlocksResponse(BaseModel):
     summary: str
     blocks: list[dict]
+
+class AIEditBlockRequest(BaseModel):
+    instruction: str
+    block: dict
+    action: Optional[str] = "edit" # "edit", "expand", "clinical_tone", "add_examples", "summarize", "to_quiz", "to_flashcards"
+    context_module: Optional[str] = None
+    all_blocks_context: Optional[list[dict]] = None
+
+class AIEditBlockResponse(BaseModel):
+    summary: str
+    block: dict
+    alternative_block: Optional[dict] = None
 
 class ImageSearchItem(BaseModel):
     id: str

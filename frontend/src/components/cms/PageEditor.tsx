@@ -123,9 +123,13 @@ const [mobilePreviewMode, setMobilePreviewMode] = useState<boolean>(false);
 
 // AI Copilot & Agent States
 const [rightSidebarTab, setRightSidebarTab] = useState<'properties' | 'ai' | 'images'>('properties');
+const [aiMode, setAiMode] = useState<'create' | 'edit'>('create');
 const [aiPrompt, setAiPrompt] = useState('');
+const [aiEditInstruction, setAiEditInstruction] = useState('');
 const [aiTargetType, setAiTargetType] = useState<string>('full_page');
 const [isAiGenerating, setIsAiGenerating] = useState(false);
+const [isAiEditing, setIsAiEditing] = useState(false);
+const [aiEditSummary, setAiEditSummary] = useState<string | null>(null);
 const [generatedBlocksResult, setGeneratedBlocksResult] = useState<{ summary: string; blocks: BlockData[] } | null>(null);
 
 // Image Bank States
@@ -318,6 +322,71 @@ const handleInsertAllGeneratedBlocks = () => {
 const handleInsertSingleGeneratedBlock = (block: BlockData) => {
     setBlocksWithHistory(prev => [...prev, block]);
     showToast(`✅ Bloco "${block.type}" inserido no Canvas!`);
+};
+
+const handleAiEditBlock = async (instructionPreset?: string, insertAsNew: boolean = false) => {
+    const instructionToUse = instructionPreset || aiEditInstruction;
+    if (!instructionToUse.trim()) return;
+
+    const targetBlock = blocks.find(b => b.id === selectedBlockId);
+    if (!targetBlock) {
+        showToast('⚠️ Selecione um bloco no canvas para editar com a IA.');
+        return;
+    }
+
+    setIsAiEditing(true);
+    try {
+        const res = await fetch(`${API_URL}/api/ai/edit-block`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                instruction: instructionToUse,
+                block: targetBlock,
+                context_module: selectedPage,
+                action: 'edit'
+            })
+        });
+
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.detail || 'Erro ao editar bloco com IA');
+        }
+
+        const data = await res.json();
+        const editedBlock = data.block;
+
+        if (insertAsNew) {
+            const uniqueSuffix = Math.random().toString(36).substr(2, 6);
+            const newBlock = {
+                ...editedBlock,
+                id: `${editedBlock.type.toLowerCase()}_${Date.now()}_${uniqueSuffix}`
+            };
+            setBlocksWithHistory(prev => {
+                const idx = prev.findIndex(b => b.id === selectedBlockId);
+                if (idx !== -1) {
+                    const newBlocks = [...prev];
+                    newBlocks.splice(idx + 1, 0, newBlock);
+                    return newBlocks;
+                }
+                return [...prev, newBlock];
+            });
+            showToast('✨ Novo bloco gerado e inserido abaixo!');
+        } else {
+            setBlocksWithHistory(prev => prev.map(b => b.id === selectedBlockId ? editedBlock : b));
+            showToast(`🪄 ${data.summary || 'Bloco atualizado pelo Agente IA!'}`);
+        }
+
+        setAiEditSummary(data.summary);
+        setIsDirty(true);
+    } catch (err: any) {
+        console.error('Erro na edição IA:', err);
+        showToast(err.message || 'Erro ao comunicar com o Agente IA');
+    } finally {
+        setIsAiEditing(false);
+    }
 };
 
 const handleInsertImageAsBlock = (img: { url: string; title: string }) => {
@@ -817,33 +886,33 @@ className="bg-warm-50 dark:bg-slate-800 border border-warm-200 dark:border-slate
     </div>
 
     {/* Secondary Expanding Panel */}
-    <div className={`bg-white border-r border-warm-200 flex flex-col z-40 overflow-hidden shadow-lg transition-all duration-300 ease-in-out ${
+    <div className={`bg-white dark:bg-slate-900 border-r border-warm-200 dark:border-slate-800 flex flex-col z-40 overflow-hidden shadow-lg transition-all duration-300 ease-in-out ${
         leftSidebarTab === 'midia' || leftSidebarTab === 'historico' ? 'w-[360px] sm:w-[380px] opacity-100' : leftSidebarTab !== null ? 'w-[340px] opacity-100' : 'w-0 opacity-0 border-r-0'
     }`}>
         {leftSidebarTab === 'blocos' && (
             <>
-                <div className="p-4 border-b border-warm-100 flex items-center justify-between gap-2 bg-white shrink-0">
-                    <h3 className="text-sm font-bold text-warm-800">Modelos e Seções</h3>
-                    <button onClick={() => setLeftSidebarTab(null)} className="p-1 hover:bg-warm-100 rounded-md text-warm-400 hover:text-warm-700">
+                <div className="p-4 border-b border-warm-100 dark:border-slate-800 flex items-center justify-between gap-2 bg-white dark:bg-slate-900 shrink-0">
+                    <h3 className="text-sm font-bold text-warm-800 dark:text-slate-100">Modelos e Seções</h3>
+                    <button onClick={() => setLeftSidebarTab(null)} className="p-1 hover:bg-warm-100 dark:hover:bg-slate-800 rounded-md text-warm-400 dark:text-slate-400 hover:text-warm-700 dark:hover:text-slate-200 cursor-pointer">
                         <X size={16} />
                     </button>
                 </div>
                 <div className="p-4 flex flex-col gap-3 overflow-y-auto flex-1 custom-scrollbar">
-                    <p className="text-xs text-warm-500 mb-1 leading-relaxed">Clique nos blocos abaixo para adicioná-los ao fim da sua página.</p>
+                    <p className="text-xs text-warm-500 dark:text-slate-400 mb-1 leading-relaxed">Clique nos blocos abaixo para adicioná-los ao fim da sua página.</p>
                     {BLOCK_TEMPLATES.map(tmpl => (
                         <button
                             key={tmpl.type}
                             onClick={() => addBlock(tmpl.type)}
-                            className="flex flex-col items-start p-3.5 bg-white border border-warm-200 rounded-xl hover:border-primary hover:shadow-md transition-all group text-left relative overflow-hidden"
+                            className="flex flex-col items-start p-3.5 bg-white dark:bg-slate-800/90 border border-warm-200 dark:border-slate-700 rounded-xl hover:border-primary dark:hover:border-teal-500/50 hover:shadow-md transition-all group text-left relative overflow-hidden cursor-pointer"
                         >
                             <div className="absolute top-0 left-0 w-1 h-full bg-primary transform -translate-x-full group-hover:translate-x-0 transition-transform" />
                             <div className="flex items-center gap-3 w-full mb-2">
-                                <div className="p-2 bg-warm-50 rounded-lg text-primary group-hover:scale-110 transition-transform">
+                                <div className="p-2 bg-warm-50 dark:bg-slate-900 rounded-lg text-primary dark:text-teal-400 group-hover:scale-110 transition-transform">
                                     {tmpl.icon}
                                 </div>
-                                <div className="text-sm font-bold text-warm-800 group-hover:text-primary transition-colors">{tmpl.label}</div>
+                                <div className="text-sm font-bold text-warm-800 dark:text-slate-100 group-hover:text-primary dark:group-hover:text-teal-300 transition-colors">{tmpl.label}</div>
                             </div>
-                            <div className="text-[11px] text-warm-500 leading-relaxed pr-2">{tmpl.description}</div>
+                            <div className="text-[11px] text-warm-500 dark:text-slate-400 leading-relaxed pr-2">{tmpl.description}</div>
                         </button>
                     ))}
                 </div>
@@ -1180,199 +1249,369 @@ className="p-1 bg-white border border-warm-200 rounded-md hover:bg-primary hover
 </div>
 
 {/* ─── RIGHT SIDEBAR (DESKTOP) ─── */}
-<div className="hidden md:flex w-84 sm:w-96 bg-white border-l border-warm-200 flex-col z-40 shrink-0">
+<div className="hidden md:flex w-84 sm:w-96 bg-white dark:bg-slate-900 border-l border-warm-200 dark:border-slate-800 flex-col z-40 shrink-0 shadow-lg">
     {/* Tabs Header */}
-    <div className="flex border-b border-warm-100 bg-warm-50 shrink-0">
+    <div className="flex items-center border-b border-warm-200 dark:border-slate-800 bg-warm-50/70 dark:bg-slate-800/80 p-1.5 gap-1 shrink-0">
         <button 
             onClick={() => setRightSidebarTab('properties')}
-            className={`flex-1 flex items-center justify-center gap-1.5 p-2.5 text-xs font-bold transition-colors ${
-                rightSidebarTab === 'properties' ? 'bg-white text-primary border-b-2 border-primary shadow-2xs' : 'text-warm-500 hover:text-warm-700'
+            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                rightSidebarTab === 'properties'
+                    ? 'bg-white dark:bg-slate-900 text-warm-900 dark:text-slate-100 shadow-xs border border-warm-200/60 dark:border-slate-700'
+                    : 'text-warm-500 dark:text-slate-400 hover:text-warm-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800'
             }`}
         >
-            <Settings size={15} /> Propriedades
+            <Settings size={14} className={rightSidebarTab === 'properties' ? 'text-primary' : ''} />
+            <span>Propriedades</span>
         </button>
         <button 
             onClick={() => setRightSidebarTab('ai')}
-            className={`flex-1 flex items-center justify-center gap-1.5 p-2.5 text-xs font-bold transition-colors ${
-                rightSidebarTab === 'ai' ? 'bg-white text-purple-700 border-b-2 border-purple-600 shadow-2xs' : 'text-warm-500 hover:text-warm-700'
+            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                rightSidebarTab === 'ai'
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'text-purple-700 dark:text-purple-300 bg-purple-50/50 dark:bg-purple-950/40 hover:bg-purple-100/70 dark:hover:bg-purple-900/50 border border-purple-200/50 dark:border-purple-800/50'
             }`}
         >
-            <Wand2 size={15} className={rightSidebarTab === 'ai' ? 'text-purple-600' : ''} /> Agente IA
+            <Wand2 size={14} className={rightSidebarTab === 'ai' ? 'animate-spin' : 'text-purple-600 dark:text-purple-400'} />
+            <span>Agente IA</span>
         </button>
         <button 
             onClick={() => setRightSidebarTab('images')}
-            className={`flex-1 flex items-center justify-center gap-1.5 p-2.5 text-xs font-bold transition-colors ${
-                rightSidebarTab === 'images' ? 'bg-white text-emerald-700 border-b-2 border-emerald-600 shadow-2xs' : 'text-warm-500 hover:text-warm-700'
+            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                rightSidebarTab === 'images'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-emerald-700 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/40 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/50 border border-emerald-200/50 dark:border-emerald-800/50'
             }`}
         >
-            <ImageIcon size={15} className={rightSidebarTab === 'images' ? 'text-emerald-600' : ''} /> Imagens
+            <ImageIcon size={14} className={rightSidebarTab === 'images' ? '' : 'text-emerald-600 dark:text-emerald-400'} />
+            <span>Imagens</span>
         </button>
     </div>
 
-    {/* TAB 1: AGENTE IA CONSTRUTOR */}
+    {/* TAB 1: AGENTE IA (QWEN 3.6 / LLAMA 70B) */}
     {rightSidebarTab === 'ai' && (
-        <div className="flex flex-col h-full min-h-0 p-4 overflow-y-auto space-y-4 bg-gray-50/50">
+        <div className="flex flex-col h-full min-h-0 p-4 overflow-y-auto space-y-4 bg-purple-50/30 dark:bg-slate-950/60">
             {/* Header Badge */}
-            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-3 shadow-xs">
-                <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span className="text-xs font-bold text-purple-900">Agente Arquiteto (Qwen 3.6)</span>
-                    </div>
-                    <span className="text-[10px] font-extrabold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full">
-                        100% Grátis
-                    </span>
+            <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 dark:from-purple-950/50 dark:to-indigo-950/50 border border-purple-200 dark:border-purple-800/60 p-3 rounded-xl space-y-1.5">
+                <div className="flex items-center gap-2 text-purple-900 dark:text-purple-200 font-bold text-xs">
+                    <Sparkles size={16} className="text-purple-600 dark:text-purple-400" />
+                    <span>Agente Especialista do Palieduca</span>
                 </div>
-                <p className="text-[11px] text-purple-700">
-                    Gere aulas completas, cards com ícones, textos didáticos e quizzes que entram direto no Canvas!
+                <p className="text-[11px] text-purple-700 dark:text-purple-300">
+                    Gere novas seções completas ou aprimore qualquer bloco selecionado com base nas diretrizes de Cuidados Paliativos!
                 </p>
             </div>
 
-            {/* Prompt Form */}
-            <div className="space-y-3 bg-white p-3.5 rounded-xl border border-warm-200 shadow-xs">
-                <label className="block text-xs font-bold text-warm-800">
-                    O que você gostaria de criar?
-                </label>
-                <textarea
-                    value={aiPrompt}
-                    onChange={(e) => setAiPrompt(e.target.value)}
-                    placeholder="Ex: Crie uma aula completa sobre Comunicação de Más Notícias com protocolo SPIKES, banner, 3 cards com ícones e um quiz de 2 perguntas..."
-                    className="w-full bg-warm-50 border border-warm-200 rounded-lg p-2.5 text-xs text-warm-900 focus:ring-2 focus:ring-purple-400 outline-none resize-none h-24 transition-shadow"
-                    disabled={isAiGenerating}
-                />
-
-                {/* Target Type Selector */}
-                <div>
-                    <label className="block text-[11px] font-semibold text-warm-600 mb-1.5">
-                        Tipo de Conteúdo:
-                    </label>
-                    <div className="grid grid-cols-2 gap-1.5">
-                        {[
-                            { id: 'full_page', label: '🚀 Aula Completa' },
-                            { id: 'cards', label: '🎴 Cards c/ Ícones' },
-                            { id: 'quiz', label: '❓ Quiz Fixação' },
-                            { id: 'text', label: '📖 Texto Teórico' },
-                            { id: 'flashcard', label: '🗂️ Flashcards' },
-                            { id: 'hero', label: '✨ Banner Hero' },
-                        ].map(t => (
-                            <button
-                                key={t.id}
-                                type="button"
-                                onClick={() => setAiTargetType(t.id)}
-                                className={`text-[11px] py-1.5 px-2 rounded-lg border font-medium transition-all text-left ${
-                                    aiTargetType === t.id
-                                        ? 'bg-purple-50 text-purple-700 border-purple-300 font-bold shadow-2xs'
-                                        : 'bg-white text-warm-600 border-warm-200 hover:bg-warm-50'
-                                }`}
-                            >
-                                {t.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Quick Suggestion Chips */}
-                <div>
-                    <label className="block text-[11px] font-semibold text-warm-600 mb-1">
-                        Sugestões rápidas de temas:
-                    </label>
-                    <div className="flex flex-wrap gap-1">
-                        {[
-                            'Comunicação SPIKES',
-                            'Escala de Dor OMS',
-                            'Bioética e Autonomia',
-                            'Luto e Apoio Familiar'
-                        ].map((chip) => (
-                            <button
-                                key={chip}
-                                type="button"
-                                onClick={() => {
-                                    setAiPrompt(`Crie uma aula completa sobre ${chip} com introdução, cards explicativos com ícones e um quiz de fixação.`);
-                                    setAiTargetType('full_page');
-                                }}
-                                className="text-[10px] bg-warm-100 hover:bg-purple-100 text-warm-700 hover:text-purple-800 px-2 py-0.5 rounded-full border border-warm-200 transition-colors"
-                            >
-                                + {chip}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Generate Button */}
+            {/* Sub-Tabs: Criar Novos Blocos vs Editar Bloco Selecionado */}
+            <div className="flex bg-warm-100 dark:bg-slate-800 p-1 rounded-xl gap-1">
                 <button
                     type="button"
-                    onClick={() => handleAiGenerate()}
-                    disabled={!aiPrompt.trim() || isAiGenerating}
-                    className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-bold text-xs shadow-md hover:shadow-lg disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    onClick={() => setAiMode('create')}
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
+                        aiMode === 'create'
+                            ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
+                            : 'text-warm-600 dark:text-slate-400 hover:text-warm-900 dark:hover:text-white'
+                    }`}
                 >
-                    {isAiGenerating ? (
-                        <>
-                            <Loader2 size={16} className="animate-spin" />
-                            <span>Agente IA Criando Blocos...</span>
-                        </>
-                    ) : (
-                        <>
-                            <Wand2 size={16} />
-                            <span>Gerar Estrutura com Agente IA</span>
-                        </>
-                    )}
+                    <Plus size={13} />
+                    <span>Criar Blocos</span>
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setAiMode('edit')}
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
+                        aiMode === 'edit'
+                            ? 'bg-purple-600 text-white shadow-xs'
+                            : 'text-warm-600 dark:text-slate-400 hover:text-warm-900 dark:hover:text-white'
+                    }`}
+                >
+                    <Wand2 size={13} />
+                    <span>Editar Bloco {selectedBlockId ? '●' : ''}</span>
                 </button>
             </div>
 
-            {/* Generated Blocks Preview & Insertion */}
-            {generatedBlocksResult && (
-                <div className="bg-white border-2 border-purple-200 rounded-xl p-3.5 space-y-3 shadow-md animate-slide-down">
-                    <div className="flex items-start justify-between gap-2 border-b border-purple-100 pb-2">
-                        <div>
-                            <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider">
-                                ✨ Estrutura Gerada
-                            </span>
-                            <p className="text-xs font-semibold text-warm-900 mt-0.5">
-                                {generatedBlocksResult.summary}
+            {/* MODO 1: EDITAR BLOCO SELECIONADO */}
+            {aiMode === 'edit' && (
+                <div className="space-y-3.5">
+                    {selectedBlockId && blocks.find(b => b.id === selectedBlockId) ? (
+                        (() => {
+                            const currentSelectedBlock = blocks.find(b => b.id === selectedBlockId)!;
+                            const blockTypeLabel = BLOCK_TEMPLATES.find(t => t.type === currentSelectedBlock.type)?.label || currentSelectedBlock.type;
+
+                            return (
+                                <div className="space-y-3 bg-white dark:bg-slate-900 p-3.5 rounded-xl border-2 border-purple-300 dark:border-purple-700/80 shadow-xs">
+                                    <div className="flex items-center justify-between pb-2 border-b border-purple-100 dark:border-slate-800">
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                                            <span className="text-xs font-bold text-purple-950 dark:text-purple-200">
+                                                Editando: {blockTypeLabel}
+                                            </span>
+                                        </div>
+                                        <span className="text-[10px] text-warm-400 dark:text-slate-500 font-mono">
+                                            #{currentSelectedBlock.id.slice(-6)}
+                                        </span>
+                                    </div>
+
+                                    {/* Quick AI Action Chips */}
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-warm-700 dark:text-slate-300 mb-1.5">
+                                            Ações rápidas de melhoria (1 clique):
+                                        </label>
+                                        <div className="flex flex-col gap-1.5">
+                                            {[
+                                                { label: '✨ Aprofundar explicação teórica com diretrizes ANCP/OMS', prompt: 'Aprofunde e enriqueça a explicação teórica deste bloco com embasamento científico nas diretrizes de Cuidados Paliativos (ANCP/OMS), detalhes práticos e formatação rica com tópicos e termos em negrito.' },
+                                                { label: '🩺 Ajustar para protocolos clínicos e condutas', prompt: 'Refine o conteúdo deste bloco para focar nas condutas assistenciais, protocolos consagrados (ex: SPIKES, Escada de Dor OMS, ESAS) e segurança do paciente.' },
+                                                { label: '💡 Adicionar exemplos práticos e humanizados', prompt: 'Adicione exemplos práticos, diálogos ou condutas assistenciais humanizadas no conteúdo deste bloco.' },
+                                                ...(currentSelectedBlock.type === 'FeatureCardsBlock' ? [
+                                                    { label: '🎴 Adicionar mais 2 tópicos/cards complementares', prompt: 'Mantenha os cards existentes e adicione mais 2 cards com ícones pertinentes e descrições detalhadas aprofundando o tema.' }
+                                                ] : []),
+                                                { label: '✂️ Resumir e tornar mais direto e objetivo', prompt: 'Reescreva o conteúdo deste bloco de forma mais concisa, direta e pontual, mantendo todas as informações clínicas essenciais.' },
+                                                { label: '🎯 Revisar gramática, tom e clareza pedagógica', prompt: 'Revise o texto deste bloco para garantir clareza pedagógica impecável, correção gramatical e tom acolhedor e profissional.' }
+                                            ].map((act, aIdx) => (
+                                                <button
+                                                    key={aIdx}
+                                                    type="button"
+                                                    disabled={isAiEditing}
+                                                    onClick={() => {
+                                                        setAiEditInstruction(act.prompt);
+                                                        handleAiEditBlock(act.prompt, false);
+                                                    }}
+                                                    className="text-[11px] p-2 rounded-lg bg-purple-50/80 dark:bg-slate-800 hover:bg-purple-100 dark:hover:bg-purple-950/60 text-purple-900 dark:text-purple-200 border border-purple-200/80 dark:border-slate-700 text-left font-medium transition-all hover:translate-x-0.5 cursor-pointer disabled:opacity-50"
+                                                >
+                                                    {act.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Custom Prompt Textarea */}
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-warm-800 dark:text-slate-200 mb-1">
+                                            Ou escreva como deseja alterar:
+                                        </label>
+                                        <textarea
+                                            value={aiEditInstruction}
+                                            onChange={(e) => setAiEditInstruction(e.target.value)}
+                                            placeholder="Ex: Altere o foco para o protocolo SPIKES etapa por etapa; adicione detalhes sobre titulação de morfina..."
+                                            className="w-full bg-warm-50 dark:bg-slate-950 border border-warm-200 dark:border-slate-700 rounded-lg p-2.5 text-xs text-warm-900 dark:text-slate-100 focus:ring-2 focus:ring-purple-400 outline-none resize-none h-20"
+                                            disabled={isAiEditing}
+                                        />
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="space-y-2 pt-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleAiEditBlock(undefined, false)}
+                                            disabled={!aiEditInstruction.trim() || isAiEditing}
+                                            className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-bold text-xs shadow-md disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                                        >
+                                            {isAiEditing ? (
+                                                <>
+                                                    <Loader2 size={15} className="animate-spin" />
+                                                    <span>Agente IA Editando Bloco...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Wand2 size={15} />
+                                                    <span>🪄 Aplicar Edição no Bloco</span>
+                                                </>
+                                            )}
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => handleAiEditBlock(undefined, true)}
+                                            disabled={!aiEditInstruction.trim() || isAiEditing}
+                                            className="w-full py-2 px-3 bg-white dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-slate-700 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-slate-700 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                            title="Gera a versão melhorada e insere logo abaixo, sem substituir o original"
+                                        >
+                                            <Plus size={14} />
+                                            <span>Inserir como Novo Bloco (Duplicar e Melhorar)</span>
+                                        </button>
+                                    </div>
+
+                                    {aiEditSummary && (
+                                        <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg text-emerald-900 dark:text-emerald-200 text-xs flex items-start gap-2">
+                                            <CheckCircle2 size={15} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                                            <span>{aiEditSummary}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })()
+                    ) : (
+                        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-warm-200 dark:border-slate-800 text-center space-y-3">
+                            <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 mx-auto flex items-center justify-center">
+                                <Wand2 size={24} />
+                            </div>
+                            <h4 className="text-sm font-bold text-warm-900 dark:text-white">Nenhum bloco selecionado</h4>
+                            <p className="text-xs text-warm-500 dark:text-slate-400 leading-relaxed">
+                                Clique em qualquer bloco no canvas central para editá-lo com a inteligência artificial, ou crie novos blocos na aba "Criar Blocos".
                             </p>
+                            {blocks.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedBlockId(blocks[0].id)}
+                                    className="px-3 py-1.5 bg-purple-100 dark:bg-purple-950/60 hover:bg-purple-200 dark:hover:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                                >
+                                    Selecionar Bloco 1 da Página
+                                </button>
+                            )}
                         </div>
-                        <button 
-                            onClick={() => setGeneratedBlocksResult(null)} 
-                            className="text-warm-400 hover:text-warm-700 p-1 rounded-md"
-                            title="Limpar sugestão"
+                    )}
+                </div>
+            )}
+
+            {/* MODO 2: CRIAR NOVOS BLOCOS */}
+            {aiMode === 'create' && (
+                <div className="space-y-3.5">
+                    {/* Prompt Form */}
+                    <div className="space-y-3 bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-warm-200 dark:border-slate-800 shadow-xs">
+                        <label className="block text-xs font-bold text-warm-800 dark:text-slate-200">
+                            O que você gostaria de criar?
+                        </label>
+                        <textarea
+                            value={aiPrompt}
+                            onChange={(e) => setAiPrompt(e.target.value)}
+                            placeholder="Ex: Crie uma seção completa sobre Comunicação de Más Notícias com protocolo SPIKES, banner, 3 cards com ícones e um quiz..."
+                            className="w-full bg-warm-50 dark:bg-slate-950 border border-warm-200 dark:border-slate-700 rounded-lg p-2.5 text-xs text-warm-900 dark:text-slate-100 focus:ring-2 focus:ring-purple-400 outline-none resize-none h-24 transition-shadow"
+                            disabled={isAiGenerating}
+                        />
+
+                        {/* Target Type Selector */}
+                        <div>
+                            <label className="block text-[11px] font-semibold text-warm-600 dark:text-slate-400 mb-1.5">
+                                Tipo de Conteúdo:
+                            </label>
+                            <div className="grid grid-cols-2 gap-1.5">
+                                {[
+                                    { id: 'full_page', label: '🚀 Aula Completa' },
+                                    { id: 'cards', label: '🎴 Cards c/ Ícones' },
+                                    { id: 'quiz', label: '❓ Quiz Fixação' },
+                                    { id: 'text', label: '📖 Texto Teórico' },
+                                    { id: 'flashcard', label: '🗂️ Flashcards' },
+                                    { id: 'clinical_case', label: '🩺 Caso Clínico' },
+                                ].map(t => (
+                                    <button
+                                        key={t.id}
+                                        type="button"
+                                        onClick={() => setAiTargetType(t.id)}
+                                        className={`text-[11px] py-1.5 px-2 rounded-lg border font-medium transition-all text-left ${
+                                            aiTargetType === t.id
+                                                ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-700 font-bold shadow-2xs'
+                                                : 'bg-white dark:bg-slate-800 text-warm-600 dark:text-slate-300 border-warm-200 dark:border-slate-700 hover:bg-warm-50 dark:hover:bg-slate-700'
+                                        }`}
+                                    >
+                                        {t.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Quick Suggestion Chips */}
+                        <div>
+                            <label className="block text-[11px] font-semibold text-warm-600 dark:text-slate-400 mb-1">
+                                Sugestões rápidas de temas:
+                            </label>
+                            <div className="flex flex-wrap gap-1">
+                                {[
+                                    'Comunicação SPIKES',
+                                    'Escala de Dor OMS',
+                                    'Bioética e Autonomia',
+                                    'Luto e Apoio Familiar'
+                                ].map((chip) => (
+                                    <button
+                                        key={chip}
+                                        type="button"
+                                        onClick={() => {
+                                            setAiPrompt(`Crie uma aula completa sobre ${chip} com introdução, cards explicativos com ícones e um quiz de fixação.`);
+                                            setAiTargetType('full_page');
+                                        }}
+                                        className="text-[10px] bg-warm-100 dark:bg-slate-800 hover:bg-purple-100 dark:hover:bg-purple-950 text-warm-700 dark:text-slate-300 hover:text-purple-800 dark:hover:text-purple-200 px-2 py-0.5 rounded-full border border-warm-200 dark:border-slate-700 transition-colors"
+                                    >
+                                        + {chip}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Generate Button */}
+                        <button
+                            type="button"
+                            onClick={() => handleAiGenerate()}
+                            disabled={!aiPrompt.trim() || isAiGenerating}
+                            className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-bold text-xs shadow-md hover:shadow-lg disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
                         >
-                            <X size={14} />
+                            {isAiGenerating ? (
+                                <>
+                                    <Loader2 size={16} className="animate-spin" />
+                                    <span>Agente IA Criando Blocos...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Wand2 size={16} />
+                                    <span>Gerar Estrutura com Agente IA</span>
+                                </>
+                            )}
                         </button>
                     </div>
 
-                    {/* Block Preview List */}
-                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                        {generatedBlocksResult.blocks.map((b, i) => (
-                            <div key={b.id || i} className="flex items-center justify-between p-2 bg-purple-50/70 border border-purple-100 rounded-lg text-xs">
-                                <div className="flex items-center gap-2 truncate">
-                                    <span className="font-bold text-purple-800 bg-purple-200/70 px-1.5 py-0.5 rounded text-[10px]">
-                                        {b.type.replace('Block', '')}
+                    {/* Generated Blocks Preview & Insertion */}
+                    {generatedBlocksResult && (
+                        <div className="bg-white dark:bg-slate-900 border-2 border-purple-200 dark:border-purple-800 rounded-xl p-3.5 space-y-3 shadow-md animate-slide-down">
+                            <div className="flex items-start justify-between gap-2 border-b border-purple-100 dark:border-slate-800 pb-2">
+                                <div>
+                                    <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                                        ✨ Estrutura Gerada
                                     </span>
-                                    <span className="text-warm-700 truncate text-[11px]">
-                                        {b.data?.title || b.data?.headline || b.data?.question || 'Bloco de Conteúdo'}
-                                    </span>
+                                    <p className="text-xs font-semibold text-warm-900 dark:text-slate-100 mt-0.5">
+                                        {generatedBlocksResult.summary}
+                                    </p>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => handleInsertSingleGeneratedBlock(b)}
-                                    className="p-1 text-purple-700 hover:bg-purple-200 rounded text-[10px] font-bold shrink-0 flex items-center gap-0.5"
-                                    title="Inserir apenas este bloco"
+                                <button 
+                                    onClick={() => setGeneratedBlocksResult(null)} 
+                                    className="text-warm-400 dark:text-slate-400 hover:text-warm-700 dark:hover:text-slate-200 p-1 rounded-md"
+                                    title="Limpar sugestão"
                                 >
-                                    <Plus size={12} /> Inserir
+                                    <X size={14} />
                                 </button>
                             </div>
-                        ))}
-                    </div>
 
-                    {/* Insert All Button */}
-                    <button
-                        type="button"
-                        onClick={handleInsertAllGeneratedBlocks}
-                        className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                        <CheckCheck size={16} />
-                        <span>Inserir Todos os {generatedBlocksResult.blocks.length} Blocos no Canvas</span>
-                    </button>
+                            {/* Block Preview List */}
+                            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                                {generatedBlocksResult.blocks.map((b, i) => (
+                                    <div key={b.id || i} className="flex items-center justify-between p-2 bg-purple-50/70 dark:bg-slate-800/80 border border-purple-100 dark:border-slate-700 rounded-lg text-xs">
+                                        <div className="flex items-center gap-2 truncate">
+                                            <span className="font-bold text-purple-800 dark:text-purple-300 bg-purple-200/70 dark:bg-purple-950 px-1.5 py-0.5 rounded text-[10px]">
+                                                {b.type.replace('Block', '')}
+                                            </span>
+                                            <span className="text-warm-700 dark:text-slate-300 truncate text-[11px]">
+                                                {b.data?.title || b.data?.headline || b.data?.question || 'Bloco de Conteúdo'}
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleInsertSingleGeneratedBlock(b)}
+                                            className="p-1 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900 rounded text-[10px] font-bold shrink-0 flex items-center gap-0.5"
+                                            title="Inserir apenas este bloco"
+                                        >
+                                            <Plus size={12} /> Inserir
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Insert All Button */}
+                            <button
+                                type="button"
+                                onClick={handleInsertAllGeneratedBlocks}
+                                className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            >
+                                <CheckCheck size={16} />
+                                <span>Inserir Todos os {generatedBlocksResult.blocks.length} Blocos no Canvas</span>
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

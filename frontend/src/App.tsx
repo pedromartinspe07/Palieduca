@@ -62,6 +62,26 @@ const AnimatedRoutes: React.FC = () => {
   );
 };
 
+const AppContent: React.FC = () => {
+  const location = useLocation();
+  const isEditor = location.pathname.startsWith('/editor');
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background dark:bg-[#0b1329] text-warm-900 dark:text-slate-100 relative selection:bg-primary/30 transition-colors duration-300">
+      <SiteIntroPreloader />
+      {!isEditor && <Header />}
+      <main className="flex-grow">
+        <AnimatedRoutes />
+      </main>
+      {!isEditor && <Footer />}
+      {!isEditor && <FontSizeControl />}
+      {!isEditor && <VLibras />}
+      {!isEditor && <ChatBox />}
+      {!isEditor && <PWAInstallPrompt />}
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   const keepAlive = useCallback(async () => {
     try { await fetch(`${API_URL}/api/health`); } catch { /* silent */ }
@@ -76,18 +96,7 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-background dark:bg-[#0b1329] text-warm-900 dark:text-slate-100 relative selection:bg-primary/30 transition-colors duration-300">
-        <SiteIntroPreloader />
-        <Header />
-        <main className="flex-grow">
-          <AnimatedRoutes />
-        </main>
-        <Footer />
-        <FontSizeControl />
-        <VLibras />
-        <ChatBox />
-        <PWAInstallPrompt />
-      </div>
+      <AppContent />
     </Router>
   );
 };

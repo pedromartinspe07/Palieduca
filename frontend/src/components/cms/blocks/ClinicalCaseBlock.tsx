@@ -157,10 +157,10 @@ const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected,
                 e.stopPropagation();
                 onSelect(block.id);
             }}
-            className={`my-6 rounded-3xl bg-white p-6 sm:p-8 border-2 transition-all shadow-md relative ${
+            className={`my-6 rounded-3xl bg-white dark:bg-slate-900 p-6 sm:p-8 border-2 transition-all shadow-md relative ${
                 isEditing ? 'cursor-pointer' : ''
             } ${
-                isSelected ? 'border-primary ring-4 ring-primary/20 shadow-xl' : 'border-warm-200 hover:border-teal-400'
+                isSelected ? 'border-primary ring-4 ring-primary/20 shadow-xl' : 'border-warm-200 dark:border-slate-800 hover:border-teal-400'
             }`}
         >
             {/* Badge de Seleção no Editor */}
@@ -172,24 +172,24 @@ const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected,
             )}
 
             {/* Tag Superior do Bloco */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-warm-200">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-warm-200 dark:border-slate-800">
                 <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-teal-100 text-teal-800 flex items-center justify-center border border-teal-200 shrink-0 shadow-xs">
+                    <div className="w-11 h-11 rounded-2xl bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 flex items-center justify-center border border-teal-200 dark:border-teal-800 shrink-0 shadow-xs">
                         <Stethoscope size={22} />
                     </div>
                     <div>
-                        <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200 text-[10px] font-extrabold uppercase tracking-wider">
-                            <Activity size={12} className="text-teal-600" />
+                        <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 text-[10px] font-extrabold uppercase tracking-wider">
+                            <Activity size={12} className="text-teal-600 dark:text-teal-400" />
                             Caso Clínico Interativo &bull; Tomada de Decisão
                         </div>
-                        <h3 className="text-base sm:text-lg font-bold text-warm-900 mt-1">
+                        <h3 className="text-base sm:text-lg font-bold text-warm-900 dark:text-slate-100 mt-1">
                             {data.patient_name || 'Paciente sem identificação'}
                         </h3>
                     </div>
                 </div>
 
                 {data.setting && (
-                    <span className="text-[11px] font-semibold text-warm-600 bg-warm-50 px-3 py-1.5 rounded-xl border border-warm-200 shadow-2xs">
+                    <span className="text-[11px] font-semibold text-warm-600 dark:text-slate-300 bg-warm-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-warm-200 dark:border-slate-700 shadow-2xs">
                         📍 {data.setting}
                     </span>
                 )}
@@ -197,59 +197,59 @@ const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected,
 
             {/* Diagnóstico e Sinais Vitais */}
             <div className="my-5 space-y-3.5">
-                <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 text-xs text-amber-950 flex items-start gap-3">
-                    <User size={18} className="text-amber-700 shrink-0 mt-0.5" />
+                <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-600/50 text-xs text-amber-950 dark:text-amber-100 flex items-start gap-3 shadow-xs">
+                    <User size={18} className="text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
                     <div>
-                        <strong className="font-bold">Diagnóstico e Histórico de Base:</strong>
-                        <p className="mt-0.5 text-amber-900 leading-relaxed">{data.diagnosis || 'Não especificado'}</p>
+                        <strong className="font-bold text-amber-950 dark:text-amber-200">Diagnóstico e Histórico de Base:</strong>
+                        <p className="mt-0.5 text-amber-900 dark:text-slate-100 font-medium leading-relaxed">{data.diagnosis || 'Não especificado'}</p>
                     </div>
                 </div>
 
                 {/* Grid de Sinais Vitais */}
                 {((data.vitals && Object.keys(data.vitals).length > 0) || isEditing) && (
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-0.5">
-                        <div className="p-2.5 bg-warm-50/80 rounded-xl border border-warm-200 text-center shadow-2xs">
-                            <span className="text-[10px] text-warm-400 font-bold uppercase block">P.A.</span>
-                            <span className="text-xs font-black text-warm-800">{data.vitals?.pa || (isEditing ? '130/80 mmHg' : '—')}</span>
+                        <div className="p-2.5 bg-warm-50/80 dark:bg-slate-800 rounded-xl border border-warm-200 dark:border-slate-700 text-center shadow-2xs">
+                            <span className="text-[10px] text-warm-500 dark:text-slate-300 font-bold uppercase block">P.A.</span>
+                            <span className="text-xs font-black text-warm-900 dark:text-white">{data.vitals?.pa || (isEditing ? '130/80 mmHg' : '—')}</span>
                         </div>
-                        <div className="p-2.5 bg-warm-50/80 rounded-xl border border-warm-200 text-center shadow-2xs">
-                            <span className="text-[10px] text-warm-400 font-bold uppercase block">F.C.</span>
-                            <span className="text-xs font-black text-warm-800">{data.vitals?.fc || (isEditing ? '102 bpm' : '—')}</span>
+                        <div className="p-2.5 bg-warm-50/80 dark:bg-slate-800 rounded-xl border border-warm-200 dark:border-slate-700 text-center shadow-2xs">
+                            <span className="text-[10px] text-warm-500 dark:text-slate-300 font-bold uppercase block">F.C.</span>
+                            <span className="text-xs font-black text-warm-900 dark:text-white">{data.vitals?.fc || (isEditing ? '102 bpm' : '—')}</span>
                         </div>
-                        <div className="p-2.5 bg-warm-50/80 rounded-xl border border-warm-200 text-center shadow-2xs">
-                            <span className="text-[10px] text-warm-400 font-bold uppercase block">F.R.</span>
-                            <span className="text-xs font-black text-rose-700">{data.vitals?.fr || (isEditing ? '28 irpm' : '—')}</span>
+                        <div className="p-2.5 bg-warm-50/80 dark:bg-slate-800 rounded-xl border border-warm-200 dark:border-slate-700 text-center shadow-2xs">
+                            <span className="text-[10px] text-warm-500 dark:text-slate-300 font-bold uppercase block">F.R.</span>
+                            <span className="text-xs font-black text-rose-600 dark:text-rose-400">{data.vitals?.fr || (isEditing ? '28 irpm' : '—')}</span>
                         </div>
-                        <div className="p-2.5 bg-warm-50/80 rounded-xl border border-warm-200 text-center shadow-2xs">
-                            <span className="text-[10px] text-warm-400 font-bold uppercase block">Dor (EVA)</span>
-                            <span className="text-xs font-black text-rose-700">{data.vitals?.dor || (isEditing ? '7/10' : '—')}</span>
+                        <div className="p-2.5 bg-warm-50/80 dark:bg-slate-800 rounded-xl border border-warm-200 dark:border-slate-700 text-center shadow-2xs">
+                            <span className="text-[10px] text-warm-500 dark:text-slate-300 font-bold uppercase block">Dor (EVA)</span>
+                            <span className="text-xs font-black text-rose-600 dark:text-rose-400">{data.vitals?.dor || (isEditing ? '7/10' : '—')}</span>
                         </div>
-                        <div className="p-2.5 bg-warm-50/80 rounded-xl border border-warm-200 text-center shadow-2xs">
-                            <span className="text-[10px] text-warm-400 font-bold uppercase block">SpO2</span>
-                            <span className="text-xs font-black text-warm-800">{data.vitals?.spo2 || (isEditing ? '89%' : '—')}</span>
+                        <div className="p-2.5 bg-warm-50/80 dark:bg-slate-800 rounded-xl border border-warm-200 dark:border-slate-700 text-center shadow-2xs">
+                            <span className="text-[10px] text-warm-500 dark:text-slate-300 font-bold uppercase block">SpO2</span>
+                            <span className="text-xs font-black text-warm-900 dark:text-white">{data.vitals?.spo2 || (isEditing ? '89%' : '—')}</span>
                         </div>
-                        <div className="p-2.5 bg-warm-50/80 rounded-xl border border-warm-200 text-center shadow-2xs">
-                            <span className="text-[10px] text-warm-400 font-bold uppercase block">Consciência</span>
-                            <span className="text-[11px] font-bold text-warm-800 truncate block">{data.vitals?.consciencia || (isEditing ? 'Lúcida e ansiosa' : '—')}</span>
+                        <div className="p-2.5 bg-warm-50/80 dark:bg-slate-800 rounded-xl border border-warm-200 dark:border-slate-700 text-center shadow-2xs">
+                            <span className="text-[10px] text-warm-500 dark:text-slate-300 font-bold uppercase block">Consciência</span>
+                            <span className="text-[11px] font-bold text-warm-900 dark:text-white truncate block">{data.vitals?.consciencia || (isEditing ? 'Lúcida e ansiosa' : '—')}</span>
                         </div>
                     </div>
                 )}
 
                 {/* Narrativa da Situação Clínica */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-warm-50/60 border border-warm-200">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-warm-400 block mb-1.5">
+                <div className="p-4 sm:p-5 rounded-2xl bg-warm-50/80 dark:bg-slate-800/90 border border-warm-200 dark:border-slate-700">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-warm-600 dark:text-teal-400 block mb-1.5">
                         Situação Clínica no Leito:
                     </span>
-                    <p className="text-xs sm:text-sm text-warm-800 leading-relaxed font-serif">
+                    <p className="text-xs sm:text-sm text-warm-900 dark:text-slate-100 leading-relaxed font-sans">
                         {data.clinical_scenario || 'Cenário clínico a ser preenchido.'}
                     </p>
                 </div>
             </div>
 
             {/* Pergunta de Decisão */}
-            <div className="mt-6 pt-5 border-t border-warm-200">
-                <div className="flex items-center gap-2 text-primary font-bold text-xs sm:text-sm mb-3">
-                    <HeartPulse size={18} className="text-primary shrink-0" />
+            <div className="mt-6 pt-5 border-t border-warm-200 dark:border-slate-800">
+                <div className="flex items-center gap-2 text-primary dark:text-teal-400 font-bold text-xs sm:text-sm mb-3">
+                    <HeartPulse size={18} className="text-primary dark:text-teal-400 shrink-0" />
                     <h4>{data.decision_prompt || 'Qual a conduta de enfermagem prioritária?'}</h4>
                 </div>
 
@@ -258,16 +258,16 @@ const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected,
                     {data.decisions?.map((decision, idx) => {
                         const isSelectedOption = selectedDecisionId === decision.id;
                         
-                        let borderStyle = 'border-warm-200 bg-warm-50/40 hover:border-teal-400 hover:bg-teal-50/30';
+                        let borderStyle = 'border-warm-200 dark:border-slate-700 bg-warm-50/40 dark:bg-slate-800/40 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50/30 dark:hover:bg-slate-800';
                         if (isSelectedOption && !isSubmitted) {
-                            borderStyle = 'border-teal-600 bg-teal-50/70 ring-2 ring-teal-500/20';
+                            borderStyle = 'border-teal-600 dark:border-teal-500 bg-teal-50/70 dark:bg-teal-950/50 ring-2 ring-teal-500/20';
                         } else if (isSubmitted && isSelectedOption) {
                             if (decision.rating === 'optimal') {
-                                borderStyle = 'border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-500/20';
+                                borderStyle = 'border-emerald-500 dark:border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/50 ring-2 ring-emerald-500/20';
                             } else if (decision.rating === 'acceptable') {
-                                borderStyle = 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20';
+                                borderStyle = 'border-amber-500 dark:border-amber-500 bg-amber-50/70 dark:bg-amber-950/50 ring-2 ring-amber-500/20';
                             } else {
-                                borderStyle = 'border-rose-500 bg-rose-50/70 ring-2 ring-rose-500/20';
+                                borderStyle = 'border-rose-500 dark:border-rose-500 bg-rose-50/70 dark:bg-rose-950/50 ring-2 ring-rose-500/20';
                             }
                         }
 
@@ -279,11 +279,11 @@ const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected,
                                 className={`w-full text-left p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 flex items-start gap-3 cursor-pointer ${borderStyle}`}
                             >
                                 <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 transition-all ${
-                                    isSelectedOption ? 'bg-primary text-white shadow-xs' : 'bg-warm-200 text-warm-700'
+                                    isSelectedOption ? 'bg-primary text-white shadow-xs' : 'bg-warm-200 dark:bg-slate-700 text-warm-700 dark:text-slate-200'
                                 }`}>
                                     {String.fromCharCode(65 + idx)}
                                 </div>
-                                <div className="flex-1 text-xs sm:text-sm text-warm-800 leading-relaxed font-medium">
+                                <div className="flex-1 text-xs sm:text-sm text-warm-800 dark:text-slate-200 leading-relaxed font-medium">
                                     {decision.label}
                                 </div>
                             </button>
@@ -311,14 +311,14 @@ const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected,
                     <div className="mt-6 animate-scale-in">
                         <div className={`p-5 sm:p-6 rounded-2xl border-2 shadow-md space-y-3.5 ${
                             activeDecision.rating === 'optimal'
-                                ? 'bg-emerald-50/90 border-emerald-400 text-emerald-950'
+                                ? 'bg-emerald-50/90 dark:bg-emerald-950/50 border-emerald-400 dark:border-emerald-700 text-emerald-950 dark:text-emerald-100'
                                 : activeDecision.rating === 'acceptable'
-                                ? 'bg-amber-50/90 border-amber-400 text-amber-950'
-                                : 'bg-rose-50/90 border-rose-400 text-rose-950'
+                                ? 'bg-amber-50/90 dark:bg-amber-950/50 border-amber-400 dark:border-amber-700 text-amber-950 dark:text-amber-100'
+                                : 'bg-rose-50/90 dark:bg-rose-950/50 border-rose-400 dark:border-rose-700 text-rose-950 dark:text-rose-100'
                         }`}>
                             
                             {/* Header do Desfecho */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-warm-300/40">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-warm-300/40 dark:border-slate-700">
                                 <div className="flex items-center gap-3">
                                     {activeDecision.rating === 'optimal' && (
                                         <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -339,16 +339,16 @@ const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected,
                                     <div>
                                         <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                                             activeDecision.rating === 'optimal'
-                                                ? 'bg-emerald-200/80 text-emerald-900'
+                                                ? 'bg-emerald-200/80 dark:bg-emerald-900/80 text-emerald-900 dark:text-emerald-200'
                                                 : activeDecision.rating === 'acceptable'
-                                                ? 'bg-amber-200/80 text-amber-900'
-                                                : 'bg-rose-200/80 text-rose-900'
+                                                ? 'bg-amber-200/80 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200'
+                                                : 'bg-rose-200/80 dark:bg-rose-900/80 text-rose-900 dark:text-rose-200'
                                         }`}>
                                             {activeDecision.rating === 'optimal' && '✨ Conduta Padrão-Ouro Recomendada'}
                                             {activeDecision.rating === 'acceptable' && '⚠️ Conduta Parcialmente Adequada'}
                                             {activeDecision.rating === 'inadequate' && '❌ Conduta Inadequada / Desfavorável'}
                                         </span>
-                                        <h4 className="text-sm sm:text-base font-bold mt-1 text-warm-900">
+                                        <h4 className="text-sm sm:text-base font-bold mt-1 text-warm-900 dark:text-slate-100">
                                             {activeDecision.outcome_title}
                                         </h4>
                                     </div>
@@ -357,7 +357,7 @@ const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected,
                                 <button
                                     type="button"
                                     onClick={(e) => handleReset(e)}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-warm-50 text-warm-700 text-xs font-bold rounded-xl border border-warm-300 shadow-2xs transition-all cursor-pointer shrink-0"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-warm-50 dark:hover:bg-slate-700 text-warm-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-warm-300 dark:border-slate-700 shadow-2xs transition-all cursor-pointer shrink-0"
                                 >
                                     <RotateCcw size={13} />
                                     <span>Simular Outra Conduta</span>
@@ -367,21 +367,21 @@ const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected,
                             {/* Descrição do Desfecho */}
                             <div className="space-y-2.5">
                                 <div>
-                                    <strong className="text-[11px] uppercase tracking-wider font-bold text-warm-600 block mb-0.5">
+                                    <strong className="text-[11px] uppercase tracking-wider font-bold text-warm-600 dark:text-slate-400 block mb-0.5">
                                         Evolução do Paciente:
                                     </strong>
-                                    <p className="text-xs sm:text-sm text-warm-800 leading-relaxed">
+                                    <p className="text-xs sm:text-sm text-warm-800 dark:text-slate-200 leading-relaxed">
                                         {activeDecision.outcome_description}
                                     </p>
                                 </div>
 
                                 {/* Justificativa Científica */}
-                                <div className="p-3.5 rounded-xl bg-white/90 border border-warm-200/80 space-y-1">
-                                    <div className="flex items-center gap-1.5 text-primary font-bold text-xs">
+                                <div className="p-3.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-warm-200/80 dark:border-slate-800 space-y-1">
+                                    <div className="flex items-center gap-1.5 text-primary dark:text-teal-400 font-bold text-xs">
                                         <BookOpen size={13} />
                                         <span>Fundamentação Científica e Bioética:</span>
                                     </div>
-                                    <p className="text-xs text-warm-700 leading-relaxed font-light">
+                                    <p className="text-xs text-warm-700 dark:text-slate-300 leading-relaxed font-light">
                                         {activeDecision.scientific_rationale}
                                     </p>
                                 </div>

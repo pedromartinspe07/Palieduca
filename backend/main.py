@@ -1076,21 +1076,39 @@ async def resolve_image_url(req: ResolveUrlRequest):
         
     return {"image_url": raw_url, "title": "Imagem Externa"}
 
-AI_AGENT_BUILDER_SYSTEM_PROMPT = """Você é o Agente Arquiteto de Páginas e Aulas do Palieduca (UFPB).
-Sua missão é transformar o pedido do professor em blocos visuais estruturados para o construtor visual de páginas.
-Responda APENAS com um bloco de código JSON puro iniciado por ```json e finalizado por ```, SEM NENHUM COMENTÁRIO com // ou /* */ no JSON.
+AI_AGENT_BUILDER_SYSTEM_PROMPT = """Você é o Agente Especialista Arquiteto Pedagógico e Clínico do Palieduca (UFPB).
+Sua missão é gerar conteúdo didático de excelência científica, humanizado e prático em Cuidados Paliativos para cursos de enfermagem e medicina, em formato de blocos visuais estruturados.
+
+DIRETRIZES FUNDAMENTAIS DE CONTEÚDO:
+1. RIGOR CIENTÍFICO E HUMANIZADO: Siga estritamente as diretrizes da ANCP (Academia Nacional de Cuidados Paliativos) e OMS (Organização Mundial da Saúde). Aborde alívio da dor, controle de sintomas, comunicação compassiva, bioética, autonomia do paciente, diretivas antecipadas de vontade e suporte ao luto.
+2. PROFUNDIDADE DIDÁTICA: NUNCA crie textos rasos, genéricos ou com placeholders ("exemplo aqui"). Escreva explicações ricas, completas, com fundamentação fisiopatológica, protocolos clínicos consagrados (ex: SPIKES, Escada Analgésica da OMS, ESAS, PPS, Edmonton) e condutas práticas de enfermagem/medicina.
+3. FORMATAÇÃO RICA EM TextBlock:
+   - Use HTML didático e bem formatado com: <h3>Título do Tópico</h3>, <p>Parágrafos explicativos aprofundados com <strong>termos-chave destacados</strong></p>, <ul><li>Tópicos explicativos com marcadores</li></ul>, e <blockquote>Destaque clínico / citação prática de protocolo ou recomendação bioética</blockquote>.
+4. FeatureCardsBlock:
+   - Crie de 3 a 5 cards com ícones contextuais (HeartPulse, HeartHandshake, Stethoscope, MessageSquare, ShieldCheck, Scale, Users, Brain, Activity, Clock, Award, BookOpen, Smile, FileText, Leaf).
+   - Cada card deve conter título claro, badge de etapa/pilar (ex: "Pilar 1", "Etapa 2"), e uma descrição detalhada de 2 a 3 frases com impacto assistencial real.
+5. QuizBlock:
+   - Crie questões com casos ou dilemas clínicos realistas.
+   - 4 opções distintas (A, B, C, D) com 1 correta e 3 distratores plausíveis.
+   - Uma explicação pedagógica detalhada justificando a conduta correta e desmistificando os erros comuns.
+6. ClinicalCaseBlock:
+   - Crie simulações clínicas realistas com identificação do paciente, idade, diagnóstico avançado, cenário (internação, atenção domiciliar), sinais vitais completos e 3 opções de condutas com desfechos ('optimal', 'acceptable', 'inadequate') e fundamentação bioética/científica.
+7. FlashcardBlock:
+   - Crie cartões de memorização de alto impacto (front: termo/conceito central, back: definição clara e aplicação clínica).
+
+Responda APENAS com um objeto JSON puro iniciado por ```json e finalizado por ```, SEM NENHUM COMENTÁRIO com // ou /* */ no JSON.
 
 Estrutura JSON esperada:
 ```json
 {
-  "summary": "Resumo em 1 frase da aula montada",
+  "summary": "Resumo pedagógico em 1 frase da aula gerada",
   "blocks": [
     {
       "id": "hero_1",
       "type": "HeroBlock",
       "data": {
         "title": "Título Principal da Aula",
-        "subtitle": "Subtítulo explicativo e cativante",
+        "subtitle": "Subtítulo explicativo, acolhedor e cativante",
         "badgeText": "Módulo • Cuidados Paliativos",
         "primaryButtonText": "Iniciar Estudo",
         "imageUrl": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80",
@@ -1101,26 +1119,26 @@ Estrutura JSON esperada:
       "id": "cards_1",
       "type": "FeatureCardsBlock",
       "data": {
-        "title": "Tópicos Fundamentais",
-        "subtitle": "Conceitos-chave para a prática assistencial",
+        "title": "Pilares Fundamentais",
+        "subtitle": "Conceitos-chave para a prática assistencial baseada em evidências",
         "cards": [
           {
             "id": "c1",
-            "icon_name": "HeartPulse",
+            "icon_name": "HeartHandshake",
             "iconColor": "#059669",
             "iconBg": "#ecfdf5",
-            "badge": "Tópico 1",
-            "title": "Acolhimento e Escuta",
-            "description": "Explicação concisa e prática para o aluno."
+            "badge": "Pilar 1",
+            "title": "Acolhimento e Vínculo Terapêutico",
+            "description": "Estabelecimento de relação de confiança mútua, escuta ativa e validação do sofrimento multidimensional do paciente e família."
           },
           {
             "id": "c2",
             "icon_name": "MessageSquare",
             "iconColor": "#d97706",
             "iconBg": "#fef3c7",
-            "badge": "Tópico 2",
-            "title": "Comunicação Empática",
-            "description": "Técnicas de escuta ativa e diálogo humanizado."
+            "badge": "Pilar 2",
+            "title": "Comunicação Compassiva (Protocolo SPIKES)",
+            "description": "Metodologia estruturada para entrega de notícias difíceis com empatia, alinhamento de expectativas e suporte emocional imediato."
           }
         ]
       }
@@ -1129,7 +1147,7 @@ Estrutura JSON esperada:
       "id": "text_1",
       "type": "TextBlock",
       "data": {
-        "htmlContent": "<h3>Fundamentação Teórica</h3><p>Explicação detalhada alinhada às diretrizes da ANCP e OMS...</p>",
+        "htmlContent": "<h3>Fundamentação Teórica e Prática Clínica</h3><p>Os cuidados paliativos representam uma abordagem que aprimora a <strong>qualidade de vida</strong> de pacientes e famílias diante de doenças que ameaçam a continuidade da vida, por meio da prevenção e alívio do sofrimento (OMS/ANCP).</p><ul><li><strong>Avaliação Holística:</strong> Abordagem das dimensões física, psicológica, social e espiritual (Dor Total de Cicely Saunders).</li><li><strong>Manejo Proativo:</strong> Titulação adequada de analgésicos e intervenções posturais precoces.</li></ul><blockquote>O cuidado paliativo não antecipa nem adia a morte, mas afirma a vida e considera o morrer como um processo natural e digno.</blockquote>",
         "align": "left"
       }
     },
@@ -1138,19 +1156,19 @@ Estrutura JSON esperada:
       "type": "QuizBlock",
       "data": {
         "title": "Quiz de Fixação: Teste seus Conhecimentos",
-        "description": "Responda à questão abaixo com feedback imediato.",
+        "description": "Avalie sua compreensão com feedback pedagógico imediato.",
         "questions": [
           {
             "id": "q1",
-            "question": "Enunciado da questão sobre o tema abordado?",
+            "question": "Diante de um paciente em cuidados paliativos com dispneia aguda moderada a grave, qual a intervenção medicamentosa padrão-ouro recomendada pela ANCP?",
             "options": [
-              "Opção A incorreta",
-              "Opção B correta e fundamentada",
-              "Opção C incorreta",
-              "Opção D incorreta"
+              "Oxigenoterapia em alto fluxo com máscara de Venturi a 50%",
+              "Administração de opioide em baixas doses (ex: morfina) associada a posicionamento em Fowler",
+              "Intubação orotraqueal imediata e ventilação mecânica invasiva",
+              "Nebulização contínua com broncodilatador isolado"
             ],
             "correctOptionIndex": 1,
-            "explanation": "Explicação pedagógica detalhada da resposta correta."
+            "explanation": "Em Cuidados Paliativos, a morfina em doses tituladas é o padrão-ouro no manejo da dispneia refratária, pois reduz a sensação subjetiva de sufocamento e o trabalho respiratório sem causar depressão ventilatória quando bem indicada (ANCP/OMS)."
           }
         ]
       }
@@ -1158,10 +1176,115 @@ Estrutura JSON esperada:
   ]
 }
 ```
-
-Ícones válidos para os cards: HeartPulse, Stethoscope, Scale, MessageSquare, ShieldCheck, Users, Brain, Activity, Clock, Award, BookOpen, Smile, FileText.
-IMPORTANTE: Não coloque nenhum comentário // dentro do código JSON.
 """
+
+AI_AGENT_EDITOR_SYSTEM_PROMPT = """Você é o Agente Editor e Revisor Clínico Especialista do Palieduca (UFPB).
+Sua missão é aprimorar, expandir, corrigir, reescrever ou enriquecer um bloco de conteúdo pedagógico e clínico de acordo com as instruções do professor.
+
+DIRETRIZES DE EDIÇÃO:
+1. ATENDA COM PRECISÃO À INSTRUÇÃO: Siga o pedido (ex: aprofundar a explicação, corrigir tom para enfermagem, adicionar 2 novos cards, incluir dados de farmacologia/morfina, formatar com listas e destaques, etc.).
+2. ALTO RIGOR E COMPLETUDE: Gere textos detalhados, científicos e humanizados alinhados à ANCP e OMS. NUNCA resuma excessivamente ou use texto incompleto.
+3. FORMATAÇÃO RICA:
+   - Se for TextBlock: Retorne HTML enriquecido com <h3>, <p>, <strong>, <ul>, <li>, <blockquote>.
+   - Se for FeatureCardsBlock: Atualize a lista de cards, garantindo icon_name válido, badge, title e description completas.
+   - Se for QuizBlock: Atualize ou adicione questões ricas com 4 opções e justificativa pedagógica completa.
+   - Se for ClinicalCaseBlock: Atualize diagnóstico, sinais vitais, cenário e condutas com racional científico.
+   - Se for FlashcardBlock: Atualize os cartões com conceitos nítidos.
+4. PRESERVAÇÃO DE DADOS: Mantenha o 'id' e o 'type' do bloco original (a menos que a instrução peça explicitamente para converter o tipo do bloco).
+
+Responda APENAS com um objeto JSON puro iniciado por ```json e finalizado por ```, SEM NENHUM COMENTÁRIO com // ou /* */ no JSON.
+
+Estrutura JSON esperada:
+```json
+{
+  "summary": "Resumo claro e conciso das melhorias realizadas no bloco",
+  "block": {
+    "id": "id_original",
+    "type": "TipoDoBloco",
+    "data": { ... dados enriquecidos ... },
+    "styles": { ... estilos ... }
+  }
+}
+```
+"""
+
+async def call_groq_json(system_prompt: str, user_prompt: str, groq_api_key: str) -> dict:
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {groq_api_key}"
+    }
+
+    models_to_try = [
+        "qwen/qwen3.6-27b",
+        "qwen/qwen3.8-27b",
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b",
+        "groq/compound"
+    ]
+
+    last_err = None
+    for model_name in models_to_try:
+        payload = {
+            "model": model_name,
+            "messages": [
+                {"role": "system", "content": system_prompt + "\nIMPORTANTE: Retorne estritamente um objeto JSON válido, sem texto antes ou depois."},
+                {"role": "user", "content": user_prompt}
+            ],
+            "response_format": {"type": "json_object"},
+            "temperature": 0.3,
+            "max_tokens": 4096
+        }
+
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            try:
+                response = await client.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers=headers,
+                    json=payload
+                )
+
+                if response.status_code == 401:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail="Chave da Groq API inválida ou expirada. Atualize a GROQ_API_KEY no arquivo backend/.env."
+                    )
+
+                if response.status_code != 200:
+                    last_err = f"Erro no modelo {model_name} (HTTP {response.status_code}): {response.text[:150]}"
+                    continue
+
+                data = response.json()
+                raw_reply = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+
+                # Limpa eventuais tags de pensamento <think> se presentes
+                clean = re.sub(r"<think>[\s\S]*?</think>", "", raw_reply, flags=re.DOTALL).strip()
+
+                # Remove blocos markdown caso o modelo tenha envolvido
+                if clean.startswith("```"):
+                    clean = re.sub(r"^```(?:json)?\s*", "", clean)
+                    clean = re.sub(r"\s*```$", "", clean)
+
+                # Limpeza de comentários (preservando URLs http e https)
+                clean = re.sub(r"(?<!http:)(?<!https:)//.*", "", clean)
+                clean = re.sub(r"/\*[\s\S]*?\*/", "", clean)
+                clean = re.sub(r",\s*([\}\]])", r"\1", clean)
+
+                first_brace = clean.find('{')
+                last_brace = clean.rfind('}')
+                if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+                    json_str = clean[first_brace:last_brace + 1]
+                else:
+                    json_str = clean
+
+                parsed_data = json.loads(json_str, strict=False)
+                return parsed_data
+            except HTTPException:
+                raise
+            except Exception as e:
+                last_err = str(e)
+                continue
+
+    raise HTTPException(status_code=500, detail=f"Erro ao processar com IA nos modelos disponíveis: {last_err}")
 
 @app.post("/api/ai/generate-blocks", response_model=schemas.AIGenerateBlocksResponse)
 async def generate_page_blocks_agent(
@@ -1176,89 +1299,72 @@ async def generate_page_blocks_agent(
     if not groq_api_key:
         raise HTTPException(status_code=500, detail="GROQ_API_KEY não configurada no backend/.env")
 
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {groq_api_key}"
-    }
-
-    user_prompt = request.prompt
+    user_prompt = f"Solicitação do Professor: {request.prompt}"
     if request.target_type and request.target_type != "full_page":
-        user_prompt += f" (Foco: {request.target_type})"
+        user_prompt += f"\nTipo de Conteúdo Alvo: {request.target_type}"
     if request.context_module:
-        user_prompt += f" (Módulo: {request.context_module})"
+        user_prompt += f"\nContexto do Módulo da Aula: {request.context_module}"
+    if request.level:
+        user_prompt += f"\nNível de Ensino: {request.level}"
 
-    payload = {
-        "model": "qwen/qwen3.6-27b",
-        "messages": [
-            {"role": "system", "content": AI_AGENT_BUILDER_SYSTEM_PROMPT + "\nIMPORTANTE: Retorne a resposta estritamente como um objeto JSON válido."},
-            {"role": "user", "content": user_prompt}
-        ],
-        "response_format": {"type": "json_object"},
-        "temperature": 0.3,
-        "max_tokens": 4096
+    parsed_data = await call_groq_json(AI_AGENT_BUILDER_SYSTEM_PROMPT, user_prompt, groq_api_key)
+
+    summary = parsed_data.get("summary", "Blocos pedagógicos gerados com sucesso pela IA!")
+    generated_blocks = parsed_data.get("blocks", [])
+
+    # Garante IDs únicos para cada bloco gerado
+    for idx, b in enumerate(generated_blocks):
+        unique_suffix = uuid.uuid4().hex[:6]
+        b["id"] = f"{b.get('type', 'block').lower()}_{int(datetime.now().timestamp())}_{idx}_{unique_suffix}"
+
+    return {
+        "summary": summary,
+        "blocks": generated_blocks
     }
 
-    async with httpx.AsyncClient(timeout=45.0) as client:
-        try:
-            response = await client.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers=headers,
-                json=payload
-            )
-            
-            if response.status_code == 401:
-                raise HTTPException(
-                    status_code=400, 
-                    detail="Chave da Groq API inválida ou expirada. Atualize a GROQ_API_KEY no arquivo backend/.env."
-                )
-            
-            if response.status_code != 200:
-                err_text = response.text[:200]
-                raise HTTPException(status_code=response.status_code, detail=f"Erro na Groq API: {err_text}")
+@app.post("/api/ai/edit-block", response_model=schemas.AIEditBlockResponse)
+async def edit_page_block_agent(
+    request: schemas.AIEditBlockRequest,
+    current_user: models.User = Depends(get_current_user)
+):
+    allowed_roles = ["dona", "desenvolvedor", "administrador", "professor", "coordenador", "monitor", "suporte"]
+    if current_user.cargo not in allowed_roles:
+        raise HTTPException(status_code=403, detail="Sem permissão para editar blocos com IA.")
 
-            data = response.json()
-            raw_reply = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
-            
-            # Limpa eventuais tags de pensamento <think> se presentes
-            clean = re.sub(r"<think>[\s\S]*?</think>", "", raw_reply, flags=re.DOTALL).strip()
-            
-            # Remove blocos markdown caso o modelo tenha envolvido
-            if clean.startswith("```"):
-                clean = re.sub(r"^```(?:json)?\s*", "", clean)
-                clean = re.sub(r"\s*```$", "", clean)
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    if not groq_api_key:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY não configurada no backend/.env")
 
-            # Limpeza de comentários (preservando URLs http e https)
-            clean = re.sub(r"(?<!http:)(?<!https:)//.*", "", clean)
-            clean = re.sub(r"/\*[\s\S]*?\*/", "", clean)
-            clean = re.sub(r",\s*([\}\]])", r"\1", clean)
+    block_json_str = json.dumps(request.block, ensure_ascii=False, indent=2)
+    user_prompt = f"""Instrução do Professor para Edição:
+{request.instruction}
 
-            first_brace = clean.find('{')
-            last_brace = clean.rfind('}')
-            if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
-                json_str = clean[first_brace:last_brace + 1]
-            else:
-                json_str = clean
+Ação Solicitada: {request.action or 'edit'}
+Contexto do Módulo: {request.context_module or 'Geral'}
 
-            parsed_data = json.loads(json_str, strict=False)
+Bloco Atual a ser Editado:
+```json
+{block_json_str}
+```
 
-            summary = parsed_data.get("summary", "Blocos gerados com sucesso pela IA!")
-            generated_blocks = parsed_data.get("blocks", [])
+Por favor, atualize o bloco com alta qualidade clínica e pedagógica, enriquecendo o texto e atendendo com precisão à instrução solicitada."""
 
-            # Garante IDs únicos para cada bloco gerado
-            for idx, b in enumerate(generated_blocks):
-                unique_suffix = uuid.uuid4().hex[:6]
-                b["id"] = f"{b.get('type', 'block').lower()}_{int(datetime.now().timestamp())}_{idx}_{unique_suffix}"
+    parsed_data = await call_groq_json(AI_AGENT_EDITOR_SYSTEM_PROMPT, user_prompt, groq_api_key)
 
-            return {
-                "summary": summary,
-                "blocks": generated_blocks
-            }
+    summary = parsed_data.get("summary", "Bloco aprimorado com sucesso pelo Agente IA!")
+    updated_block = parsed_data.get("block", request.block)
 
-        except HTTPException:
-            raise
-        except Exception as e:
-            print("Erro ao processar resposta do Agente IA:", e)
-            raise HTTPException(status_code=500, detail=f"Erro ao processar blocos com IA: {str(e)}")
+    # Garante que o ID original seja preservado
+    if "id" in request.block and ("id" not in updated_block or not updated_block["id"]):
+        updated_block["id"] = request.block["id"]
+    if "type" in request.block and ("type" not in updated_block or not updated_block["type"]):
+        updated_block["type"] = request.block["type"]
+
+    return {
+        "summary": summary,
+        "block": updated_block,
+        "alternative_block": parsed_data.get("alternative_block")
+    }
 
 @app.get("/api/modules/{module_slug}/resources", response_model=list[schemas.InteractiveResourceResponse])
 def get_interactive_resources(module_slug: str, db: Session = Depends(get_db)):

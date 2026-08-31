@@ -77,14 +77,14 @@ const HeaderBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpd
                 isEditing ? 'cursor-pointer' : ''
             } ${
                 isSelected 
-                    ? 'ring-2 ring-primary ring-offset-2 bg-primary/5 p-4' 
+                    ? 'ring-2 ring-primary ring-offset-2 bg-primary/5 dark:bg-teal-950/20 p-4' 
                     : isEditing 
-                    ? 'hover:bg-warm-50/70 p-2' 
+                    ? 'hover:bg-warm-50/70 dark:hover:bg-slate-800/40 p-2' 
                     : ''
             }`}
         >
             <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 ${
-                showDivider ? 'pb-6 border-b border-warm-200/80' : ''
+                showDivider ? 'pb-6 border-b border-warm-200/80 dark:border-slate-800' : ''
             }`}>
                 {/* Ícone Estilizado (Livro Aberto / Customizável) */}
                 <div className={`${colorClasses.bg} p-3.5 sm:p-4 rounded-2xl ${colorClasses.text} shrink-0 shadow-xs flex items-center justify-center`}>

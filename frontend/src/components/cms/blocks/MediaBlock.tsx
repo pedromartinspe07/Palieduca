@@ -23,14 +23,14 @@ const MediaBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpda
                 isSelected ? 'ring-4 ring-primary ring-inset z-10 rounded-xl' : 'hover:ring-2 hover:ring-blue-400/50 hover:ring-inset rounded-xl'
             }`}
         >
-            <div className={`bg-white rounded-2xl border border-warm-200 overflow-hidden shadow-sm ${isEditing ? 'pointer-events-none' : ''}`}>
-                <div className="p-4 border-b border-warm-100 bg-warm-50 flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 text-blue-600 rounded-lg"><Play size={20}/></div>
+            <div className={`bg-white dark:bg-slate-900 rounded-2xl border border-warm-200 dark:border-slate-800 overflow-hidden shadow-sm ${isEditing ? 'pointer-events-none' : ''}`}>
+                <div className="p-4 border-b border-warm-100 dark:border-slate-800 bg-warm-50 dark:bg-slate-800/70 flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 rounded-lg"><Play size={20}/></div>
                     <h3 
                         contentEditable={isEditing}
                         suppressContentEditableWarning={true}
                         onBlur={(e) => onUpdate(block.id, { data: { ...block.data, title: e.currentTarget.innerText } })}
-                        className="font-bold text-warm-900 text-lg outline-none flex-1 pointer-events-auto"
+                        className="font-bold text-warm-900 dark:text-slate-100 text-lg outline-none flex-1 pointer-events-auto"
                     >
                         {title}
                     </h3>
@@ -46,7 +46,7 @@ const MediaBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpda
                         ></iframe>
                     </div>
                 ) : (
-                    <div className="aspect-video w-full bg-warm-100 flex items-center justify-center flex-col gap-3 text-warm-400">
+                    <div className="aspect-video w-full bg-warm-100 dark:bg-slate-800 flex items-center justify-center flex-col gap-3 text-warm-400 dark:text-slate-400">
                         <Play size={48} className="opacity-50" />
                         <p className="font-medium">Insira a URL do vídeo no painel lateral</p>
                     </div>

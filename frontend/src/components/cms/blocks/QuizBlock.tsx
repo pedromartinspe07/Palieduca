@@ -145,41 +145,41 @@ const QuizBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
                 isSelected ? 'ring-4 ring-primary ring-inset z-10 rounded-xl' : 'hover:ring-2 hover:ring-purple-400/50 hover:ring-inset rounded-xl'
             }`}
         >
-            <div className="bg-white rounded-2xl border border-warm-200 overflow-hidden shadow-sm">
-                <div className="p-4 border-b border-warm-100 bg-warm-50 flex items-center justify-between gap-3">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-warm-200 dark:border-slate-800 overflow-hidden shadow-sm">
+                <div className="p-4 border-b border-warm-100 dark:border-slate-800 bg-warm-50 dark:bg-slate-800/70 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-purple-100 text-purple-600 rounded-lg"><LayoutList size={20}/></div>
+                        <div className="p-2 bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 rounded-lg"><LayoutList size={20}/></div>
                         <h3 
                             contentEditable={isEditing}
                             suppressContentEditableWarning={true}
                             onBlur={(e) => onUpdate(block.id, { data: { ...block.data, title: e.currentTarget.innerText } })}
-                            className="font-bold text-warm-900 text-lg outline-none flex-1"
+                            className="font-bold text-warm-900 dark:text-slate-100 text-lg outline-none flex-1"
                         >
                             {title}
                         </h3>
                     </div>
                     {!user && !isEditing ? (
-                        <span className="text-[10px] font-bold uppercase tracking-wider bg-sky-100 text-sky-900 px-2.5 py-1 rounded-full flex items-center gap-1">
-                            <Sparkles size={12} className="text-sky-600" /> Modo Visitante
+                        <span className="text-[10px] font-bold uppercase tracking-wider bg-sky-100 dark:bg-sky-950/60 text-sky-900 dark:text-sky-300 border border-sky-200 dark:border-sky-800 px-2.5 py-1 rounded-full flex items-center gap-1">
+                            <Sparkles size={12} className="text-sky-600 dark:text-sky-400" /> Modo Visitante
                         </span>
                     ) : (
                         !isEditing && (
-                            <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-900 px-2.5 py-1 rounded-full flex items-center gap-1">
-                                <CheckCircle2 size={12} className="text-emerald-600" /> Salvo no Perfil
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full flex items-center gap-1">
+                                <CheckCircle2 size={12} className="text-emerald-600 dark:text-emerald-400" /> Salvo no Perfil
                             </span>
                         )
                     )}
                 </div>
                 
                 {!user && !isEditing && (
-                    <div className="bg-sky-50/80 border-b border-sky-200/60 px-6 py-2.5 text-xs text-sky-950 flex items-center gap-2">
+                    <div className="bg-sky-50/80 dark:bg-sky-950/40 border-b border-sky-200/60 dark:border-sky-800/40 px-6 py-2.5 text-xs text-sky-950 dark:text-sky-200 flex items-center gap-2">
                         <span>💡 <strong>Respostas salvas no dispositivo:</strong> Você pode responder e praticar livremente. Ao criar sua conta gratuita, suas respostas serão vinculadas ao seu Certificado Oficial da UFPB.</span>
                     </div>
                 )}
                 
                 <div className={`p-6 flex flex-col gap-8 ${isEditing ? 'pointer-events-none' : ''}`}>
                     {questions.length === 0 ? (
-                        <p className="text-warm-500 text-center italic">Adicione perguntas através do painel lateral.</p>
+                        <p className="text-warm-500 dark:text-slate-400 text-center italic">Adicione perguntas através do painel lateral ou gere com o Agente IA.</p>
                     ) : (
                         questions.map((q: any, i: number) => {
                             const selectedOpt = selectedOpts[i] ?? null;
@@ -187,13 +187,13 @@ const QuizBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
                             const isCorrect = selectedOpt === q.correct_index;
 
                             return (
-                                <div key={i} className="bg-warm-50 p-6 rounded-2xl border border-warm-100">
+                                <div key={i} className="bg-warm-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-warm-100 dark:border-slate-700">
                                     <div className="flex items-center justify-between gap-2 mb-4">
-                                        <h4 className="font-bold text-warm-900 text-lg">{i + 1}. {q.text || 'Sem texto'}</h4>
+                                        <h4 className="font-bold text-warm-900 dark:text-slate-100 text-lg">{i + 1}. {q.text || 'Sem texto'}</h4>
                                         {isSubmitted && (
                                             <button
                                                 onClick={() => handleRetry(i)}
-                                                className="text-xs font-semibold text-warm-500 hover:text-purple-700 flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-purple-50 transition-colors cursor-pointer"
+                                                className="text-xs font-semibold text-warm-500 dark:text-slate-400 hover:text-purple-700 dark:hover:text-purple-300 flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-purple-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                                                 title="Tentar novamente esta questão"
                                             >
                                                 <RotateCcw size={13} />
@@ -207,15 +207,15 @@ const QuizBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
                                             
                                             if (!isSubmitted) {
                                                 btnClass += selectedOpt === oIndex 
-                                                    ? "bg-purple-100 border-purple-400 text-purple-900 shadow-sm" 
-                                                    : "bg-white border-warm-200 text-warm-700 hover:bg-warm-100";
+                                                    ? "bg-purple-100 dark:bg-purple-950/60 border-purple-400 dark:border-purple-600 text-purple-900 dark:text-purple-200 shadow-sm" 
+                                                    : "bg-white dark:bg-slate-800 border-warm-200 dark:border-slate-700 text-warm-700 dark:text-slate-200 hover:bg-warm-100 dark:hover:bg-slate-700/80";
                                             } else {
                                                 if (oIndex === q.correct_index) {
-                                                    btnClass += "bg-green-100 border-green-400 text-green-900 font-bold";
+                                                    btnClass += "bg-green-100 dark:bg-emerald-950/70 border-green-400 dark:border-emerald-600 text-green-900 dark:text-emerald-200 font-bold";
                                                 } else if (oIndex === selectedOpt) {
-                                                    btnClass += "bg-red-100 border-red-400 text-red-900";
+                                                    btnClass += "bg-red-100 dark:bg-rose-950/70 border-red-400 dark:border-rose-600 text-red-900 dark:text-rose-200";
                                                 } else {
-                                                    btnClass += "bg-white border-warm-200 text-warm-400 opacity-50";
+                                                    btnClass += "bg-white dark:bg-slate-800/40 border-warm-200 dark:border-slate-800 text-warm-400 dark:text-slate-500 opacity-50";
                                                 }
                                             }
 
@@ -242,12 +242,12 @@ const QuizBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
                                             Confirmar Resposta
                                         </button>
                                     ) : (
-                                        <div className={`mt-6 p-4 rounded-xl flex items-center justify-between gap-3 font-bold ${isCorrect ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                                        <div className={`mt-6 p-4 rounded-xl flex items-center justify-between gap-3 font-bold ${isCorrect ? 'bg-green-50 dark:bg-emerald-950/50 text-green-700 dark:text-emerald-300 border border-green-200 dark:border-emerald-800/60' : 'bg-red-50 dark:bg-rose-950/50 text-red-700 dark:text-rose-300 border border-red-200 dark:border-rose-800/60'}`}>
                                             <div className="flex items-center gap-3">
                                                 {isCorrect ? <CheckCircle2 size={24} /> : <XCircle size={24} />}
                                                 <span>{isCorrect ? 'Você acertou! Muito bem.' : 'Resposta incorreta. Revise o conteúdo e tente novamente.'}</span>
                                             </div>
-                                            <span className="text-[11px] font-normal text-warm-500 hidden sm:inline">
+                                            <span className="text-[11px] font-normal text-warm-500 dark:text-slate-400 hidden sm:inline">
                                                 Salvo no dispositivo
                                             </span>
                                         </div>

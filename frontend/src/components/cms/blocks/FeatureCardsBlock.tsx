@@ -108,7 +108,7 @@ export const FeatureCardsBlock: React.FC<BlockProps> = ({ block, isEditing, isSe
                             contentEditable={isEditing}
                             suppressContentEditableWarning={true}
                             onBlur={(e) => onUpdate(block.id, { styles: { ...block.styles, sectionTitle: e.currentTarget.innerText } })}
-                            className="text-2xl sm:text-3xl font-bold text-warm-900 outline-none"
+                            className="text-2xl sm:text-3xl font-bold text-warm-900 dark:text-slate-100 outline-none"
                         >
                             {sectionTitle || (isEditing ? 'Título da Seção de Cards (Opcional)' : '')}
                         </h2>
@@ -117,7 +117,7 @@ export const FeatureCardsBlock: React.FC<BlockProps> = ({ block, isEditing, isSe
                                 contentEditable={isEditing}
                                 suppressContentEditableWarning={true}
                                 onBlur={(e) => onUpdate(block.id, { styles: { ...block.styles, sectionSubtitle: e.currentTarget.innerText } })}
-                                className="text-warm-600 text-sm mt-2 max-w-2xl mx-auto outline-none"
+                                className="text-warm-600 dark:text-slate-300 text-sm mt-2 max-w-2xl mx-auto outline-none"
                             >
                                 {sectionSubtitle || (isEditing ? 'Subtítulo descritivo...' : '')}
                             </p>
@@ -135,15 +135,15 @@ export const FeatureCardsBlock: React.FC<BlockProps> = ({ block, isEditing, isSe
                     {cards.map((card, idx) => (
                         <div
                             key={card.id || idx}
-                            className={`relative rounded-3xl p-6 transition-all duration-300 flex flex-col justify-between group ${
-                                cardBorder ? 'border border-warm-200' : ''
+                            className={`relative rounded-3xl p-6 transition-all duration-300 flex flex-col justify-between group bg-white dark:bg-slate-900/90 ${
+                                cardBorder ? 'border border-warm-200 dark:border-slate-800' : ''
                             } ${
                                 cardShadow === 'none' ? '' :
                                 cardShadow === 'sm' ? 'shadow-sm hover:shadow-md' :
                                 cardShadow === 'lg' ? 'shadow-lg hover:shadow-2xl' :
                                 'shadow-md hover:shadow-xl'
                             } hover:-translate-y-1`}
-                            style={{ backgroundColor: cardBg }}
+                            style={{ backgroundColor: (cardBg && cardBg !== '#ffffff' && cardBg !== '#fff') ? cardBg : undefined }}
                         >
                             {/* Top row: Icon Badge & Optional Tag Badge */}
                             <div>
@@ -152,8 +152,8 @@ export const FeatureCardsBlock: React.FC<BlockProps> = ({ block, isEditing, isSe
                                     <button
                                         type="button"
                                         onClick={(e) => {
-                                            e.stopPropagation();
-                                            openIconPickerForCard(idx);
+                                             e.stopPropagation();
+                                             openIconPickerForCard(idx);
                                         }}
                                         className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
                                             isEditing ? 'hover:scale-110 cursor-pointer shadow-sm hover:ring-2 hover:ring-primary' : ''
@@ -226,10 +226,10 @@ export const FeatureCardsBlock: React.FC<BlockProps> = ({ block, isEditing, isSe
                                 e.stopPropagation();
                                 handleAddCard();
                             }}
-                            className="rounded-3xl border-2 border-dashed border-warm-300 hover:border-primary bg-warm-50/50 hover:bg-primary/5 p-6 flex flex-col items-center justify-center gap-2 text-warm-500 hover:text-primary transition-all min-h-[180px] group"
+                            className="rounded-3xl border-2 border-dashed border-warm-300 dark:border-slate-700 hover:border-primary dark:hover:border-teal-400 bg-warm-50/50 dark:bg-slate-800/40 hover:bg-primary/5 dark:hover:bg-slate-800/80 p-6 flex flex-col items-center justify-center gap-2 text-warm-500 dark:text-slate-300 hover:text-primary dark:hover:text-teal-400 transition-all min-h-[180px] group"
                         >
-                            <div className="w-12 h-12 rounded-2xl bg-white border border-warm-200 flex items-center justify-center group-hover:scale-110 transition-transform shadow-xs">
-                                <Plus size={22} className="text-primary" />
+                            <div className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 border border-warm-200 dark:border-slate-700 flex items-center justify-center group-hover:scale-110 transition-transform shadow-xs">
+                                <Plus size={22} className="text-primary dark:text-teal-400" />
                             </div>
                             <span className="font-bold text-sm">Adicionar Novo Card</span>
                         </button>

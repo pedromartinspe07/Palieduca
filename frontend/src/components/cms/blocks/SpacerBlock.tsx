@@ -20,10 +20,10 @@ const SpacerBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onSel
             {isEditing && (
                 <div className="absolute inset-0 flex items-center justify-center">
                     <div className={`w-full border-t-2 border-dashed transition-colors ${
-                        isSelected ? 'border-primary/40' : 'border-warm-300/50 group-hover:border-warm-400/50'
+                        isSelected ? 'border-primary/40' : 'border-warm-300/50 dark:border-slate-700 group-hover:border-warm-400/50 dark:group-hover:border-slate-500'
                     }`} />
-                    <span className={`absolute bg-white px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                        isSelected ? 'text-primary border border-primary/30' : 'text-warm-400 border border-warm-200 group-hover:text-warm-600'
+                    <span className={`absolute bg-white dark:bg-slate-800 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                        isSelected ? 'text-primary dark:text-teal-400 border border-primary/30' : 'text-warm-400 dark:text-slate-300 border border-warm-200 dark:border-slate-700 group-hover:text-warm-600 dark:group-hover:text-slate-100'
                     }`}>
                         {height}px
                     </span>

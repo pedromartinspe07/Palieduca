@@ -115,8 +115,8 @@ const ImageBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpda
             <div className={`w-full ${containerWidth} ${alignSelfClass} relative group`}>
                 {!src ? (
                     <div 
-                        className={`w-full bg-warm-100 border-2 border-dashed flex flex-col items-center justify-center ${roundedClass} transition-colors ${
-                            isDragging ? 'border-primary bg-primary/10' : 'border-warm-300'
+                        className={`w-full bg-warm-100 dark:bg-slate-800 border-2 border-dashed flex flex-col items-center justify-center ${roundedClass} transition-colors ${
+                            isDragging ? 'border-primary bg-primary/10 dark:bg-primary/20' : 'border-warm-300 dark:border-slate-700'
                         }`}
                         style={{ minHeight: isFixed ? `${height}px` : '300px' }}
                     >
@@ -124,9 +124,9 @@ const ImageBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpda
                             <Loader2 className="animate-spin text-primary" size={40} />
                         ) : (
                             <>
-                                <ImageIcon className="text-warm-400 mb-2" size={48} />
-                                <p className="text-sm font-semibold text-warm-600">Arraste uma imagem ou clique para selecionar</p>
-                                <p className="text-sm text-warm-400 mt-1">ou use o painel lateral para enviar</p>
+                                <ImageIcon className="text-warm-400 dark:text-slate-400 mb-2" size={48} />
+                                <p className="text-sm font-semibold text-warm-600 dark:text-slate-200">Arraste uma imagem ou clique para selecionar</p>
+                                <p className="text-sm text-warm-400 dark:text-slate-400 mt-1">ou use o painel lateral para enviar</p>
                             </>
                         )}
                     </div>
@@ -136,7 +136,7 @@ const ImageBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpda
                         style={isFixed ? { height: `${height}px` } : undefined}
                     >
                         {uploading && (
-                            <div className={`absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center ${roundedClass}`}>
+                            <div className={`absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm z-10 flex items-center justify-center ${roundedClass}`}>
                                 <Loader2 className="animate-spin text-primary" size={40} />
                             </div>
                         )}
@@ -154,7 +154,7 @@ const ImageBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpda
                         />
                         {isEditing && isDragging && (
                             <div className={`absolute inset-0 bg-primary/20 backdrop-blur-[2px] z-20 flex items-center justify-center border-4 border-primary ${roundedClass}`}>
-                                <span className="bg-white px-4 py-2 rounded-full font-bold text-primary shadow-lg">Soltar Imagem</span>
+                                <span className="bg-white dark:bg-slate-800 px-4 py-2 rounded-full font-bold text-primary dark:text-teal-400 shadow-lg">Soltar Imagem</span>
                             </div>
                         )}
                     </div>
@@ -166,7 +166,7 @@ const ImageBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpda
                             contentEditable={isEditing}
                             suppressContentEditableWarning={true}
                             onBlur={(e) => onUpdate(block.id, { data: { ...block.data, caption: e.currentTarget.innerText } })}
-                            className={`text-sm text-warm-500 italic outline-none ${!caption && isEditing ? 'opacity-50' : ''}`}
+                            className={`text-sm text-warm-500 dark:text-slate-400 italic outline-none ${!caption && isEditing ? 'opacity-50' : ''}`}
                             data-placeholder="Adicione uma legenda..."
                         >
                             {caption || (isEditing ? 'Adicione uma legenda...' : '')}

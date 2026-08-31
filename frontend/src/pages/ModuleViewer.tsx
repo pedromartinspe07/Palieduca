@@ -259,20 +259,20 @@ const ModuleViewer: React.FC = () => {
                 {user ? (
                     <div className={`p-5 rounded-3xl border shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all ${
                         isModuleFinished
-                            ? 'bg-gradient-to-r from-amber-50 to-emerald-50 border-amber-200'
-                            : 'bg-white border-warm-200'
+                            ? 'bg-gradient-to-r from-amber-50 to-emerald-50 dark:from-amber-950/40 dark:to-emerald-950/40 border-amber-200 dark:border-amber-800/60'
+                            : 'bg-white dark:bg-slate-900 border-warm-200 dark:border-slate-800'
                     }`}>
                         <div className="flex items-center gap-3.5 w-full sm:w-auto">
                             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-xs ${
-                                isModuleFinished ? 'bg-gradient-to-tr from-amber-400 to-amber-500 text-warm-950 animate-bounce' : 'bg-primary/10 text-primary'
+                                isModuleFinished ? 'bg-gradient-to-tr from-amber-400 to-amber-500 text-warm-950 animate-bounce' : 'bg-primary/10 dark:bg-teal-950/70 text-primary dark:text-teal-400'
                             }`}>
                                 {isModuleFinished ? <Award size={28} /> : <Sparkles size={24} />}
                             </div>
                             <div>
-                                <h4 className="text-xs font-bold uppercase tracking-wider text-warm-500">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-warm-500 dark:text-slate-400">
                                     Seu Progresso no Módulo
                                 </h4>
-                                <p className="text-sm font-extrabold text-warm-900">
+                                <p className="text-sm font-extrabold text-warm-900 dark:text-slate-100">
                                     {completedCount} de {totalActivities} atividades concluídas ({progressPercentage}%)
                                 </p>
                             </div>
@@ -280,7 +280,7 @@ const ModuleViewer: React.FC = () => {
 
                         {/* Barra de Progresso Visual */}
                         <div className="w-full sm:w-64 flex flex-col items-end gap-1.5">
-                            <div className="w-full bg-warm-100 rounded-full h-3 overflow-hidden border border-warm-200 shadow-inner">
+                            <div className="w-full bg-warm-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden border border-warm-200 dark:border-slate-700 shadow-inner">
                                 <div 
                                     className={`h-full transition-all duration-500 rounded-full ${
                                         isModuleFinished 
@@ -290,7 +290,7 @@ const ModuleViewer: React.FC = () => {
                                     style={{ width: `${progressPercentage}%` }}
                                 />
                             </div>
-                            <span className="text-[11px] font-bold text-warm-600">
+                            <span className="text-[11px] font-bold text-warm-600 dark:text-slate-300">
                                 {isModuleFinished ? '🎉 Parabéns! Módulo 100% Concluído!' : 'Continue aprendendo para avançar'}
                             </span>
                         </div>
@@ -299,28 +299,28 @@ const ModuleViewer: React.FC = () => {
                     /* Banner e Card de Progresso do Visitante (Salvo no Navegador e IP) */
                     <div className={`p-5 rounded-3xl border shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all ${
                         isModuleFinished
-                            ? 'bg-gradient-to-r from-amber-50 via-emerald-50 to-teal-50 border-amber-300'
-                            : 'bg-white border-warm-200'
+                            ? 'bg-gradient-to-r from-amber-50 via-emerald-50 to-teal-50 dark:from-amber-950/40 dark:via-emerald-950/40 dark:to-teal-950/40 border-amber-300 dark:border-amber-800'
+                            : 'bg-white dark:bg-slate-900 border-warm-200 dark:border-slate-800'
                     }`}>
                         <div className="flex items-center gap-3.5 w-full sm:w-auto">
                             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-xs ${
-                                isModuleFinished ? 'bg-gradient-to-tr from-amber-400 to-amber-500 text-warm-950 animate-bounce' : 'bg-sky-100 text-sky-700'
+                                isModuleFinished ? 'bg-gradient-to-tr from-amber-400 to-amber-500 text-warm-950 animate-bounce' : 'bg-sky-100 dark:bg-sky-950/70 text-sky-700 dark:text-sky-300'
                             }`}>
                                 {isModuleFinished ? <Award size={28} /> : <Sparkles size={24} />}
                             </div>
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <h4 className="text-xs font-bold uppercase tracking-wider text-warm-500">
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-warm-500 dark:text-slate-400">
                                         Seu Progresso no Módulo
                                     </h4>
-                                    <span className="text-[10px] font-extrabold uppercase bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full border border-sky-200">
+                                    <span className="text-[10px] font-extrabold uppercase bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">
                                         Modo Visitante
                                     </span>
                                 </div>
-                                <p className="text-sm font-extrabold text-warm-900 mt-0.5">
+                                <p className="text-sm font-extrabold text-warm-900 dark:text-slate-100 mt-0.5">
                                     {completedCount} de {totalActivities} atividades concluídas ({progressPercentage}%)
                                 </p>
-                                <p className="text-[11px] text-warm-500 font-medium">
+                                <p className="text-[11px] text-warm-500 dark:text-slate-400 font-medium">
                                     💾 Respostas e progresso salvos no seu aparelho
                                 </p>
                             </div>
@@ -328,7 +328,7 @@ const ModuleViewer: React.FC = () => {
 
                         {/* Barra de Progresso Visual e CTA de Certificado */}
                         <div className="w-full sm:w-72 flex flex-col items-end gap-2">
-                            <div className="w-full bg-warm-100 rounded-full h-3 overflow-hidden border border-warm-200 shadow-inner">
+                            <div className="w-full bg-warm-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden border border-warm-200 dark:border-slate-700 shadow-inner">
                                 <div 
                                     className={`h-full transition-all duration-500 rounded-full ${
                                         isModuleFinished 
@@ -339,12 +339,12 @@ const ModuleViewer: React.FC = () => {
                                 />
                             </div>
                             <div className="flex items-center justify-between w-full">
-                                <span className="text-[11px] font-bold text-warm-600">
+                                <span className="text-[11px] font-bold text-warm-600 dark:text-slate-300">
                                     {isModuleFinished ? '🎉 100% Concluído!' : `${progressPercentage}% Concluído`}
                                 </span>
                                 <button
                                     onClick={() => navigate('/login')}
-                                    className="text-[11px] font-bold text-sky-700 hover:text-sky-900 underline cursor-pointer"
+                                    className="text-[11px] font-bold text-sky-700 dark:text-sky-400 hover:text-sky-900 dark:hover:text-sky-300 underline cursor-pointer"
                                 >
                                     {isModuleFinished ? 'Cadastrar para Certificado' : 'Salvar no Perfil'}
                                 </button>
@@ -354,19 +354,19 @@ const ModuleViewer: React.FC = () => {
                 )}
 
                 {/* Conteúdo Principal do Módulo */}
-                <div className={`p-6 md:p-10 rounded-3xl border shadow-xl bg-white mb-12 transition-all ${
-                    isFocusMode ? 'border-amber-200/80 shadow-2xl' : 'border-warm-200'
+                <div className={`p-6 md:p-10 rounded-3xl border shadow-xl bg-white dark:bg-slate-900 mb-12 transition-all ${
+                    isFocusMode ? 'border-amber-200/80 dark:border-amber-700/80 shadow-2xl' : 'border-warm-200 dark:border-slate-800'
                 }`}>
-                    <div className="flex items-center gap-4 mb-8 pb-8 border-b border-warm-100">
-                        <div className="bg-primary/10 p-4 rounded-2xl text-primary shrink-0 shadow-xs">
+                    <div className="flex items-center gap-4 mb-8 pb-8 border-b border-warm-100 dark:border-slate-800">
+                        <div className="bg-primary/10 dark:bg-teal-950/70 p-4 rounded-2xl text-primary dark:text-teal-400 shrink-0 shadow-xs">
                             {getModuleIcon(moduleInfo?.icon_name, 32)}
                         </div>
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-bold text-warm-900">
+                            <h1 className="text-2xl md:text-3xl font-bold text-warm-900 dark:text-slate-100">
                                 {moduleInfo ? moduleInfo.title : 'Conteúdo do Módulo'}
                             </h1>
                             {moduleInfo && (
-                                <p className="text-warm-600 mt-1.5 text-sm leading-relaxed">{moduleInfo.description}</p>
+                                <p className="text-warm-600 dark:text-slate-300 mt-1.5 text-sm leading-relaxed">{moduleInfo.description}</p>
                             )}
                         </div>
                     </div>
@@ -384,14 +384,14 @@ const ModuleViewer: React.FC = () => {
                                         key={block.id} 
                                         className={`relative p-5 md:p-6 rounded-3xl border transition-all ${
                                             isBlockCompleted 
-                                                ? 'bg-emerald-50/30 border-emerald-200/80 shadow-xs' 
-                                                : 'bg-warm-50/40 border-warm-200'
+                                                ? 'bg-emerald-50/30 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/80 shadow-xs' 
+                                                : 'bg-warm-50/40 dark:bg-slate-800/50 border-warm-200 dark:border-slate-700'
                                         }`}
                                     >
                                         {/* Barra Superior do Bloco / Checkbox de Atividade */}
-                                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-warm-200/60">
-                                            <div className="flex items-center gap-2 text-xs font-bold text-warm-600">
-                                                <span className="w-6 h-6 rounded-full bg-warm-200/80 flex items-center justify-center text-warm-700 text-[11px]">
+                                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-warm-200/60 dark:border-slate-700">
+                                            <div className="flex items-center gap-2 text-xs font-bold text-warm-600 dark:text-slate-300">
+                                                <span className="w-6 h-6 rounded-full bg-warm-200/80 dark:bg-slate-700 flex items-center justify-center text-warm-700 dark:text-slate-200 text-[11px]">
                                                     {index + 1}
                                                 </span>
                                                 <span className="uppercase tracking-wider text-[11px]">
@@ -408,18 +408,18 @@ const ModuleViewer: React.FC = () => {
                                                 onClick={() => toggleActivity(block.id)}
                                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
                                                     isBlockCompleted
-                                                        ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300'
-                                                        : 'bg-warm-100 text-warm-700 hover:bg-primary/10 hover:text-primary border border-warm-300'
+                                                        ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-800'
+                                                        : 'bg-warm-100 dark:bg-slate-800 text-warm-700 dark:text-slate-300 hover:bg-primary/10 dark:hover:bg-teal-950/50 hover:text-primary dark:hover:text-teal-300 border border-warm-300 dark:border-slate-700'
                                                 }`}
                                             >
                                                 {isBlockCompleted ? (
                                                     <>
-                                                        <CheckCircle2 size={15} className="text-emerald-600" />
+                                                        <CheckCircle2 size={15} className="text-emerald-600 dark:text-emerald-400" />
                                                         <span>Concluído</span>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <Circle size={15} className="text-warm-400" />
+                                                        <Circle size={15} className="text-warm-400 dark:text-slate-500" />
                                                         <span>Marcar como Concluído</span>
                                                     </>
                                                 )}
