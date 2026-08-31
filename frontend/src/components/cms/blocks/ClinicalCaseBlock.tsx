@@ -11,7 +11,8 @@ import {
     User, 
     BookOpen, 
     ChevronRight,
-    Edit3
+    Edit3,
+    Plus
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { getGuestId } from '../../../utils/guestStorage';
@@ -86,7 +87,7 @@ const DEFAULT_CASE_DATA: ClinicalCaseData = {
     ]
 };
 
-const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onSelect }) => {
+const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onSelect, onUpdate }) => {
     const { user } = useAuth();
     const data: ClinicalCaseData = { ...DEFAULT_CASE_DATA, ...(block.data || {}) };
 
@@ -149,6 +150,37 @@ const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected,
         }
     };
 
+    const updateField = (field: string, value: any) => {
+        onUpdate(block.id, { data: { ...data, [field]: value } });
+    };
+
+    const updateVital = (vitalKey: string, value: string) => {
+        const updatedVitals = { ...(data.vitals || {}), [vitalKey]: value };
+        onUpdate(block.id, { data: { ...data, vitals: updatedVitals } });
+    };
+
+    const updateDecision = (decisionId: string, patch: Partial<DecisionOption>) => {
+        const updatedDecisions = (data.decisions || []).map(d => d.id === decisionId ? { ...d, ...patch } : d);
+        onUpdate(block.id, { data: { ...data, decisions: updatedDecisions } });
+    };
+
+    const addDecision = () => {
+        const newDec: DecisionOption = {
+            id: `dec_${Date.now()}`,
+            label: 'Nova conduta de enfermagem',
+            rating: 'acceptable',
+            outcome_title: 'Desfecho da conduta',
+            outcome_description: 'Evolução clínica do paciente após a conduta.',
+            scientific_rationale: 'Fundamentação científica alinhada às diretrizes da ANCP/OMS.'
+        };
+        onUpdate(block.id, { data: { ...data, decisions: [...(data.decisions || []), newDec] } });
+    };
+
+    const removeDecision = (decisionId: string) => {
+        const updatedDecisions = (data.decisions || []).filter(d => d.id !== decisionId);
+        onUpdate(block.id, { data: { ...data, decisions: updatedDecisions } });
+    };
+
     const activeDecision = data.decisions?.find(d => d.id === selectedDecisionId);
 
     return (
@@ -167,41 +199,86 @@ const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected,
             {isEditing && isSelected && (
                 <div className="absolute -top-3 right-6 bg-primary text-white text-[11px] px-3 py-1 rounded-full font-bold shadow-md flex items-center gap-1.5 z-20 animate-fade-in">
                     <Edit3 size={12} />
-                    <span>Editando Caso Clínico no Painel Lateral</span>
+                    <span>Editável no Canvas & no Painel Lateral</span>
                 </div>
             )}
 
             {/* Tag Superior do Bloco */}
             <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-warm-200 dark:border-slate-800">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-1 min-w-[240px]">
                     <div className="w-11 h-11 rounded-2xl bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 flex items-center justify-center border border-teal-200 dark:border-teal-800 shrink-0 shadow-xs">
                         <Stethoscope size={22} />
                     </div>
-                    <div>
+                    <div className="flex-1">
                         <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 text-[10px] font-extrabold uppercase tracking-wider">
                             <Activity size={12} className="text-teal-600 dark:text-teal-400" />
                             Caso Clínico Interativo &bull; Tomada de Decisão
                         </div>
-                        <h3 className="text-base sm:text-lg font-bold text-warm-900 dark:text-slate-100 mt-1">
-                            {data.patient_name || 'Paciente sem identificação'}
-                        </h3>
+                        {isEditing ? (
+                            <div className="mt-1">
+                                <input
+                                    type="text"
+                                    value={data.patient_name || ''}
+                                    onChange={(e) => updateField('patient_name', e.target.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    placeholder="Nome e Idade do Paciente (Ex: Dona Maria de Lourdes, 72 anos)"
+                                    className="text-base sm:text-lg font-bold text-warm-900 dark:text-slate-100 bg-transparent border-b-2 border-dashed border-teal-500/50 hover:border-teal-500 focus:border-teal-500 outline-none w-full transition-colors"
+                                    title="Clique para editar o nome do paciente diretamente"
+                                />
+                            </div>
+                        ) : (
+                            <h3 className="text-base sm:text-lg font-bold text-warm-900 dark:text-slate-100 mt-1">
+                                {data.patient_name || 'Paciente sem identificação'}
+                            </h3>
+                        )}
                     </div>
                 </div>
 
-                {data.setting && (
-                    <span className="text-[11px] font-semibold text-warm-600 dark:text-slate-300 bg-warm-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-warm-200 dark:border-slate-700 shadow-2xs">
-                        📍 {data.setting}
-                    </span>
-                )}
+                <div>
+                    {isEditing ? (
+                        <div className="inline-flex items-center gap-1 bg-warm-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-warm-200 dark:border-slate-700 shadow-2xs">
+                            <span className="text-xs">📍</span>
+                            <input
+                                type="text"
+                                value={data.setting || ''}
+                                onChange={(e) => updateField('setting', e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                                placeholder="Local / Enfermaria..."
+                                className="text-[11px] font-semibold text-warm-700 dark:text-slate-200 bg-transparent border-b border-dashed border-warm-400 dark:border-slate-600 outline-none w-44"
+                                title="Clique para editar o local de atendimento diretamente"
+                            />
+                        </div>
+                    ) : (
+                        data.setting && (
+                            <span className="text-[11px] font-semibold text-warm-600 dark:text-slate-300 bg-warm-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-warm-200 dark:border-slate-700 shadow-2xs">
+                                📍 {data.setting}
+                            </span>
+                        )
+                    )}
+                </div>
             </div>
 
             {/* Diagnóstico e Sinais Vitais */}
             <div className="my-5 space-y-3.5">
                 <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-600/50 text-xs text-amber-950 dark:text-amber-100 flex items-start gap-3 shadow-xs">
                     <User size={18} className="text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
-                    <div>
+                    <div className="w-full">
                         <strong className="font-bold text-amber-950 dark:text-amber-200">Diagnóstico e Histórico de Base:</strong>
-                        <p className="mt-0.5 text-amber-900 dark:text-slate-100 font-medium leading-relaxed">{data.diagnosis || 'Não especificado'}</p>
+                        {isEditing ? (
+                            <textarea
+                                rows={2}
+                                value={data.diagnosis || ''}
+                                onChange={(e) => updateField('diagnosis', e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                                placeholder="Ex: Neoplasia pulmonar avançada em cuidados paliativos exclusivos..."
+                                className="w-full mt-1 p-2 text-xs text-amber-950 dark:text-slate-100 bg-amber-100/50 dark:bg-slate-900/80 border border-dashed border-amber-400 dark:border-amber-600 rounded-lg outline-none resize-none font-medium leading-relaxed"
+                                title="Clique para editar o diagnóstico diretamente"
+                            />
+                        ) : (
+                            <p className="mt-0.5 text-amber-900 dark:text-slate-100 font-medium leading-relaxed">
+                                {data.diagnosis || 'Não especificado'}
+                            </p>
+                        )}
                     </div>
                 </div>
 
@@ -210,27 +287,99 @@ const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected,
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-0.5">
                         <div className="p-2.5 bg-warm-50/80 dark:bg-slate-800 rounded-xl border border-warm-200 dark:border-slate-700 text-center shadow-2xs">
                             <span className="text-[10px] text-warm-500 dark:text-slate-300 font-bold uppercase block">P.A.</span>
-                            <span className="text-xs font-black text-warm-900 dark:text-white">{data.vitals?.pa || (isEditing ? '130/80 mmHg' : '—')}</span>
+                            {isEditing ? (
+                                <input
+                                    type="text"
+                                    value={data.vitals?.pa || ''}
+                                    onChange={(e) => updateVital('pa', e.target.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    placeholder="130/80"
+                                    className="w-full text-center text-xs font-black text-warm-900 dark:text-white bg-transparent border-b border-dashed border-teal-400 outline-none mt-0.5"
+                                    title="Editar Pressão Arterial"
+                                />
+                            ) : (
+                                <span className="text-xs font-black text-warm-900 dark:text-white">{data.vitals?.pa || '—'}</span>
+                            )}
                         </div>
                         <div className="p-2.5 bg-warm-50/80 dark:bg-slate-800 rounded-xl border border-warm-200 dark:border-slate-700 text-center shadow-2xs">
                             <span className="text-[10px] text-warm-500 dark:text-slate-300 font-bold uppercase block">F.C.</span>
-                            <span className="text-xs font-black text-warm-900 dark:text-white">{data.vitals?.fc || (isEditing ? '102 bpm' : '—')}</span>
+                            {isEditing ? (
+                                <input
+                                    type="text"
+                                    value={data.vitals?.fc || ''}
+                                    onChange={(e) => updateVital('fc', e.target.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    placeholder="102 bpm"
+                                    className="w-full text-center text-xs font-black text-warm-900 dark:text-white bg-transparent border-b border-dashed border-teal-400 outline-none mt-0.5"
+                                    title="Editar Frequência Cardíaca"
+                                />
+                            ) : (
+                                <span className="text-xs font-black text-warm-900 dark:text-white">{data.vitals?.fc || '—'}</span>
+                            )}
                         </div>
                         <div className="p-2.5 bg-warm-50/80 dark:bg-slate-800 rounded-xl border border-warm-200 dark:border-slate-700 text-center shadow-2xs">
                             <span className="text-[10px] text-warm-500 dark:text-slate-300 font-bold uppercase block">F.R.</span>
-                            <span className="text-xs font-black text-rose-600 dark:text-rose-400">{data.vitals?.fr || (isEditing ? '28 irpm' : '—')}</span>
+                            {isEditing ? (
+                                <input
+                                    type="text"
+                                    value={data.vitals?.fr || ''}
+                                    onChange={(e) => updateVital('fr', e.target.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    placeholder="28 irpm"
+                                    className="w-full text-center text-xs font-black text-rose-600 dark:text-rose-400 bg-transparent border-b border-dashed border-rose-400 outline-none mt-0.5"
+                                    title="Editar Frequência Respiratória"
+                                />
+                            ) : (
+                                <span className="text-xs font-black text-rose-600 dark:text-rose-400">{data.vitals?.fr || '—'}</span>
+                            )}
                         </div>
                         <div className="p-2.5 bg-warm-50/80 dark:bg-slate-800 rounded-xl border border-warm-200 dark:border-slate-700 text-center shadow-2xs">
                             <span className="text-[10px] text-warm-500 dark:text-slate-300 font-bold uppercase block">Dor (EVA)</span>
-                            <span className="text-xs font-black text-rose-600 dark:text-rose-400">{data.vitals?.dor || (isEditing ? '7/10' : '—')}</span>
+                            {isEditing ? (
+                                <input
+                                    type="text"
+                                    value={data.vitals?.dor || ''}
+                                    onChange={(e) => updateVital('dor', e.target.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    placeholder="7/10"
+                                    className="w-full text-center text-xs font-black text-rose-600 dark:text-rose-400 bg-transparent border-b border-dashed border-rose-400 outline-none mt-0.5"
+                                    title="Editar Escala de Dor"
+                                />
+                            ) : (
+                                <span className="text-xs font-black text-rose-600 dark:text-rose-400">{data.vitals?.dor || '—'}</span>
+                            )}
                         </div>
                         <div className="p-2.5 bg-warm-50/80 dark:bg-slate-800 rounded-xl border border-warm-200 dark:border-slate-700 text-center shadow-2xs">
                             <span className="text-[10px] text-warm-500 dark:text-slate-300 font-bold uppercase block">SpO2</span>
-                            <span className="text-xs font-black text-warm-900 dark:text-white">{data.vitals?.spo2 || (isEditing ? '89%' : '—')}</span>
+                            {isEditing ? (
+                                <input
+                                    type="text"
+                                    value={data.vitals?.spo2 || ''}
+                                    onChange={(e) => updateVital('spo2', e.target.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    placeholder="89%"
+                                    className="w-full text-center text-xs font-black text-warm-900 dark:text-white bg-transparent border-b border-dashed border-teal-400 outline-none mt-0.5"
+                                    title="Editar Saturação de Oxigênio"
+                                />
+                            ) : (
+                                <span className="text-xs font-black text-warm-900 dark:text-white">{data.vitals?.spo2 || '—'}</span>
+                            )}
                         </div>
                         <div className="p-2.5 bg-warm-50/80 dark:bg-slate-800 rounded-xl border border-warm-200 dark:border-slate-700 text-center shadow-2xs">
                             <span className="text-[10px] text-warm-500 dark:text-slate-300 font-bold uppercase block">Consciência</span>
-                            <span className="text-[11px] font-bold text-warm-900 dark:text-white truncate block">{data.vitals?.consciencia || (isEditing ? 'Lúcida e ansiosa' : '—')}</span>
+                            {isEditing ? (
+                                <input
+                                    type="text"
+                                    value={data.vitals?.consciencia || ''}
+                                    onChange={(e) => updateVital('consciencia', e.target.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    placeholder="Lúcida"
+                                    className="w-full text-center text-[11px] font-bold text-warm-900 dark:text-white bg-transparent border-b border-dashed border-teal-400 outline-none mt-0.5"
+                                    title="Editar Estado de Consciência"
+                                />
+                            ) : (
+                                <span className="text-[11px] font-bold text-warm-900 dark:text-white truncate block">{data.vitals?.consciencia || '—'}</span>
+                            )}
                         </div>
                     </div>
                 )}
@@ -240,9 +389,21 @@ const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected,
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-warm-600 dark:text-teal-400 block mb-1.5">
                         Situação Clínica no Leito:
                     </span>
-                    <p className="text-xs sm:text-sm text-warm-900 dark:text-slate-100 leading-relaxed font-sans">
-                        {data.clinical_scenario || 'Cenário clínico a ser preenchido.'}
-                    </p>
+                    {isEditing ? (
+                        <textarea
+                            rows={3}
+                            value={data.clinical_scenario || ''}
+                            onChange={(e) => updateField('clinical_scenario', e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            placeholder="Descreva detalhadamente a situação clínica e o sofrimento do paciente..."
+                            className="w-full text-xs sm:text-sm text-warm-900 dark:text-slate-100 bg-white/70 dark:bg-slate-900/80 border border-dashed border-teal-500/60 rounded-xl p-2.5 outline-none resize-none font-sans leading-relaxed"
+                            title="Clique para editar o cenário clínico diretamente"
+                        />
+                    ) : (
+                        <p className="text-xs sm:text-sm text-warm-900 dark:text-slate-100 leading-relaxed font-sans">
+                            {data.clinical_scenario || 'Cenário clínico a ser preenchido.'}
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -250,7 +411,19 @@ const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected,
             <div className="mt-6 pt-5 border-t border-warm-200 dark:border-slate-800">
                 <div className="flex items-center gap-2 text-primary dark:text-teal-400 font-bold text-xs sm:text-sm mb-3">
                     <HeartPulse size={18} className="text-primary dark:text-teal-400 shrink-0" />
-                    <h4>{data.decision_prompt || 'Qual a conduta de enfermagem prioritária?'}</h4>
+                    {isEditing ? (
+                        <input
+                            type="text"
+                            value={data.decision_prompt || ''}
+                            onChange={(e) => updateField('decision_prompt', e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            placeholder="Pergunta de conduta (Ex: Como enfermeiro(a), qual sua conduta prioritária?)"
+                            className="w-full text-xs sm:text-sm font-bold text-primary dark:text-teal-400 bg-transparent border-b-2 border-dashed border-teal-500/50 hover:border-teal-500 outline-none py-0.5"
+                            title="Clique para editar a pergunta diretamente"
+                        />
+                    ) : (
+                        <h4>{data.decision_prompt || 'Qual a conduta de enfermagem prioritária?'}</h4>
+                    )}
                 </div>
 
                 {/* Opções de Conduta */}
@@ -272,23 +445,70 @@ const ClinicalCaseBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected,
                         }
 
                         return (
-                            <button
+                            <div
                                 key={decision.id || idx}
-                                type="button"
                                 onClick={(e) => handleSelectOption(decision.id, e)}
-                                className={`w-full text-left p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 flex items-start gap-3 cursor-pointer ${borderStyle}`}
+                                className={`w-full text-left p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 flex items-start gap-3 ${borderStyle} ${isEditing ? '' : 'cursor-pointer'}`}
                             >
                                 <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 transition-all ${
                                     isSelectedOption ? 'bg-primary text-white shadow-xs' : 'bg-warm-200 dark:bg-slate-700 text-warm-700 dark:text-slate-200'
                                 }`}>
                                     {String.fromCharCode(65 + idx)}
                                 </div>
-                                <div className="flex-1 text-xs sm:text-sm text-warm-800 dark:text-slate-200 leading-relaxed font-medium">
-                                    {decision.label}
-                                </div>
-                            </button>
+
+                                {isEditing ? (
+                                    <div className="flex-1 flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+                                        <textarea
+                                            rows={2}
+                                            value={decision.label || ''}
+                                            onChange={(e) => updateDecision(decision.id, { label: e.target.value })}
+                                            placeholder={`Descreva a conduta da opção ${String.fromCharCode(65 + idx)}...`}
+                                            className="w-full text-xs sm:text-sm text-warm-900 dark:text-slate-100 bg-white/70 dark:bg-slate-900/80 border border-dashed border-teal-400/80 rounded-xl p-2 outline-none font-medium leading-relaxed resize-none"
+                                            title="Clique para editar o texto desta opção diretamente"
+                                        />
+                                        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-warm-200/50 dark:border-slate-700/50">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-[10px] font-bold text-warm-500 dark:text-slate-400">Classificação:</span>
+                                                <select
+                                                    value={decision.rating || 'acceptable'}
+                                                    onChange={(e) => updateDecision(decision.id, { rating: e.target.value as any })}
+                                                    className="text-[11px] font-bold rounded-lg px-2 py-1 bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 text-warm-800 dark:text-slate-200 outline-none cursor-pointer"
+                                                >
+                                                    <option value="optimal">✨ Padrão-Ouro (Correta)</option>
+                                                    <option value="acceptable">⚠️ Parcialmente Adequada</option>
+                                                    <option value="inadequate">❌ Inadequada</option>
+                                                </select>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeDecision(decision.id)}
+                                                className="text-[11px] text-rose-600 dark:text-rose-400 hover:text-rose-800 font-bold px-2 py-0.5 rounded hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                                                title="Excluir esta opção de conduta"
+                                            >
+                                                Excluir Opção
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex-1 text-xs sm:text-sm text-warm-800 dark:text-slate-200 leading-relaxed font-medium">
+                                        {decision.label}
+                                    </div>
+                                )}
+                            </div>
                         );
                     })}
+
+                    {/* Botão de Adicionar Nova Opção no Modo de Edição */}
+                    {isEditing && (
+                        <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); addDecision(); }}
+                            className="w-full py-2.5 px-4 border-2 border-dashed border-teal-400/80 hover:border-teal-500 dark:border-teal-600/60 dark:hover:border-teal-500 rounded-2xl bg-teal-50/40 dark:bg-teal-950/30 text-teal-800 dark:text-teal-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.005]"
+                        >
+                            <Plus size={15} />
+                            <span>Adicionar Nova Opção de Conduta ({String.fromCharCode(65 + (data.decisions?.length || 0))})</span>
+                        </button>
+                    )}
                 </div>
 
                 {/* Botão de Confirmação */}

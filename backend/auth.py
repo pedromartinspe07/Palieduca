@@ -9,7 +9,7 @@ SECRET_KEY = os.getenv("JWT_SECRET_KEY", "minha_chave_super_secreta_palieduca")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 dias
 
-GOOGLE_CLIENT_ID = "685476211444-k1d51qlvic4n0sk8rq3h2o54rnikpbd1.apps.googleusercontent.com"
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "685476211444-k1d51qlvic4n0sk8rq3h2o54rnikpbd1.apps.googleusercontent.com")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

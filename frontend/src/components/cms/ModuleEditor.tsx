@@ -118,13 +118,13 @@ const ModuleEditor: React.FC = () => {
     }
 
     return (
-        <div className="mt-8 bg-white/50 border border-warm-200 rounded-3xl p-6 shadow-inner">
-            <h3 className="text-xl font-bold text-warm-900 mb-6 flex items-center gap-2">
-                <Pencil className="text-secondary" /> Editor de Conteúdo (Módulos)
+        <div className="mt-8 bg-white/50 dark:bg-slate-900/60 border border-warm-200 dark:border-slate-800 rounded-3xl p-6 shadow-inner text-warm-900 dark:text-slate-100">
+            <h3 className="text-xl font-bold text-warm-900 dark:text-slate-100 mb-6 flex items-center gap-2">
+                <Pencil className="text-secondary dark:text-teal-400" /> Editor de Conteúdo (Módulos)
             </h3>
 
             {successMessage && (
-                <div className="mb-6 p-4 bg-sage-50 text-sage-700 rounded-xl flex items-center gap-2 border border-sage-200 animate-fade-in">
+                <div className="mb-6 p-4 bg-sage-50 dark:bg-emerald-950/60 text-sage-700 dark:text-emerald-300 rounded-xl flex items-center gap-2 border border-sage-200 dark:border-emerald-800 animate-fade-in">
                     <CheckCircle2 size={20} />
                     {successMessage}
                 </div>
@@ -132,21 +132,21 @@ const ModuleEditor: React.FC = () => {
 
             <div className="space-y-4">
                 {modules.map((mod) => (
-                    <div key={mod.id} className="bg-white p-5 rounded-3xl border border-warm-100 shadow-sm transition-all hover:shadow-xl">
+                    <div key={mod.id} className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-warm-100 dark:border-slate-800 shadow-sm transition-all hover:shadow-xl">
                         {editingId === mod.id ? (
                             <div className="space-y-4 animate-fade-in">
                                 <div>
-                                    <label className="block text-sm font-semibold text-warm-700 mb-1">Título do Módulo</label>
+                                    <label className="block text-sm font-semibold text-warm-700 dark:text-slate-300 mb-1">Título do Módulo</label>
                                     <input
                                         type="text"
                                         value={editForm.title}
                                         onChange={e => setEditForm({ ...editForm, title: e.target.value })}
-                                        className="w-full p-3 bg-warm-50 border border-warm-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
+                                        className="w-full p-3 bg-warm-50 dark:bg-slate-950 border border-warm-200 dark:border-slate-700 text-warm-900 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-primary outline-none"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-warm-700 mb-1">Descrição (Aparece no card)</label>
-                                    <div className="bg-white rounded-xl overflow-hidden border border-warm-200">
+                                    <label className="block text-sm font-semibold text-warm-700 dark:text-slate-300 mb-1">Descrição (Aparece no card)</label>
+                                    <div className="bg-white dark:bg-slate-950 rounded-xl overflow-hidden border border-warm-200 dark:border-slate-700">
                                         <ReactQuill 
                                             theme="snow"
                                             value={editForm.description}
@@ -156,23 +156,23 @@ const ModuleEditor: React.FC = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-warm-700 mb-1">URL da Imagem de Fundo</label>
+                                    <label className="block text-sm font-semibold text-warm-700 dark:text-slate-300 mb-1">URL da Imagem de Fundo</label>
                                     <div className="flex gap-2">
                                         <input
                                             type="text"
                                             value={editForm.image_url}
                                             onChange={e => setEditForm({ ...editForm, image_url: e.target.value })}
-                                            className="flex-1 p-3 bg-warm-50 border border-warm-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
+                                            className="flex-1 p-3 bg-warm-50 dark:bg-slate-950 border border-warm-200 dark:border-slate-700 text-warm-900 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-primary outline-none"
                                             placeholder="https://..."
                                         />
                                         <button
                                             onClick={() => setShowMediaLibrary(true)}
-                                            className="px-4 py-2 bg-warm-100 hover:bg-warm-200 text-warm-700 font-medium rounded-xl border border-warm-200 transition-colors flex items-center gap-2 shadow-sm"
+                                            className="px-4 py-2 bg-warm-100 dark:bg-slate-800 hover:bg-warm-200 dark:hover:bg-slate-700 text-warm-700 dark:text-slate-200 font-medium rounded-xl border border-warm-200 dark:border-slate-700 transition-colors flex items-center gap-2 shadow-sm"
                                         >
                                             <ImageIcon size={18} />
                                             Biblioteca
                                         </button>
-                                        <label className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary font-bold rounded-xl border border-primary/20 transition-colors flex items-center gap-2 shadow-sm cursor-pointer">
+                                        <label className="px-4 py-2 bg-primary/10 dark:bg-teal-950/60 hover:bg-primary/20 text-primary dark:text-teal-300 font-bold rounded-xl border border-primary/20 dark:border-teal-800/60 transition-colors flex items-center gap-2 shadow-sm cursor-pointer">
                                             {uploading ? <Loader2 size={18} className="animate-spin" /> : <UploadCloud size={18} />}
                                             Upload (PC)
                                             <input type="file" accept="image/*" className="hidden" onChange={handleLocalUpload} disabled={uploading} />
@@ -191,7 +191,7 @@ const ModuleEditor: React.FC = () => {
                                     <button
                                         onClick={() => setEditingId(null)}
                                         disabled={saving}
-                                        className="px-5 py-2.5 bg-warm-100 text-warm-700 font-medium rounded-xl hover:bg-warm-200 transition-colors flex items-center gap-2"
+                                        className="px-5 py-2.5 bg-warm-100 dark:bg-slate-800 text-warm-700 dark:text-slate-300 font-medium rounded-xl hover:bg-warm-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
                                     >
                                         <X size={18} /> Cancelar
                                     </button>
@@ -200,17 +200,17 @@ const ModuleEditor: React.FC = () => {
                         ) : (
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="bg-primary/10 p-2.5 rounded-xl text-primary shrink-0 flex items-center justify-center">
+                                    <div className="bg-primary/10 dark:bg-teal-950/60 p-2.5 rounded-xl text-primary dark:text-teal-400 shrink-0 flex items-center justify-center">
                                         {getModuleIcon(mod.icon_name, 22)}
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-warm-900 text-lg">{mod.title}</h4>
-                                        <p className="text-sm text-warm-500 line-clamp-1">{mod.description}</p>
+                                        <h4 className="font-bold text-warm-900 dark:text-slate-100 text-lg">{mod.title}</h4>
+                                        <p className="text-sm text-warm-500 dark:text-slate-400 line-clamp-1">{mod.description}</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => handleEdit(mod)}
-                                    className="shrink-0 px-4 py-2 text-sm bg-warm-50 border border-warm-200 text-warm-700 hover:bg-primary/10 hover:text-primary hover:border-primary/30 rounded-lg transition-colors font-medium flex items-center gap-2"
+                                    className="shrink-0 px-4 py-2 text-sm bg-warm-50 dark:bg-slate-800 border border-warm-200 dark:border-slate-700 text-warm-700 dark:text-slate-200 hover:bg-primary/10 dark:hover:bg-teal-950/50 hover:text-primary dark:hover:text-teal-300 hover:border-primary/30 rounded-lg transition-colors font-medium flex items-center gap-2 cursor-pointer"
                                 >
                                     <Pencil size={16} /> Editar
                                 </button>
@@ -237,6 +237,14 @@ const ModuleEditor: React.FC = () => {
                     border: none;
                     font-size: 14px;
                     font-family: inherit;
+                }
+                html.dark .custom-quill-module .ql-toolbar {
+                    border-bottom: 1px solid #334155 !important;
+                    background-color: #0f172a !important;
+                }
+                html.dark .custom-quill-module .ql-container {
+                    background-color: #020617 !important;
+                    color: #f8fafc !important;
                 }
             `}</style>
         </div>

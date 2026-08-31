@@ -18,10 +18,40 @@
     color: #0f172a;
   }
 
-  html.dark input, 
+  html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), 
   html.dark textarea, 
   html.dark select {
-    color: #f8fafc;
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+  }
+
+  html.dark input::placeholder,
+  html.dark textarea::placeholder {
+    color: #64748b !important;
+  }
+
+  html.dark label {
+    color: #e2e8f0;
+  }
+
+  html.dark .custom-quill-module .ql-container,
+  html.dark .custom-quill-module .ql-editor {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+  }
+
+  html.dark .custom-quill-module .ql-toolbar {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+  }
+
+  html.dark .custom-quill-module .ql-stroke {
+    stroke: #e2e8f0 !important;
+  }
+
+  html.dark .custom-quill-module .ql-fill {
+    fill: #e2e8f0 !important;
   }
 }
 

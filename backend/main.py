@@ -29,23 +29,30 @@ load_dotenv()
 
 models.Base.metadata.create_all(bind=engine)
 
-# Migração simples para SQLite (se as colunas não existirem, adiciona individualmente)
+# Migração e compatibilidade cross-database (SQLite e PostgreSQL Supabase)
+is_postgres = not str(engine.url).startswith("sqlite")
+bool_default = "false" if is_postgres else "0"
+
 with engine.connect() as conn:
-    for migration_sql in [
-        "ALTER TABLE page_content ADD COLUMN draft_content VARCHAR",
-        "ALTER TABLE page_content ADD COLUMN meta_title VARCHAR",
-        "ALTER TABLE page_content ADD COLUMN meta_description VARCHAR",
-        "ALTER TABLE page_content ADD COLUMN slug VARCHAR",
-        "ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT 0",
-        "ALTER TABLE users ADD COLUMN verification_code VARCHAR",
-        "ALTER TABLE users ADD COLUMN reset_password_code VARCHAR",
-        "ALTER TABLE users ADD COLUMN auth_provider VARCHAR DEFAULT 'local'",
-        "ALTER TABLE users ADD COLUMN last_password_change VARCHAR",
-        "ALTER TABLE users ADD COLUMN foto_url VARCHAR",
-        "ALTER TABLE users ADD COLUMN completion_email_sent BOOLEAN DEFAULT 0",
-    ]:
+    migration_columns = [
+        ("page_content", "draft_content", "VARCHAR"),
+        ("page_content", "meta_title", "VARCHAR"),
+        ("page_content", "meta_description", "VARCHAR"),
+        ("page_content", "slug", "VARCHAR"),
+        ("users", "email_verified", f"BOOLEAN DEFAULT {bool_default}"),
+        ("users", "verification_code", "VARCHAR"),
+        ("users", "reset_password_code", "VARCHAR"),
+        ("users", "auth_provider", "VARCHAR DEFAULT 'local'"),
+        ("users", "last_password_change", "VARCHAR"),
+        ("users", "foto_url", "VARCHAR"),
+        ("users", "completion_email_sent", f"BOOLEAN DEFAULT {bool_default}"),
+    ]
+    for table, col, col_type in migration_columns:
         try:
-            conn.execute(text(migration_sql))
+            if is_postgres:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {col_type}"))
+            else:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"))
             conn.commit()
         except Exception:
             pass
@@ -89,6 +96,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 

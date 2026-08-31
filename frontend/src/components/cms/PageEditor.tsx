@@ -1809,53 +1809,53 @@ className="p-1 bg-white border border-warm-200 rounded-md hover:bg-primary hover
             ) : (
                 <div className="space-y-5">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold bg-primary/10 text-primary px-2 py-1 rounded-md">
+                        <span className="text-xs font-bold bg-primary/10 text-primary dark:text-teal-300 dark:bg-teal-950/60 px-2 py-1 rounded-md border border-primary/20 dark:border-teal-800/60">
                             {BLOCK_TEMPLATES.find(t => t.type === selectedBlock.type)?.label || selectedBlock.type}
                         </span>
-                        <span className="text-[10px] text-warm-400">#{selectedBlockIndex + 1}</span>
+                        <span className="text-[10px] text-warm-400 dark:text-slate-500 font-bold">#{selectedBlockIndex + 1}</span>
                     </div>
 
                     <div className="flex gap-1.5">
-                        <button onClick={() => moveBlock(selectedBlock.id, 'up')} disabled={selectedBlockIndex === 0} className="flex-1 flex items-center justify-center gap-1 p-2 bg-warm-50 border border-warm-200 rounded-lg text-warm-600 hover:bg-warm-100 disabled:opacity-30 text-xs font-medium transition-colors">
+                        <button onClick={() => moveBlock(selectedBlock.id, 'up')} disabled={selectedBlockIndex === 0} className="flex-1 flex items-center justify-center gap-1 p-2 bg-warm-50 dark:bg-slate-800 border border-warm-200 dark:border-slate-700 rounded-lg text-warm-700 dark:text-slate-200 hover:bg-warm-100 dark:hover:bg-slate-700 disabled:opacity-30 text-xs font-bold transition-colors cursor-pointer">
                             <ChevronUp size={14} /> Subir
                         </button>
-                        <button onClick={() => moveBlock(selectedBlock.id, 'down')} disabled={selectedBlockIndex === blocks.length - 1} className="flex-1 flex items-center justify-center gap-1 p-2 bg-warm-50 border border-warm-200 rounded-lg text-warm-600 hover:bg-warm-100 disabled:opacity-30 text-xs font-medium transition-colors">
+                        <button onClick={() => moveBlock(selectedBlock.id, 'down')} disabled={selectedBlockIndex === blocks.length - 1} className="flex-1 flex items-center justify-center gap-1 p-2 bg-warm-50 dark:bg-slate-800 border border-warm-200 dark:border-slate-700 rounded-lg text-warm-700 dark:text-slate-200 hover:bg-warm-100 dark:hover:bg-slate-700 disabled:opacity-30 text-xs font-bold transition-colors cursor-pointer">
                             <ChevronDown size={14} /> Descer
                         </button>
-                        <button onClick={() => duplicateBlock(selectedBlock.id)} className="p-2 bg-warm-50 border border-warm-200 rounded-lg text-warm-600 hover:bg-warm-100 transition-colors" title="Duplicar">
+                        <button onClick={() => duplicateBlock(selectedBlock.id)} className="p-2 bg-warm-50 dark:bg-slate-800 border border-warm-200 dark:border-slate-700 rounded-lg text-warm-700 dark:text-slate-200 hover:bg-warm-100 dark:hover:bg-slate-700 transition-colors cursor-pointer" title="Duplicar">
                             <Copy size={14} />
                         </button>
                     </div>
 
-                    <hr className="border-warm-100" />
+                    <hr className="border-warm-100 dark:border-slate-800" />
 
                     {selectedBlock.type === 'HeroBlock' && (
                         <div className="space-y-4">
-                            <h4 className="text-xs font-bold text-warm-500 uppercase tracking-wider">Conteúdo</h4>
+                            <h4 className="text-xs font-bold text-warm-600 dark:text-slate-300 uppercase tracking-wider">Conteúdo</h4>
                             <div>
-                                <label className="block text-xs font-medium text-warm-600 mb-1">Título</label>
+                                <label className="block text-xs font-medium text-warm-700 dark:text-slate-300 mb-1">Título</label>
                                 <input
                                     type="text"
                                     value={selectedBlock.data.title || ''}
                                     onChange={(e) => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, title: e.target.value } })}
-                                    className="w-full bg-warm-50 border border-warm-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                    className="w-full bg-warm-50 dark:bg-slate-900 border border-warm-200 dark:border-slate-700 text-warm-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-warm-600 mb-1">Subtítulo</label>
+                                <label className="block text-xs font-medium text-warm-700 dark:text-slate-300 mb-1">Subtítulo</label>
                                 <textarea
                                     value={selectedBlock.data.subtitle || ''}
                                     onChange={(e) => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, subtitle: e.target.value } })}
                                     rows={3}
-                                    className="w-full bg-warm-50 border border-warm-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none resize-none"
+                                    className="w-full bg-warm-50 dark:bg-slate-900 border border-warm-200 dark:border-slate-700 text-warm-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none resize-none"
                                 />
                             </div>
 
-                            <h4 className="text-xs font-bold text-warm-500 uppercase tracking-wider pt-2">Estilo</h4>
+                            <h4 className="text-xs font-bold text-warm-600 dark:text-slate-300 uppercase tracking-wider pt-2">Estilo</h4>
                             <div>
-                                <label className="block text-xs font-medium text-warm-600 mb-1">Imagem de Fundo</label>
-                                <label className="flex items-center justify-center w-full p-3 border-2 border-dashed border-warm-300 rounded-xl hover:bg-warm-50 hover:border-primary cursor-pointer transition-colors group">
-                                    <div className="flex items-center gap-2 text-warm-500 group-hover:text-primary">
+                                <label className="block text-xs font-medium text-warm-700 dark:text-slate-300 mb-1">Imagem de Fundo</label>
+                                <label className="flex items-center justify-center w-full p-3 border-2 border-dashed border-warm-300 dark:border-slate-700 rounded-xl hover:bg-warm-50 dark:hover:bg-slate-800 hover:border-primary cursor-pointer transition-colors group">
+                                    <div className="flex items-center gap-2 text-warm-500 dark:text-slate-400 group-hover:text-primary dark:group-hover:text-teal-400">
                                         <ImageIcon size={18} />
                                         <span className="text-xs font-medium">Upload Imagem</span>
                                     </div>
@@ -2727,11 +2727,11 @@ Confirmar
 
 {/* ═══ MODULE EDITOR MODAL ═══ */}
 {showModuleEditor && (
-    <div className="fixed inset-0 z-[100] bg-warm-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-        <div className="bg-[#f0f2f5] w-full max-w-6xl h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative">
-            <div className="bg-white p-4 border-b border-warm-200 flex justify-between items-center shrink-0">
-                <h3 className="text-xl font-bold text-warm-900">Gerenciar Módulos</h3>
-                <button onClick={() => setShowModuleEditor(false)} className="p-2 bg-warm-100 text-warm-600 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+    <div className="fixed inset-0 z-[100] bg-warm-900/80 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+        <div className="bg-[#f0f2f5] dark:bg-slate-950 w-full max-w-6xl h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative border border-warm-200 dark:border-slate-800">
+            <div className="bg-white dark:bg-slate-900 p-4 border-b border-warm-200 dark:border-slate-800 flex justify-between items-center shrink-0">
+                <h3 className="text-xl font-bold text-warm-900 dark:text-slate-100">Gerenciar Módulos</h3>
+                <button onClick={() => setShowModuleEditor(false)} className="p-2 bg-warm-100 dark:bg-slate-800 text-warm-600 dark:text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-full transition-colors cursor-pointer">
                     <X size={20} />
                 </button>
             </div>

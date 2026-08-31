@@ -1563,43 +1563,43 @@ const ModuleContentEditor: React.FC = () => {
                             ) : (
                                 <div className="space-y-5">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-bold bg-primary/10 text-primary px-2 py-1 rounded-md">
+                                        <span className="text-xs font-bold bg-primary/10 text-primary dark:text-teal-300 dark:bg-teal-950/60 px-2 py-1 rounded-md border border-primary/20 dark:border-teal-800/60">
                                             {BLOCK_TEMPLATES.find(t => t.type === selectedBlock.type)?.label || selectedBlock.type}
                                         </span>
-                                        <span className="text-[10px] text-warm-400">#{selectedBlockIndex + 1}</span>
+                                        <span className="text-[10px] text-warm-400 dark:text-slate-500 font-bold">#{selectedBlockIndex + 1}</span>
                                     </div>
 
                                     <div className="flex gap-1.5">
-                                        <button onClick={() => moveBlock(selectedBlock.id, 'up')} disabled={selectedBlockIndex === 0} className="flex-1 flex items-center justify-center gap-1 p-2 bg-warm-50 border border-warm-200 rounded-lg text-warm-600 hover:bg-warm-100 disabled:opacity-30 text-xs font-medium transition-colors">
+                                        <button onClick={() => moveBlock(selectedBlock.id, 'up')} disabled={selectedBlockIndex === 0} className="flex-1 flex items-center justify-center gap-1 p-2 bg-warm-50 dark:bg-slate-800 border border-warm-200 dark:border-slate-700 rounded-lg text-warm-700 dark:text-slate-200 hover:bg-warm-100 dark:hover:bg-slate-700 disabled:opacity-30 text-xs font-bold transition-colors cursor-pointer">
                                             <ChevronUp size={14} /> Subir
                                         </button>
-                                        <button onClick={() => moveBlock(selectedBlock.id, 'down')} disabled={selectedBlockIndex === blocks.length - 1} className="flex-1 flex items-center justify-center gap-1 p-2 bg-warm-50 border border-warm-200 rounded-lg text-warm-600 hover:bg-warm-100 disabled:opacity-30 text-xs font-medium transition-colors">
+                                        <button onClick={() => moveBlock(selectedBlock.id, 'down')} disabled={selectedBlockIndex === blocks.length - 1} className="flex-1 flex items-center justify-center gap-1 p-2 bg-warm-50 dark:bg-slate-800 border border-warm-200 dark:border-slate-700 rounded-lg text-warm-700 dark:text-slate-200 hover:bg-warm-100 dark:hover:bg-slate-700 disabled:opacity-30 text-xs font-bold transition-colors cursor-pointer">
                                             <ChevronDown size={14} /> Descer
                                         </button>
-                                        <button onClick={() => duplicateBlock(selectedBlock.id)} className="p-2 bg-warm-50 border border-warm-200 rounded-lg text-warm-600 hover:bg-warm-100 transition-colors" title="Duplicar">
+                                        <button onClick={() => duplicateBlock(selectedBlock.id)} className="p-2 bg-warm-50 dark:bg-slate-800 border border-warm-200 dark:border-slate-700 rounded-lg text-warm-700 dark:text-slate-200 hover:bg-warm-100 dark:hover:bg-slate-700 transition-colors cursor-pointer" title="Duplicar">
                                             <Copy size={14} />
                                         </button>
                                     </div>
 
-                                    <hr className="border-warm-100" />
+                                    <hr className="border-warm-100 dark:border-slate-800" />
 
                                     {/* TextBlock Typography Studio */}
                                     {selectedBlock.type === 'TextBlock' && (
                                         <div className="space-y-5 text-left">
-                                            <div className="flex items-center justify-between border-b border-warm-100 pb-2">
-                                                <h4 className="text-xs font-bold text-warm-900 uppercase tracking-wider flex items-center gap-1.5">
-                                                    <Type size={15} className="text-primary" /> Estúdio de Tipografia
+                                            <div className="flex items-center justify-between border-b border-warm-100 dark:border-slate-800 pb-2">
+                                                <h4 className="text-xs font-bold text-warm-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+                                                    <Type size={15} className="text-primary dark:text-teal-400" /> Estúdio de Tipografia
                                                 </h4>
-                                                <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">Photoshop FX</span>
+                                                <span className="text-[10px] bg-primary/10 text-primary dark:text-teal-300 dark:bg-teal-950 font-bold px-2 py-0.5 rounded-full border border-primary/20 dark:border-teal-800">Photoshop FX</span>
                                             </div>
 
                                             {/* 1. Família da Fonte */}
                                             <div>
-                                                <label className="block text-xs font-bold text-warm-700 mb-1">Família da Fonte</label>
+                                                <label className="block text-xs font-bold text-warm-700 dark:text-slate-300 mb-1">Família da Fonte</label>
                                                 <select
                                                     value={selectedBlock.styles?.fontFamily || 'sans-serif'}
                                                     onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, fontFamily: e.target.value } })}
-                                                    className="w-full bg-warm-50 border border-warm-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-primary outline-none"
+                                                    className="w-full bg-warm-50 dark:bg-slate-900 border border-warm-200 dark:border-slate-700 text-warm-900 dark:text-slate-100 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-primary outline-none"
                                                 >
                                                     <option value="sans-serif">Padrão / Moderna (Inter Sans)</option>
                                                     <option value="serif">Elegante / Editorial (Playfair Serif)</option>
@@ -1611,8 +1611,8 @@ const ModuleContentEditor: React.FC = () => {
                                             {/* 2. Tamanho da Fonte com Atalhos Rápidos */}
                                             <div>
                                                 <div className="flex justify-between items-center mb-1">
-                                                    <label className="text-xs font-bold text-warm-700">Tamanho da Fonte</label>
-                                                    <span className="text-xs font-bold text-primary bg-primary/5 px-2 py-0.5 rounded-md">
+                                                    <label className="text-xs font-bold text-warm-700 dark:text-slate-300">Tamanho da Fonte</label>
+                                                    <span className="text-xs font-bold text-primary dark:text-teal-300 bg-primary/5 dark:bg-teal-950 px-2 py-0.5 rounded-md border border-primary/20 dark:border-teal-800">
                                                         {selectedBlock.styles?.fontSize ?? 16}px
                                                     </span>
                                                 </div>
@@ -1620,7 +1620,7 @@ const ModuleContentEditor: React.FC = () => {
                                                     type="range" min="12" max="56"
                                                     value={selectedBlock.styles?.fontSize ?? 16}
                                                     onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, fontSize: parseInt(e.target.value) } })}
-                                                    className="w-full accent-primary h-2 bg-warm-200 rounded-lg cursor-pointer"
+                                                    className="w-full accent-primary h-2 bg-warm-200 dark:bg-slate-700 rounded-lg cursor-pointer"
                                                 />
                                                 <div className="flex gap-1.5 mt-2">
                                                     {[
@@ -1633,9 +1633,9 @@ const ModuleContentEditor: React.FC = () => {
                                                         <button
                                                             key={sz.size}
                                                             onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, fontSize: sz.size } })}
-                                                            className={`flex-1 py-1 text-[10px] rounded-lg border font-semibold transition-all ${(selectedBlock.styles?.fontSize ?? 16) === sz.size
+                                                            className={`flex-1 py-1 text-[10px] rounded-lg border font-semibold transition-all cursor-pointer ${(selectedBlock.styles?.fontSize ?? 16) === sz.size
                                                                     ? 'bg-primary text-white border-primary shadow-sm'
-                                                                    : 'bg-warm-50 text-warm-600 border-warm-200 hover:bg-warm-100'
+                                                                    : 'bg-warm-50 dark:bg-slate-800 text-warm-600 dark:text-slate-300 border-warm-200 dark:border-slate-700 hover:bg-warm-100 dark:hover:bg-slate-700'
                                                                 }`}
                                                         >
                                                             {sz.label.split(' ')[0]}
@@ -1646,7 +1646,7 @@ const ModuleContentEditor: React.FC = () => {
 
                                             {/* 3. Espessura da Fonte (Weight) */}
                                             <div>
-                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Espessura (Peso)</label>
+                                                <label className="block text-xs font-bold text-warm-700 dark:text-slate-300 mb-1.5">Espessura (Peso)</label>
                                                 <div className="grid grid-cols-4 gap-1">
                                                     {[
                                                         { value: '300', label: 'Fino' },
@@ -1657,9 +1657,9 @@ const ModuleContentEditor: React.FC = () => {
                                                         <button
                                                             key={w.value}
                                                             onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, fontWeight: w.value } })}
-                                                            className={`py-1.5 text-xs rounded-lg border transition-all ${(selectedBlock.styles?.fontWeight || '400') === w.value
+                                                            className={`py-1.5 text-xs rounded-lg border transition-all cursor-pointer ${(selectedBlock.styles?.fontWeight || '400') === w.value
                                                                     ? 'bg-primary text-white border-primary font-bold shadow-sm'
-                                                                    : 'bg-warm-50 text-warm-600 border-warm-200 hover:bg-warm-100'
+                                                                    : 'bg-warm-50 dark:bg-slate-800 text-warm-600 dark:text-slate-300 border-warm-200 dark:border-slate-700 hover:bg-warm-100 dark:hover:bg-slate-700'
                                                                 }`}
                                                         >
                                                             {w.label}
@@ -1670,8 +1670,8 @@ const ModuleContentEditor: React.FC = () => {
 
                                             {/* 4. Alinhamento */}
                                             <div>
-                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Alinhamento</label>
-                                                <div className="flex bg-warm-50 p-1 rounded-xl border border-warm-200 gap-1">
+                                                <label className="block text-xs font-bold text-warm-700 dark:text-slate-300 mb-1.5">Alinhamento</label>
+                                                <div className="flex bg-warm-50 dark:bg-slate-800 p-1 rounded-xl border border-warm-200 dark:border-slate-700 gap-1">
                                                     {[
                                                         { value: 'left', icon: <AlignLeft size={16} />, label: 'Esquerda' },
                                                         { value: 'center', icon: <AlignCenter size={16} />, label: 'Centro' },
@@ -1682,9 +1682,9 @@ const ModuleContentEditor: React.FC = () => {
                                                             key={align.value}
                                                             title={align.label}
                                                             onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textAlign: align.value } })}
-                                                            className={`flex-1 py-1.5 rounded-lg flex items-center justify-center transition-all ${(selectedBlock.styles?.textAlign || 'left') === align.value
-                                                                    ? 'bg-white text-primary shadow-sm font-bold'
-                                                                    : 'text-warm-400 hover:text-warm-700'
+                                                            className={`flex-1 py-1.5 rounded-lg flex items-center justify-center transition-all cursor-pointer ${(selectedBlock.styles?.textAlign || 'left') === align.value
+                                                                    ? 'bg-white dark:bg-slate-900 text-primary dark:text-teal-400 shadow-sm font-bold border border-warm-200 dark:border-slate-700'
+                                                                    : 'text-warm-400 dark:text-slate-400 hover:text-warm-700 dark:hover:text-slate-200'
                                                                 }`}
                                                         >
                                                             {align.icon}
@@ -1696,8 +1696,8 @@ const ModuleContentEditor: React.FC = () => {
                                             {/* 5. Transformação de Texto (Maiúsculas/Minúsculas) & Decoração */}
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label className="block text-[11px] font-bold text-warm-700 mb-1">Caixa (Transform)</label>
-                                                    <div className="flex bg-warm-50 p-1 rounded-xl border border-warm-200 gap-1">
+                                                    <label className="block text-[11px] font-bold text-warm-700 dark:text-slate-300 mb-1">Caixa (Transform)</label>
+                                                    <div className="flex bg-warm-50 dark:bg-slate-800 p-1 rounded-xl border border-warm-200 dark:border-slate-700 gap-1">
                                                         {[
                                                             { value: 'none', label: 'Aa' },
                                                             { value: 'uppercase', label: 'AA' },
@@ -1706,9 +1706,9 @@ const ModuleContentEditor: React.FC = () => {
                                                             <button
                                                                 key={t.value}
                                                                 onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textTransform: t.value } })}
-                                                                className={`flex-1 py-1 text-xs rounded-lg transition-all ${(selectedBlock.styles?.textTransform || 'none') === t.value
-                                                                        ? 'bg-white text-primary font-bold shadow-sm'
-                                                                        : 'text-warm-400 hover:text-warm-700'
+                                                                className={`flex-1 py-1 text-xs rounded-lg transition-all cursor-pointer ${(selectedBlock.styles?.textTransform || 'none') === t.value
+                                                                        ? 'bg-white dark:bg-slate-900 text-primary dark:text-teal-400 font-bold shadow-sm border border-warm-200 dark:border-slate-700'
+                                                                        : 'text-warm-400 dark:text-slate-400 hover:text-warm-700 dark:hover:text-slate-200'
                                                                     }`}
                                                             >
                                                                 {t.label}
@@ -1718,8 +1718,8 @@ const ModuleContentEditor: React.FC = () => {
                                                 </div>
 
                                                 <div>
-                                                    <label className="block text-[11px] font-bold text-warm-700 mb-1">Decoração</label>
-                                                    <div className="flex bg-warm-50 p-1 rounded-xl border border-warm-200 gap-1">
+                                                    <label className="block text-[11px] font-bold text-warm-700 dark:text-slate-300 mb-1">Decoração</label>
+                                                    <div className="flex bg-warm-50 dark:bg-slate-800 p-1 rounded-xl border border-warm-200 dark:border-slate-700 gap-1">
                                                         {[
                                                             { value: 'none', label: '—' },
                                                             { value: 'underline', icon: <Underline size={14} /> },
@@ -1728,9 +1728,9 @@ const ModuleContentEditor: React.FC = () => {
                                                             <button
                                                                 key={d.value}
                                                                 onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textDecoration: d.value } })}
-                                                                className={`flex-1 py-1 text-xs rounded-lg flex items-center justify-center transition-all ${(selectedBlock.styles?.textDecoration || 'none') === d.value
-                                                                        ? 'bg-white text-primary font-bold shadow-sm'
-                                                                        : 'text-warm-400 hover:text-warm-700'
+                                                                className={`flex-1 py-1 text-xs rounded-lg flex items-center justify-center transition-all cursor-pointer ${(selectedBlock.styles?.textDecoration || 'none') === d.value
+                                                                        ? 'bg-white dark:bg-slate-900 text-primary dark:text-teal-400 font-bold shadow-sm border border-warm-200 dark:border-slate-700'
+                                                                        : 'text-warm-400 dark:text-slate-400 hover:text-warm-700 dark:hover:text-slate-200'
                                                                     }`}
                                                             >
                                                                 {d.icon || d.label}
@@ -1743,11 +1743,11 @@ const ModuleContentEditor: React.FC = () => {
                                             {/* 6. Entrelinha (Line Height), Espaço Parágrafo e Tracking (Letter Spacing) */}
                                             <div className="grid grid-cols-3 gap-2">
                                                 <div>
-                                                    <label className="block text-[10px] font-bold text-warm-700 mb-1">Entrelinha</label>
+                                                    <label className="block text-[10px] font-bold text-warm-700 dark:text-slate-300 mb-1">Entrelinha</label>
                                                     <select
                                                         value={selectedBlock.styles?.lineHeight || '1.4'}
                                                         onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, lineHeight: e.target.value } })}
-                                                        className="w-full bg-warm-50 border border-warm-200 rounded-xl px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary outline-none"
+                                                        className="w-full bg-warm-50 dark:bg-slate-900 border border-warm-200 dark:border-slate-700 text-warm-900 dark:text-slate-100 rounded-xl px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary outline-none"
                                                     >
                                                         <option value="1.15">Compacto (1.15)</option>
                                                         <option value="1.4">Padrão (1.4)</option>
@@ -1756,11 +1756,11 @@ const ModuleContentEditor: React.FC = () => {
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] font-bold text-warm-700 mb-1">Espaço Parágrafo</label>
+                                                    <label className="block text-[10px] font-bold text-warm-700 dark:text-slate-300 mb-1">Espaço Parágrafo</label>
                                                     <select
                                                         value={selectedBlock.styles?.paragraphSpacing || '0px'}
                                                         onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, paragraphSpacing: e.target.value } })}
-                                                        className="w-full bg-warm-50 border border-warm-200 rounded-xl px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary outline-none"
+                                                        className="w-full bg-warm-50 dark:bg-slate-900 border border-warm-200 dark:border-slate-700 text-warm-900 dark:text-slate-100 rounded-xl px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary outline-none"
                                                     >
                                                         <option value="0px">Nenhum (0px)</option>
                                                         <option value="4px">Pequeno (4px)</option>
@@ -1770,11 +1770,11 @@ const ModuleContentEditor: React.FC = () => {
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] font-bold text-warm-700 mb-1">Letras (Tracking)</label>
+                                                    <label className="block text-[10px] font-bold text-warm-700 dark:text-slate-300 mb-1">Letras (Tracking)</label>
                                                     <select
                                                         value={selectedBlock.styles?.letterSpacing || 'normal'}
                                                         onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, letterSpacing: e.target.value } })}
-                                                        className="w-full bg-warm-50 border border-warm-200 rounded-xl px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary outline-none"
+                                                        className="w-full bg-warm-50 dark:bg-slate-900 border border-warm-200 dark:border-slate-700 text-warm-900 dark:text-slate-100 rounded-xl px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary outline-none"
                                                     >
                                                         <option value="-0.05em">Apertado (-0.05)</option>
                                                         <option value="normal">Normal (0)</option>
@@ -1787,8 +1787,8 @@ const ModuleContentEditor: React.FC = () => {
                                             {/* 7. Cor do Texto com Seletor Livre */}
                                             <div>
                                                 <div className="flex justify-between items-center mb-1.5">
-                                                    <label className="text-xs font-bold text-warm-700">Cor do Texto</label>
-                                                    <span className="text-[11px] font-mono text-warm-500">{selectedBlock.styles?.textColor || '#374151'}</span>
+                                                    <label className="text-xs font-bold text-warm-700 dark:text-slate-300">Cor do Texto</label>
+                                                    <span className="text-[11px] font-mono text-warm-500 dark:text-slate-400">{selectedBlock.styles?.textColor || '#374151'}</span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <div className="flex flex-wrap gap-1.5 flex-1">
@@ -1796,9 +1796,10 @@ const ModuleContentEditor: React.FC = () => {
                                                             <button
                                                                 key={c}
                                                                 onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, textColor: c } })}
-                                                                className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-110 ${(selectedBlock.styles?.textColor || '#374151') === c ? 'border-primary shadow-md scale-110' : 'border-warm-200'
+                                                                className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-110 cursor-pointer ${(selectedBlock.styles?.textColor || '#374151') === c ? 'border-primary dark:border-teal-400 shadow-md scale-110' : 'border-warm-200 dark:border-slate-700'
                                                                     }`}
                                                                 style={{ backgroundColor: c }}
+                                                                title={c}
                                                             />
                                                         ))}
                                                     </div>
@@ -1960,19 +1961,19 @@ const ModuleContentEditor: React.FC = () => {
                                     {selectedBlock.type === 'QuizBlock' && (
                                         <div className="space-y-6">
                                             {selectedBlock.data.questions?.map((q: any, qIndex: number) => (
-                                                <div key={qIndex} className="p-3 bg-warm-50 border border-warm-200 rounded-xl space-y-3">
+                                                <div key={qIndex} className="p-3.5 bg-warm-50/80 dark:bg-slate-800/80 border border-warm-200 dark:border-slate-700 rounded-2xl space-y-3">
                                                     <div className="flex justify-between items-center">
-                                                        <h4 className="text-xs font-bold text-warm-600">Pergunta {qIndex + 1}</h4>
+                                                        <h4 className="text-xs font-bold text-warm-700 dark:text-slate-300">Pergunta {qIndex + 1}</h4>
                                                         <button onClick={() => {
                                                             const qs = [...selectedBlock.data.questions];
                                                             qs.splice(qIndex, 1);
                                                             updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, questions: qs } });
-                                                        }} className="text-red-500 hover:text-red-700"><Trash2 size={14} /></button>
+                                                        }} className="text-red-500 hover:text-red-700 dark:hover:text-red-400 cursor-pointer"><Trash2 size={14} /></button>
                                                     </div>
                                                     <textarea
                                                         value={q.text}
                                                         onChange={e => updateQuizQuestion(qIndex, 'text', e.target.value)}
-                                                        className="w-full bg-white border border-warm-300 rounded-lg p-2 text-sm"
+                                                        className="w-full bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 text-warm-900 dark:text-slate-100 rounded-xl p-2.5 text-xs"
                                                         placeholder="Digite a pergunta..."
                                                         rows={2}
                                                     />
@@ -1990,7 +1991,7 @@ const ModuleContentEditor: React.FC = () => {
                                                                     type="text"
                                                                     value={opt}
                                                                     onChange={e => updateQuizQuestion(qIndex, `option_${oIndex}`, e.target.value)}
-                                                                    className="flex-1 bg-white border border-warm-300 rounded-md px-2 py-1 text-xs"
+                                                                    className="flex-1 bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 text-warm-900 dark:text-slate-100 rounded-lg px-2.5 py-1.5 text-xs"
                                                                     placeholder={`Opção ${['A', 'B', 'C', 'D'][oIndex]}`}
                                                                 />
                                                             </div>
@@ -2003,7 +2004,7 @@ const ModuleContentEditor: React.FC = () => {
                                                     const qs = [...(selectedBlock.data.questions || []), { text: '', options: ['', '', '', ''], correct_index: 0 }];
                                                     updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, questions: qs } });
                                                 }}
-                                                className="w-full py-2 bg-purple-50 text-purple-700 border border-purple-200 font-bold text-xs rounded-lg hover:bg-purple-100"
+                                                className="w-full py-2.5 bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-bold text-xs rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900/60 transition-colors cursor-pointer"
                                             >
                                                 + Adicionar Pergunta
                                             </button>
@@ -2014,59 +2015,59 @@ const ModuleContentEditor: React.FC = () => {
                                     {selectedBlock.type === 'ClinicalCaseBlock' && (
                                         <div className="space-y-5 text-left">
                                             {/* 1. Dados do Paciente */}
-                                            <div className="space-y-3 p-3.5 bg-warm-50/80 rounded-2xl border border-warm-200">
-                                                <div className="flex items-center gap-1.5 text-xs font-bold text-warm-900 border-b border-warm-200/80 pb-1.5">
+                                            <div className="space-y-3 p-3.5 bg-warm-50/80 dark:bg-slate-800/80 rounded-2xl border border-warm-200 dark:border-slate-700">
+                                                <div className="flex items-center gap-1.5 text-xs font-bold text-warm-900 dark:text-slate-100 border-b border-warm-200/80 dark:border-slate-700 pb-1.5">
                                                     <span>👤 Dados do Paciente e Local</span>
                                                 </div>
 
                                                 <div>
-                                                    <label className="block text-[11px] font-bold text-warm-700 mb-1">Nome e Idade do Paciente</label>
+                                                    <label className="block text-[11px] font-bold text-warm-700 dark:text-slate-300 mb-1">Nome e Idade do Paciente</label>
                                                     <input
                                                         type="text"
                                                         value={selectedBlock.data?.patient_name || ''}
                                                         onChange={e => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, patient_name: e.target.value } })}
-                                                        className="w-full bg-white border border-warm-300 rounded-xl p-2 text-xs font-bold"
+                                                        className="w-full bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 rounded-xl p-2 text-xs font-bold text-warm-900 dark:text-slate-100"
                                                         placeholder="Ex: Dona Maria de Lourdes, 72 anos"
                                                     />
                                                 </div>
 
                                                 <div>
-                                                    <label className="block text-[11px] font-bold text-warm-700 mb-1">Local / Unidade de Atendimento</label>
+                                                    <label className="block text-[11px] font-bold text-warm-700 dark:text-slate-300 mb-1">Local / Unidade de Atendimento</label>
                                                     <input
                                                         type="text"
                                                         value={selectedBlock.data?.setting || ''}
                                                         onChange={e => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, setting: e.target.value } })}
-                                                        className="w-full bg-white border border-warm-300 rounded-xl p-2 text-xs"
+                                                        className="w-full bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 rounded-xl p-2 text-xs text-warm-900 dark:text-slate-100"
                                                         placeholder="Ex: Enfermaria de Cuidados Paliativos ou Domicílio"
                                                     />
                                                 </div>
 
                                                 <div>
-                                                    <label className="block text-[11px] font-bold text-warm-700 mb-1">Diagnóstico e Histórico de Base</label>
+                                                    <label className="block text-[11px] font-bold text-warm-700 dark:text-slate-300 mb-1">Diagnóstico e Histórico de Base</label>
                                                     <input
                                                         type="text"
                                                         value={selectedBlock.data?.diagnosis || ''}
                                                         onChange={e => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, diagnosis: e.target.value } })}
-                                                        className="w-full bg-white border border-warm-300 rounded-xl p-2 text-xs"
+                                                        className="w-full bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 rounded-xl p-2 text-xs text-warm-900 dark:text-slate-100"
                                                         placeholder="Ex: Neoplasia pulmonar avançada em cuidados paliativos"
                                                     />
                                                 </div>
                                             </div>
 
                                             {/* 2. Sinais Vitais do Paciente */}
-                                            <div className="space-y-3 p-3.5 bg-warm-50/80 rounded-2xl border border-warm-200">
-                                                <div className="flex items-center justify-between text-xs font-bold text-warm-900 border-b border-warm-200/80 pb-1.5">
+                                            <div className="space-y-3 p-3.5 bg-warm-50/80 dark:bg-slate-800/80 rounded-2xl border border-warm-200 dark:border-slate-700">
+                                                <div className="flex items-center justify-between text-xs font-bold text-warm-900 dark:text-slate-100 border-b border-warm-200/80 dark:border-slate-700 pb-1.5">
                                                     <span className="flex items-center gap-1.5">
                                                         <span>🩺 Sinais Vitais no Leito</span>
                                                     </span>
-                                                    <span className="text-[10px] text-teal-700 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-full font-bold">
+                                                    <span className="text-[10px] text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 px-2 py-0.5 rounded-full font-bold">
                                                         Prontuário
                                                     </span>
                                                 </div>
 
                                                 <div className="grid grid-cols-2 gap-2.5">
                                                     <div>
-                                                        <label className="block text-[10px] font-bold text-warm-600 mb-0.5">P.A. (Pressão)</label>
+                                                        <label className="block text-[10px] font-bold text-warm-600 dark:text-slate-300 mb-0.5">P.A. (Pressão)</label>
                                                         <input
                                                             type="text"
                                                             value={selectedBlock.data?.vitals?.pa || ''}
@@ -2074,13 +2075,13 @@ const ModuleContentEditor: React.FC = () => {
                                                                 const vitals = { ...(selectedBlock.data?.vitals || {}), pa: e.target.value };
                                                                 updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, vitals } });
                                                             }}
-                                                            className="w-full bg-white border border-warm-300 rounded-lg px-2 py-1.5 text-xs font-bold text-warm-800"
+                                                            className="w-full bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs font-bold text-warm-800 dark:text-white"
                                                             placeholder="130/80 mmHg"
                                                         />
                                                     </div>
 
                                                     <div>
-                                                        <label className="block text-[10px] font-bold text-warm-600 mb-0.5">F.C. (Cardíaca)</label>
+                                                        <label className="block text-[10px] font-bold text-warm-600 dark:text-slate-300 mb-0.5">F.C. (Cardíaca)</label>
                                                         <input
                                                             type="text"
                                                             value={selectedBlock.data?.vitals?.fc || ''}
@@ -2088,13 +2089,13 @@ const ModuleContentEditor: React.FC = () => {
                                                                 const vitals = { ...(selectedBlock.data?.vitals || {}), fc: e.target.value };
                                                                 updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, vitals } });
                                                             }}
-                                                            className="w-full bg-white border border-warm-300 rounded-lg px-2 py-1.5 text-xs font-bold text-warm-800"
+                                                            className="w-full bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs font-bold text-warm-800 dark:text-white"
                                                             placeholder="102 bpm"
                                                         />
                                                     </div>
 
                                                     <div>
-                                                        <label className="block text-[10px] font-bold text-warm-600 mb-0.5">F.R. (Respiratória)</label>
+                                                        <label className="block text-[10px] font-bold text-warm-600 dark:text-slate-300 mb-0.5">F.R. (Respiratória)</label>
                                                         <input
                                                             type="text"
                                                             value={selectedBlock.data?.vitals?.fr || ''}
@@ -2102,13 +2103,13 @@ const ModuleContentEditor: React.FC = () => {
                                                                 const vitals = { ...(selectedBlock.data?.vitals || {}), fr: e.target.value };
                                                                 updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, vitals } });
                                                             }}
-                                                            className="w-full bg-white border border-warm-300 rounded-lg px-2 py-1.5 text-xs font-bold text-rose-700"
+                                                            className="w-full bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs font-bold text-rose-700 dark:text-rose-400"
                                                             placeholder="28 irpm"
                                                         />
                                                     </div>
 
                                                     <div>
-                                                        <label className="block text-[10px] font-bold text-warm-600 mb-0.5">Dor (EVA 0-10)</label>
+                                                        <label className="block text-[10px] font-bold text-warm-600 dark:text-slate-300 mb-0.5">Dor (EVA 0-10)</label>
                                                         <input
                                                             type="text"
                                                             value={selectedBlock.data?.vitals?.dor || ''}
@@ -2116,13 +2117,13 @@ const ModuleContentEditor: React.FC = () => {
                                                                 const vitals = { ...(selectedBlock.data?.vitals || {}), dor: e.target.value };
                                                                 updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, vitals } });
                                                             }}
-                                                            className="w-full bg-white border border-warm-300 rounded-lg px-2 py-1.5 text-xs font-bold text-rose-700"
+                                                            className="w-full bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs font-bold text-rose-700 dark:text-rose-400"
                                                             placeholder="7/10"
                                                         />
                                                     </div>
 
                                                     <div>
-                                                        <label className="block text-[10px] font-bold text-warm-600 mb-0.5">SpO2 (Saturação)</label>
+                                                        <label className="block text-[10px] font-bold text-warm-600 dark:text-slate-300 mb-0.5">SpO2 (Saturação)</label>
                                                         <input
                                                             type="text"
                                                             value={selectedBlock.data?.vitals?.spo2 || ''}
@@ -2130,13 +2131,13 @@ const ModuleContentEditor: React.FC = () => {
                                                                 const vitals = { ...(selectedBlock.data?.vitals || {}), spo2: e.target.value };
                                                                 updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, vitals } });
                                                             }}
-                                                            className="w-full bg-white border border-warm-300 rounded-lg px-2 py-1.5 text-xs font-bold text-warm-800"
+                                                            className="w-full bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs font-bold text-warm-800 dark:text-white"
                                                             placeholder="89%"
                                                         />
                                                     </div>
 
                                                     <div>
-                                                        <label className="block text-[10px] font-bold text-warm-600 mb-0.5">Consciência</label>
+                                                        <label className="block text-[10px] font-bold text-warm-600 dark:text-slate-300 mb-0.5">Consciência</label>
                                                         <input
                                                             type="text"
                                                             value={selectedBlock.data?.vitals?.consciencia || ''}
@@ -2144,7 +2145,7 @@ const ModuleContentEditor: React.FC = () => {
                                                                 const vitals = { ...(selectedBlock.data?.vitals || {}), consciencia: e.target.value };
                                                                 updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, vitals } });
                                                             }}
-                                                            className="w-full bg-white border border-warm-300 rounded-lg px-2 py-1.5 text-xs font-bold text-warm-800"
+                                                            className="w-full bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs font-bold text-warm-800 dark:text-white"
                                                             placeholder="Lúcida e ansiosa"
                                                         />
                                                     </div>
@@ -2154,35 +2155,35 @@ const ModuleContentEditor: React.FC = () => {
                                             {/* 3. Situação Clínica e Pergunta */}
                                             <div className="space-y-3">
                                                 <div>
-                                                    <label className="block text-xs font-bold text-warm-700 mb-1">Cenário / Descrição da Situação no Leito</label>
+                                                    <label className="block text-xs font-bold text-warm-700 dark:text-slate-300 mb-1">Cenário / Descrição da Situação no Leito</label>
                                                     <textarea
                                                         rows={4}
                                                         value={selectedBlock.data?.clinical_scenario || ''}
                                                         onChange={e => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, clinical_scenario: e.target.value } })}
-                                                        className="w-full bg-white border border-warm-300 rounded-xl p-2.5 text-xs leading-relaxed"
+                                                        className="w-full bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 rounded-xl p-2.5 text-xs leading-relaxed text-warm-900 dark:text-slate-100"
                                                         placeholder="Descreva detalhadamente a situação clínica e o sofrimento do paciente..."
                                                     />
                                                 </div>
 
                                                 <div>
-                                                    <label className="block text-xs font-bold text-warm-700 mb-1">Pergunta de Tomada de Decisão</label>
+                                                    <label className="block text-xs font-bold text-warm-700 dark:text-slate-300 mb-1">Pergunta de Tomada de Decisão</label>
                                                     <input
                                                         type="text"
                                                         value={selectedBlock.data?.decision_prompt || ''}
                                                         onChange={e => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, decision_prompt: e.target.value } })}
-                                                        className="w-full bg-white border border-warm-300 rounded-xl p-2.5 text-xs font-bold text-teal-800"
+                                                        className="w-full bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 rounded-xl p-2.5 text-xs font-bold text-teal-800 dark:text-teal-300"
                                                         placeholder="Ex: Como enfermeiro(a) responsável, qual é a sua conduta imediata e prioritária?"
                                                     />
                                                 </div>
                                             </div>
 
                                             {/* 4. Opções de Conduta e Desfechos com Letras */}
-                                            <div className="pt-3 border-t border-warm-200 space-y-3">
+                                            <div className="pt-3 border-t border-warm-200 dark:border-slate-700 space-y-3">
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-xs font-black text-warm-800 uppercase tracking-wider">
+                                                    <span className="text-xs font-black text-warm-800 dark:text-slate-200 uppercase tracking-wider">
                                                         Opções de Conduta (Letras A, B, C...)
                                                     </span>
-                                                    <span className="text-[10px] text-warm-400 font-bold">
+                                                    <span className="text-[10px] text-warm-400 dark:text-slate-400 font-bold">
                                                         {selectedBlock.data?.decisions?.length || 0} Condutas
                                                     </span>
                                                 </div>
@@ -2191,15 +2192,15 @@ const ModuleContentEditor: React.FC = () => {
                                                     {selectedBlock.data?.decisions?.map((dec: any, dIdx: number) => {
                                                         const letter = String.fromCharCode(65 + dIdx); // A, B, C, D...
                                                         return (
-                                                            <div key={dec.id || dIdx} className="p-3.5 bg-white border-2 border-warm-200/90 rounded-2xl shadow-xs space-y-3">
+                                                            <div key={dec.id || dIdx} className="p-3.5 bg-white dark:bg-slate-900 border-2 border-warm-200/90 dark:border-slate-700 rounded-2xl shadow-xs space-y-3">
                                                                 
                                                                 {/* Cabeçalho da Opção com Letra em Destaque */}
-                                                                <div className="flex justify-between items-center border-b border-warm-100 pb-2">
+                                                                <div className="flex justify-between items-center border-b border-warm-100 dark:border-slate-800 pb-2">
                                                                     <div className="flex items-center gap-2">
-                                                                        <span className="w-6 h-6 rounded-full bg-teal-700 text-white font-extrabold text-xs flex items-center justify-center shadow-2xs">
+                                                                        <span className="w-6 h-6 rounded-full bg-teal-700 dark:bg-teal-600 text-white font-extrabold text-xs flex items-center justify-center shadow-2xs">
                                                                             {letter}
                                                                         </span>
-                                                                        <span className="text-xs font-extrabold text-warm-900">
+                                                                        <span className="text-xs font-extrabold text-warm-900 dark:text-slate-100">
                                                                             Conduta {letter} (Opção {letter})
                                                                         </span>
                                                                     </div>
@@ -2214,10 +2215,10 @@ const ModuleContentEditor: React.FC = () => {
                                                                             }}
                                                                             className={`text-[11px] font-bold rounded-lg px-2 py-1 border transition-all ${
                                                                                 dec.rating === 'optimal'
-                                                                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                                                                    ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700'
                                                                                     : dec.rating === 'acceptable'
-                                                                                    ? 'bg-amber-50 text-amber-800 border-amber-300'
-                                                                                    : 'bg-rose-50 text-rose-800 border-rose-300'
+                                                                                    ? 'bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700'
+                                                                                    : 'bg-rose-50 dark:bg-rose-950 text-rose-800 dark:text-rose-200 border-rose-300 dark:border-rose-700'
                                                                             }`}
                                                                         >
                                                                             <option value="optimal">✨ Padrão-Ouro (Correta)</option>
@@ -2232,7 +2233,7 @@ const ModuleContentEditor: React.FC = () => {
                                                                                 decs.splice(dIdx, 1);
                                                                                 updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, decisions: decs } });
                                                                             }}
-                                                                            className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                                                                            className="p-1 text-red-500 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-md transition-colors cursor-pointer"
                                                                             title={`Excluir Conduta ${letter}`}
                                                                         >
                                                                             <Trash2 size={14} />
@@ -2242,7 +2243,7 @@ const ModuleContentEditor: React.FC = () => {
 
                                                                 {/* Texto da Opção / Procedimento */}
                                                                 <div>
-                                                                    <label className="block text-[10px] font-bold text-warm-600 mb-0.5">
+                                                                    <label className="block text-[10px] font-bold text-warm-600 dark:text-slate-300 mb-0.5">
                                                                         Texto da Opção {letter} (O que o aluno lê para escolher)
                                                                     </label>
                                                                     <textarea
@@ -2253,14 +2254,14 @@ const ModuleContentEditor: React.FC = () => {
                                                                             decs[dIdx].label = e.target.value;
                                                                             updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, decisions: decs } });
                                                                         }}
-                                                                        className="w-full bg-warm-50/70 border border-warm-300 rounded-lg p-2 text-xs font-medium"
+                                                                        className="w-full bg-warm-50/70 dark:bg-slate-950 border border-warm-300 dark:border-slate-700 rounded-lg p-2 text-xs font-medium text-warm-900 dark:text-slate-100"
                                                                         placeholder={`Descreva a conduta da Opção ${letter}...`}
                                                                     />
                                                                 </div>
 
                                                                 {/* Título do Desfecho */}
                                                                 <div>
-                                                                    <label className="block text-[10px] font-bold text-warm-600 mb-0.5">
+                                                                    <label className="block text-[10px] font-bold text-warm-600 dark:text-slate-300 mb-0.5">
                                                                         Título do Desfecho (Ex: Desfecho: Alívio da Dor)
                                                                     </label>
                                                                     <input
@@ -2271,14 +2272,14 @@ const ModuleContentEditor: React.FC = () => {
                                                                             decs[dIdx].outcome_title = e.target.value;
                                                                             updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, decisions: decs } });
                                                                         }}
-                                                                        className="w-full bg-warm-50/70 border border-warm-300 rounded-lg p-2 text-xs font-bold"
+                                                                        className="w-full bg-warm-50/70 dark:bg-slate-950 border border-warm-300 dark:border-slate-700 rounded-lg p-2 text-xs font-bold text-warm-900 dark:text-slate-100"
                                                                         placeholder="Título do desfecho clínico..."
                                                                     />
                                                                 </div>
 
                                                                 {/* Evolução do Paciente */}
                                                                 <div>
-                                                                    <label className="block text-[10px] font-bold text-warm-600 mb-0.5">
+                                                                    <label className="block text-[10px] font-bold text-warm-600 dark:text-slate-300 mb-0.5">
                                                                         Evolução do Paciente (O que aconteceu após essa conduta)
                                                                     </label>
                                                                     <textarea
@@ -2289,14 +2290,14 @@ const ModuleContentEditor: React.FC = () => {
                                                                             decs[dIdx].outcome_description = e.target.value;
                                                                             updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, decisions: decs } });
                                                                         }}
-                                                                        className="w-full bg-warm-50/70 border border-warm-300 rounded-lg p-2 text-xs"
+                                                                        className="w-full bg-warm-50/70 dark:bg-slate-950 border border-warm-300 dark:border-slate-700 rounded-lg p-2 text-xs text-warm-900 dark:text-slate-100"
                                                                         placeholder="Explique o que aconteceu com o paciente..."
                                                                     />
                                                                 </div>
 
                                                                 {/* Justificativa Científica */}
                                                                 <div>
-                                                                    <label className="block text-[10px] font-bold text-warm-600 mb-0.5">
+                                                                    <label className="block text-[10px] font-bold text-warm-600 dark:text-slate-300 mb-0.5">
                                                                         Fundamentação Científica &amp; Bioética (Orientações da Professora)
                                                                     </label>
                                                                     <textarea
@@ -2307,7 +2308,7 @@ const ModuleContentEditor: React.FC = () => {
                                                                             decs[dIdx].scientific_rationale = e.target.value;
                                                                             updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, decisions: decs } });
                                                                         }}
-                                                                        className="w-full bg-warm-50/70 border border-warm-300 rounded-lg p-2 text-[11px] text-warm-700"
+                                                                        className="w-full bg-warm-50/70 dark:bg-slate-950 border border-warm-300 dark:border-slate-700 rounded-lg p-2 text-[11px] text-warm-700 dark:text-slate-300"
                                                                         placeholder="Diretrizes da ANCP / COFEN e referências científicas..."
                                                                     />
                                                                 </div>
@@ -2318,21 +2319,22 @@ const ModuleContentEditor: React.FC = () => {
                                                     <button
                                                         type="button"
                                                         onClick={() => {
-                                                            const currentCount = selectedBlock.data?.decisions?.length || 0;
-                                                            const nextLetter = String.fromCharCode(65 + currentCount);
-                                                            const decs = [...(selectedBlock.data?.decisions || []), {
-                                                                id: `conduta-${Date.now()}`,
-                                                                label: `Nova conduta de enfermagem (Opção ${nextLetter})`,
+                                                            const decs = [...(selectedBlock.data?.decisions || [])];
+                                                            const newLetter = String.fromCharCode(65 + decs.length);
+                                                            decs.push({
+                                                                id: `dec_${Date.now()}`,
+                                                                label: `Nova Conduta ${newLetter}`,
                                                                 rating: 'acceptable',
-                                                                outcome_title: `Desfecho da Conduta ${nextLetter}`,
-                                                                outcome_description: 'Evolução clínica do paciente após essa escolha...',
-                                                                scientific_rationale: 'Fundamentação científica e referências...'
-                                                            }];
+                                                                outcome_title: 'Desfecho a ser avaliado',
+                                                                outcome_description: 'Evolução clínica resultante.',
+                                                                scientific_rationale: 'Fundamentação científica conforme diretrizes ANCP.'
+                                                            });
                                                             updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, decisions: decs } });
                                                         }}
-                                                        className="w-full py-2.5 bg-teal-50 text-teal-800 border-2 border-dashed border-teal-300 font-bold text-xs rounded-xl hover:bg-teal-100 transition-all flex items-center justify-center gap-1.5"
+                                                        className="w-full py-2.5 px-3 bg-teal-50 dark:bg-teal-950/60 border border-dashed border-teal-300 dark:border-teal-700 text-teal-800 dark:text-teal-300 rounded-xl text-xs font-bold hover:bg-teal-100 dark:hover:bg-teal-900/60 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                                                     >
-                                                        <span>+ Adicionar Nova Conduta (Letra {String.fromCharCode(65 + (selectedBlock.data?.decisions?.length || 0))})</span>
+                                                        <Plus size={14} />
+                                                        <span>Adicionar Nova Opção de Conduta ({String.fromCharCode(65 + (selectedBlock.data?.decisions?.length || 0))})</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -2343,14 +2345,14 @@ const ModuleContentEditor: React.FC = () => {
                                     {selectedBlock.type === 'FlashcardBlock' && (
                                         <div className="space-y-4">
                                             {selectedBlock.data.cards?.map((card: any, cIndex: number) => (
-                                                <div key={cIndex} className="p-3 bg-warm-50 border border-warm-200 rounded-xl space-y-2">
+                                                <div key={cIndex} className="p-3.5 bg-warm-50/80 dark:bg-slate-800/80 border border-warm-200 dark:border-slate-700 rounded-2xl space-y-2.5">
                                                     <div className="flex justify-between items-center">
-                                                        <h4 className="text-xs font-bold text-warm-600">Cartão {cIndex + 1}</h4>
+                                                        <h4 className="text-xs font-bold text-warm-700 dark:text-slate-300">Cartão {cIndex + 1}</h4>
                                                         <button onClick={() => {
                                                             const cs = [...selectedBlock.data.cards];
                                                             cs.splice(cIndex, 1);
                                                             updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, cards: cs } });
-                                                        }} className="text-red-500 hover:text-red-700"><Trash2 size={14} /></button>
+                                                        }} className="text-red-500 hover:text-red-700 dark:hover:text-red-400 cursor-pointer"><Trash2 size={14} /></button>
                                                     </div>
                                                     <input
                                                         type="text" value={card.front}
@@ -2359,7 +2361,7 @@ const ModuleContentEditor: React.FC = () => {
                                                             cs[cIndex].front = e.target.value;
                                                             updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, cards: cs } });
                                                         }}
-                                                        className="w-full bg-white border rounded p-2 text-xs font-bold" placeholder="Frente (Termo)"
+                                                        className="w-full bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 text-warm-900 dark:text-slate-100 rounded-xl p-2 text-xs font-bold" placeholder="Frente (Termo)"
                                                     />
                                                     <textarea
                                                         value={card.back}
@@ -2368,7 +2370,7 @@ const ModuleContentEditor: React.FC = () => {
                                                             cs[cIndex].back = e.target.value;
                                                             updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, cards: cs } });
                                                         }}
-                                                        className="w-full bg-white border rounded p-2 text-xs" placeholder="Verso (Definição)" rows={2}
+                                                        className="w-full bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 text-warm-900 dark:text-slate-100 rounded-xl p-2 text-xs" placeholder="Verso (Definição)" rows={2}
                                                     />
                                                 </div>
                                             ))}
@@ -2377,7 +2379,7 @@ const ModuleContentEditor: React.FC = () => {
                                                     const cs = [...(selectedBlock.data.cards || []), { front: '', back: '' }];
                                                     updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, cards: cs } });
                                                 }}
-                                                className="w-full py-2 bg-orange-50 text-orange-700 border border-orange-200 font-bold text-xs rounded-lg hover:bg-orange-100"
+                                                className="w-full py-2.5 bg-orange-50 dark:bg-amber-950/60 text-orange-700 dark:text-amber-300 border border-orange-200 dark:border-amber-800 font-bold text-xs rounded-xl hover:bg-orange-100 dark:hover:bg-amber-900/60 transition-colors cursor-pointer"
                                             >
                                                 + Adicionar Cartão
                                             </button>
@@ -2391,7 +2393,7 @@ const ModuleContentEditor: React.FC = () => {
                                                 <div className="space-y-2">
                                                     <button
                                                         onClick={() => setCroppingImage(selectedBlock.data.originalSrc || selectedBlock.data.src)}
-                                                        className="w-full px-4 py-2.5 bg-primary/10 text-primary font-bold rounded-xl hover:bg-primary/20 transition-colors flex items-center justify-center gap-2 text-sm shadow-sm"
+                                                        className="w-full px-4 py-2.5 bg-primary/10 dark:bg-teal-950/60 text-primary dark:text-teal-300 font-bold rounded-xl hover:bg-primary/20 dark:hover:bg-teal-900/60 transition-colors flex items-center justify-center gap-2 text-sm shadow-sm cursor-pointer border border-primary/20 dark:border-teal-800"
                                                     >
                                                         <Crop size={16} /> Recortar / Ajustar Imagem
                                                     </button>
@@ -2405,7 +2407,7 @@ const ModuleContentEditor: React.FC = () => {
                                                                 });
                                                                 showToast('Imagem original restaurada!');
                                                             }}
-                                                            className="w-full px-3 py-2 bg-warm-100 hover:bg-warm-200 text-warm-700 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 text-xs border border-warm-200"
+                                                            className="w-full px-3 py-2 bg-warm-100 dark:bg-slate-800 hover:bg-warm-200 dark:hover:bg-slate-700 text-warm-700 dark:text-slate-200 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 text-xs border border-warm-200 dark:border-slate-700 cursor-pointer"
                                                         >
                                                             <RotateCcw size={14} /> Restaurar Imagem Original
                                                         </button>
@@ -2414,7 +2416,7 @@ const ModuleContentEditor: React.FC = () => {
                                             )}
 
                                             <div>
-                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Enquadramento da Imagem</label>
+                                                <label className="block text-xs font-bold text-warm-700 dark:text-slate-300 mb-1.5">Enquadramento da Imagem</label>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     <button
                                                         type="button"
@@ -2425,9 +2427,9 @@ const ModuleContentEditor: React.FC = () => {
                                                                 heightMode: 'auto'
                                                             }
                                                         })}
-                                                        className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all ${(selectedBlock.styles?.objectFit || 'contain') === 'contain' && selectedBlock.styles?.heightMode !== 'fixed'
+                                                        className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${(selectedBlock.styles?.objectFit || 'contain') === 'contain' && selectedBlock.styles?.heightMode !== 'fixed'
                                                                 ? 'bg-primary text-white border-primary shadow-sm'
-                                                                : 'bg-white text-warm-700 border-warm-200 hover:bg-warm-50'
+                                                                : 'bg-white dark:bg-slate-800 text-warm-700 dark:text-slate-200 border-warm-200 dark:border-slate-700 hover:bg-warm-50 dark:hover:bg-slate-700'
                                                             }`}
                                                     >
                                                         Imagem Inteira (Sem corte)
@@ -2442,9 +2444,9 @@ const ModuleContentEditor: React.FC = () => {
                                                                 height: selectedBlock.styles?.height || 400
                                                             }
                                                         })}
-                                                        className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all ${selectedBlock.styles?.objectFit === 'cover' || selectedBlock.styles?.heightMode === 'fixed'
+                                                        className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${selectedBlock.styles?.objectFit === 'cover' || selectedBlock.styles?.heightMode === 'fixed'
                                                                 ? 'bg-primary text-white border-primary shadow-sm'
-                                                                : 'bg-white text-warm-700 border-warm-200 hover:bg-warm-50'
+                                                                : 'bg-white dark:bg-slate-800 text-warm-700 dark:text-slate-200 border-warm-200 dark:border-slate-700 hover:bg-warm-50 dark:hover:bg-slate-700'
                                                             }`}
                                                     >
                                                         Preencher / Altura Fixa
@@ -2454,9 +2456,9 @@ const ModuleContentEditor: React.FC = () => {
 
                                             {selectedBlock.styles?.heightMode === 'fixed' && (
                                                 <div>
-                                                    <div className="flex items-center justify-between text-xs font-medium text-warm-600 mb-1">
+                                                    <div className="flex items-center justify-between text-xs font-medium text-warm-600 dark:text-slate-300 mb-1">
                                                         <span>Altura Fixa</span>
-                                                        <span className="font-bold text-primary">{selectedBlock.styles?.height || 400}px</span>
+                                                        <span className="font-bold text-primary dark:text-teal-300">{selectedBlock.styles?.height || 400}px</span>
                                                     </div>
                                                     <input
                                                         type="range"
@@ -2477,11 +2479,11 @@ const ModuleContentEditor: React.FC = () => {
                                             )}
 
                                             <div>
-                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Largura Máxima do Bloco</label>
+                                                <label className="block text-xs font-bold text-warm-700 dark:text-slate-300 mb-1.5">Largura Máxima do Bloco</label>
                                                 <select
                                                     value={selectedBlock.styles?.containerWidth || 'max-w-4xl'}
                                                     onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, containerWidth: e.target.value } })}
-                                                    className="w-full bg-white border border-warm-200 rounded-xl px-3 py-2 text-xs font-medium text-warm-800 focus:ring-2 focus:ring-primary outline-none"
+                                                    className="w-full bg-white dark:bg-slate-900 border border-warm-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-warm-800 dark:text-slate-200 focus:ring-2 focus:ring-primary outline-none"
                                                 >
                                                     <option value="max-w-md">Pequena (500px)</option>
                                                     <option value="max-w-2xl">Média (700px)</option>
@@ -2492,7 +2494,7 @@ const ModuleContentEditor: React.FC = () => {
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Alinhamento</label>
+                                                <label className="block text-xs font-bold text-warm-700 dark:text-slate-300 mb-1.5">Alinhamento</label>
                                                 <div className="grid grid-cols-3 gap-2">
                                                     {[
                                                         { label: 'Esquerda', value: 'left' },
@@ -2503,9 +2505,9 @@ const ModuleContentEditor: React.FC = () => {
                                                             key={align.value}
                                                             type="button"
                                                             onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, alignment: align.value } })}
-                                                            className={`py-1.5 text-xs font-bold rounded-lg border transition-all ${(selectedBlock.styles?.alignment || 'center') === align.value
+                                                            className={`py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer ${(selectedBlock.styles?.alignment || 'center') === align.value
                                                                     ? 'bg-primary text-white border-primary shadow-sm'
-                                                                    : 'bg-white text-warm-700 border-warm-200 hover:bg-warm-50'
+                                                                    : 'bg-white dark:bg-slate-800 text-warm-700 dark:text-slate-200 border-warm-200 dark:border-slate-700 hover:bg-warm-50 dark:hover:bg-slate-700'
                                                                 }`}
                                                         >
                                                             {align.label}
@@ -2515,11 +2517,11 @@ const ModuleContentEditor: React.FC = () => {
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Bordas Arredondadas</label>
+                                                <label className="block text-xs font-bold text-warm-700 dark:text-slate-300 mb-1.5">Bordas Arredondadas</label>
                                                 <select
                                                     value={selectedBlock.styles?.rounded || 'xl'}
                                                     onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, rounded: e.target.value } })}
-                                                    className="w-full bg-white border border-warm-200 rounded-xl px-3 py-2 text-xs font-medium text-warm-800 focus:ring-2 focus:ring-primary outline-none"
+                                                    className="w-full bg-white dark:bg-slate-900 border border-warm-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-warm-800 dark:text-slate-200 focus:ring-2 focus:ring-primary outline-none"
                                                 >
                                                     <option value="none">Nenhum (Reto)</option>
                                                     <option value="md">Suave</option>
@@ -2535,12 +2537,12 @@ const ModuleContentEditor: React.FC = () => {
                                     {selectedBlock.type === 'MediaBlock' && (
                                         <div className="space-y-4">
                                             <div>
-                                                <label className="block text-xs font-medium text-warm-600 mb-1">URL do Vídeo (YouTube/Vimeo)</label>
+                                                <label className="block text-xs font-medium text-warm-600 dark:text-slate-300 mb-1">URL do Vídeo (YouTube/Vimeo)</label>
                                                 <input
                                                     type="text"
                                                     value={selectedBlock.data.url || ''}
                                                     onChange={(e) => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, url: e.target.value } })}
-                                                    className="w-full bg-white border border-warm-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                                    className="w-full bg-white dark:bg-slate-900 border border-warm-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-warm-900 dark:text-slate-100 focus:ring-2 focus:ring-primary outline-none"
                                                     placeholder="https://youtube.com/watch?v=..."
                                                 />
                                             </div>
@@ -2550,22 +2552,22 @@ const ModuleContentEditor: React.FC = () => {
                                     {/* FeatureCardsBlock Properties */}
                                     {selectedBlock.type === 'FeatureCardsBlock' && (
                                         <div className="space-y-5 text-left">
-                                            <div className="flex items-center justify-between border-b border-warm-100 pb-2">
-                                                <h4 className="text-xs font-bold text-warm-900 uppercase tracking-wider flex items-center gap-1.5">
-                                                    <Sparkles size={15} className="text-primary" /> Configuração dos Cards
+                                            <div className="flex items-center justify-between border-b border-warm-100 dark:border-slate-800 pb-2">
+                                                <h4 className="text-xs font-bold text-warm-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+                                                    <Sparkles size={15} className="text-primary dark:text-teal-400" /> Configuração dos Cards
                                                 </h4>
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Número de Colunas</label>
+                                                <label className="block text-xs font-bold text-warm-700 dark:text-slate-300 mb-1.5">Número de Colunas</label>
                                                 <div className="grid grid-cols-3 gap-1">
                                                     {[1, 2, 3].map(cols => (
                                                         <button
                                                             key={cols}
                                                             onClick={() => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, columns: cols } })}
-                                                            className={`py-1.5 text-xs rounded-lg border transition-all ${(selectedBlock.styles?.columns || 2) === cols
+                                                            className={`py-1.5 text-xs rounded-lg border transition-all cursor-pointer ${(selectedBlock.styles?.columns || 2) === cols
                                                                     ? 'bg-primary text-white border-primary font-bold shadow-sm'
-                                                                    : 'bg-warm-50 text-warm-600 border-warm-200 hover:bg-warm-100'
+                                                                    : 'bg-warm-50 dark:bg-slate-800 text-warm-600 dark:text-slate-300 border-warm-200 dark:border-slate-700 hover:bg-warm-100 dark:hover:bg-slate-700'
                                                                 }`}
                                                         >
                                                             {cols} Col
@@ -2575,11 +2577,11 @@ const ModuleContentEditor: React.FC = () => {
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Sombra dos Cards</label>
+                                                <label className="block text-xs font-bold text-warm-700 dark:text-slate-300 mb-1.5">Sombra dos Cards</label>
                                                 <select
                                                     value={selectedBlock.styles?.cardShadow || 'md'}
                                                     onChange={(e) => updateBlock(selectedBlock.id, { styles: { ...selectedBlock.styles, cardShadow: e.target.value } })}
-                                                    className="w-full bg-warm-50 border border-warm-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-primary outline-none"
+                                                    className="w-full bg-warm-50 dark:bg-slate-900 border border-warm-200 dark:border-slate-700 text-warm-900 dark:text-slate-100 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-primary outline-none"
                                                 >
                                                     <option value="none">Sem Sombra</option>
                                                     <option value="sm">Suave</option>
@@ -2588,7 +2590,7 @@ const ModuleContentEditor: React.FC = () => {
                                                 </select>
                                             </div>
 
-                                            <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-800 space-y-1">
+                                            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/60 rounded-2xl border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-200 space-y-1">
                                                 <p className="font-bold flex items-center gap-1">💡 Dica de Edição:</p>
                                                 <p className="text-[11px] leading-relaxed">
                                                     Você pode <strong>clicar diretamente no ícone de qualquer card na tela</strong> para abrir o seletor visual de ícones e mudar as cores!
@@ -2600,14 +2602,14 @@ const ModuleContentEditor: React.FC = () => {
                                     {/* HeaderBlock Properties */}
                                     {selectedBlock.type === 'HeaderBlock' && (
                                         <div className="space-y-5 text-left">
-                                            <div className="flex items-center justify-between border-b border-warm-100 pb-2">
-                                                <h4 className="text-xs font-bold text-warm-900 uppercase tracking-wider flex items-center gap-1.5">
-                                                    <BookOpen size={15} className="text-primary" /> Cabeçalho com Ícone
+                                            <div className="flex items-center justify-between border-b border-warm-100 dark:border-slate-800 pb-2">
+                                                <h4 className="text-xs font-bold text-warm-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+                                                    <BookOpen size={15} className="text-primary dark:text-teal-400" /> Cabeçalho com Ícone
                                                 </h4>
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold text-warm-700 mb-1.5">Escolher Ícone</label>
+                                                <label className="block text-xs font-bold text-warm-700 dark:text-slate-300 mb-1.5">Escolher Ícone</label>
                                                 <div className="grid grid-cols-3 gap-1.5">
                                                     {[
                                                         { name: 'BookOpen', label: 'Livro Aberto' },
@@ -2627,9 +2629,9 @@ const ModuleContentEditor: React.FC = () => {
                                                             key={item.name}
                                                             type="button"
                                                             onClick={() => updateBlock(selectedBlock.id, { data: { ...selectedBlock.data, icon: item.name } })}
-                                                            className={`py-2 px-1.5 rounded-xl border flex flex-col items-center gap-1 transition-all ${(selectedBlock.data?.icon || 'BookOpen') === item.name
+                                                            className={`py-2 px-1.5 rounded-xl border flex flex-col items-center gap-1 transition-all cursor-pointer ${(selectedBlock.data?.icon || 'BookOpen') === item.name
                                                                     ? 'bg-primary text-white border-primary shadow-xs font-bold'
-                                                                    : 'bg-warm-50 text-warm-700 border-warm-200 hover:bg-warm-100'
+                                                                    : 'bg-warm-50 dark:bg-slate-800 text-warm-700 dark:text-slate-200 border-warm-200 dark:border-slate-700 hover:bg-warm-100 dark:hover:bg-slate-700'
                                                                 }`}
                                                             title={item.label}
                                                         >
