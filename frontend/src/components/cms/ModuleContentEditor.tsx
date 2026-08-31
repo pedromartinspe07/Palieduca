@@ -758,11 +758,11 @@ const ModuleContentEditor: React.FC = () => {
             )}
 
             {/* ═══ TRIPLE LAYOUT ═══ */}
-            <div className="flex-1 flex overflow-hidden min-h-0">
+            <div className="flex-1 flex overflow-hidden min-h-0 bg-white dark:bg-slate-900">
 
                 {/* ─── LEFT SIDEBAR (CANVA STYLE) ─── */}
                 <div className="hidden md:flex shrink-0 h-full">
-                    <div className="w-[72px] bg-warm-900 flex flex-col items-center py-4 gap-4 z-50 shadow-md">
+                    <div className="w-[72px] bg-warm-900 dark:bg-[#0b1329] flex flex-col items-center py-4 gap-4 z-50 shadow-md border-r border-warm-800 dark:border-slate-800">
                         <button
                             onClick={() => setLeftSidebarTab(leftSidebarTab === 'blocos' ? null : 'blocos')}
                             className={`flex flex-col items-center gap-1.5 w-14 py-2.5 rounded-xl transition-all ${leftSidebarTab === 'blocos' ? 'text-white bg-white/10' : 'text-warm-400 hover:text-white hover:bg-white/5'}`}
@@ -795,12 +795,12 @@ const ModuleContentEditor: React.FC = () => {
                                 : 'w-0 opacity-0 border-r-0'
                         }`}>
                         {leftSidebarTab === 'blocos' && (
-                            <>
+                            <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-900">
                                 <div className="p-4 border-b border-warm-100 dark:border-slate-800 flex justify-between bg-white dark:bg-slate-900 shrink-0">
                                     <h3 className="text-sm font-bold text-warm-800 dark:text-slate-100">Recursos de Ensino</h3>
-                                    <button onClick={() => setLeftSidebarTab(null)} className="text-warm-400 dark:text-slate-400 hover:text-warm-700 dark:hover:text-slate-200"><X size={16} /></button>
+                                    <button onClick={() => setLeftSidebarTab(null)} className="text-warm-400 dark:text-slate-400 hover:text-warm-700 dark:hover:text-slate-200 cursor-pointer"><X size={16} /></button>
                                 </div>
-                                <div className="p-4 flex flex-col gap-3 overflow-y-auto">
+                                <div className="p-4 flex flex-col gap-3 overflow-y-auto flex-1 bg-white dark:bg-slate-900 custom-scrollbar">
                                     {BLOCK_TEMPLATES.map(tmpl => (
                                         <button
                                             key={tmpl.type}
@@ -817,7 +817,7 @@ const ModuleContentEditor: React.FC = () => {
                                         </button>
                                     ))}
                                 </div>
-                            </>
+                            </div>
                         )}
                         {leftSidebarTab === 'midia' && (
                             <div className="flex-1 flex flex-col h-full overflow-hidden">

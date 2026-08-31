@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, ArrowLeft, BookOpen, CheckCircle2, Circle, Sparkles, MonitorPlay, ChevronLeft, ChevronRight, X, Award, BookMarked } from 'lucide-react';
+import { Loader2, ArrowLeft, BookOpen, CheckCircle2, Circle, Sparkles, MonitorPlay, ChevronLeft, ChevronRight, X, Award, BookMarked, FileDown } from 'lucide-react';
 import BlockRenderer from '../components/cms/blocks/BlockRenderer';
 import { useAuth } from '../context/AuthContext';
 import { getModuleIcon } from '../utils/iconUtils';
@@ -9,6 +9,7 @@ import ConfettiCelebration from '../components/effects/ConfettiCelebration';
 import BotanicalBackground from '../components/effects/BotanicalBackground';
 import ModuleCommentsSection from '../components/ModuleCommentsSection';
 import ModuleAudioPlayer from '../components/ModuleAudioPlayer';
+import { exportModuleToPDF } from '../utils/pdfExport';
 import '../index.css';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -108,6 +109,31 @@ const ModuleViewer: React.FC = () => {
         window.scrollTo(0, 0);
         fetchModuleData();
     }, [slug_id, fetchModuleData]);
+
+    // ─── Analytics Heartbeat: Registra tempo ativo de estudo ───
+    useEffect(() => {
+        if (!slug_id) return;
+        const pingInterval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                const guestId = localStorage.getItem('palieduca_guest_id') || `guest_${Date.now()}`;
+                localStorage.setItem('palieduca_guest_id', guestId);
+                fetch(`${API_URL}/api/analytics/session`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { Authorization: `Bearer ${token}` } : {})
+                    },
+                    body: JSON.stringify({
+                        module_slug: slug_id,
+                        duration_seconds: 30,
+                        guest_id: guestId
+                    })
+                }).catch(() => {});
+            }
+        }, 30000);
+
+        return () => clearInterval(pingInterval);
+    }, [slug_id, token]);
 
     const toggleActivity = async (activityId: string) => {
         const isCurrentlyCompleted = completedActivities.has(activityId);
@@ -241,6 +267,23 @@ const ModuleViewer: React.FC = () => {
                             <BookMarked size={15} className={isFocusMode ? 'text-amber-700' : 'text-primary'} />
                             <span>{isFocusMode ? 'Modo Normal' : 'Modo Leitura Focada'}</span>
                         </button>
+
+                        {/* Botão de Exportar Apostila em PDF / Imprimir */}
+                        {elements.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => exportModuleToPDF({
+                                    moduleTitle: moduleInfo?.title || 'Cuidados Paliativos — Material Didático',
+                                    moduleDescription: moduleInfo?.description || '',
+                                    elements: elements,
+                                })}
+                                className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-xs shadow-xs transition-all cursor-pointer hover:scale-105"
+                                title="Baixar apostila formatada em PDF ou imprimir guia clínico de bolso"
+                            >
+                                <FileDown size={15} />
+                                <span>Baixar Apostila (PDF)</span>
+                            </button>
+                        )}
 
                         {/* Botão de Apresentação */}
                         {elements.length > 0 && (
@@ -447,6 +490,30 @@ const ModuleViewer: React.FC = () => {
 
                     {/* Canal de Dúvidas / Espaço de Diálogo com a Prof.ª Patrícia */}
                     {slug_id && <ModuleCommentsSection moduleSlug={slug_id} />}
+                </div>
+
+                {/* Barra Flutuante de Navegação e Conclusão Mobile */}
+                <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-warm-200 dark:border-slate-800 p-3 shadow-2xl safe-area-bottom">
+                    <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
+                        <button
+                            onClick={() => navigate('/modulos')}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-warm-100 dark:bg-slate-800 text-warm-800 dark:text-slate-200 text-xs font-bold rounded-xl border border-warm-200 dark:border-slate-700 cursor-pointer"
+                        >
+                            <ArrowLeft size={14} /> Módulos
+                        </button>
+
+                        <div className="flex flex-col items-center">
+                            <span className="text-[10px] font-bold uppercase text-warm-500 dark:text-slate-400">Progresso</span>
+                            <span className="text-xs font-black text-primary dark:text-teal-400">{completedCount}/{totalActivities} ({progressPercentage}%)</span>
+                        </div>
+
+                        <button
+                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                            className="flex items-center gap-1.5 px-3.5 py-2 bg-primary text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer"
+                        >
+                            Topo ↑
+                        </button>
+                    </div>
                 </div>
             </div>
 

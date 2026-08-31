@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /modulos
+Allow: /apresentacao
+Allow: /biblioteca
+Allow: /glossario
+Allow: /comunidade
+Allow: /simulado
+Allow: /validar
+
+# Disallow private user/admin panels from indexing
+Disallow: /perfil
+Disallow: /editor
+
+Sitemap: https://palieduca.com.br/sitemap.xml

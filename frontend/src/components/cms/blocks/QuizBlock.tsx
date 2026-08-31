@@ -237,7 +237,7 @@ const QuizBlock: React.FC<BlockProps> = ({ block, isEditing, isSelected, onUpdat
                                         <button 
                                             onClick={() => handleSubmit(i)}
                                             disabled={selectedOpt === null}
-                                            className="mt-6 px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                            className="mt-6 w-full sm:w-auto min-h-[44px] px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center"
                                         >
                                             Confirmar Resposta
                                         </button>

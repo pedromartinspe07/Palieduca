@@ -8,6 +8,8 @@ export interface User {
     nome: string;
     cargo: string;
     foto_url?: string | null;
+    telefone?: string | null;
+    whatsapp_notifications_enabled?: boolean;
 }
 
 interface AuthContextType {

@@ -4,13 +4,17 @@ import {
     LogOut, Users, BookOpen, Palette, KeyRound, 
     Lock, X, CheckCircle2, AlertCircle, Loader2, ShieldCheck, Clock, Camera, 
     Trash2, Globe, UploadCloud, Sparkles, Download, Database, RefreshCw, 
-    Award, TrendingUp, Layers, ChevronRight, Crop, GraduationCap
+    Award, TrendingUp, Layers, ChevronRight, Crop, GraduationCap, MessageSquare, Compass
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { parseGoogleDriveUrl, parseZohoWorkDriveUrl, getFullMediaUrl } from '../utils/mediaUtils';
 import CertificateModal from '../components/CertificateModal';
 import AcademicTranscriptModal from '../components/AcademicTranscriptModal';
 import StudentAnalyticsDashboard from '../components/StudentAnalyticsDashboard';
+import NotificationCenter from '../components/NotificationCenter';
+import AdminAnnouncementControl from '../components/AdminAnnouncementControl';
+import GamificationBadges from '../components/GamificationBadges';
+import OnboardingTourModal from '../components/OnboardingTourModal';
 import ImageCropperModal from '../components/cms/ImageCropperModal';
 import BotanicalBackground from '../components/effects/BotanicalBackground';
 import UserAvatar from '../components/UserAvatar';
@@ -46,6 +50,7 @@ const Perfil: React.FC = () => {
     // Certificate modal
     const [isCertModalOpen, setIsCertModalOpen] = useState(false);
     const [isTranscriptModalOpen, setIsTranscriptModalOpen] = useState(false);
+    const [isTourOpen, setIsTourOpen] = useState(false);
 
     // Admin & Teacher Analytics State (Dona / Desenvolvedor)
     const [adminMetrics, setAdminMetrics] = useState<any>(null);
@@ -56,6 +61,43 @@ const Perfil: React.FC = () => {
 
     // Student Progress State
     const [studentProgress, setStudentProgress] = useState<any>(null);
+
+    // WhatsApp Preferences State
+    const [userPhone, setUserPhone] = useState(user?.telefone || '');
+    const [whatsappOptIn, setWhatsappOptIn] = useState(user?.whatsapp_notifications_enabled ?? true);
+    const [phoneSaving, setPhoneSaving] = useState(false);
+    const [phoneMessage, setPhoneMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+    const handleSavePhonePreferences = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!token) return;
+        setPhoneSaving(true);
+        setPhoneMessage(null);
+        try {
+            const res = await fetch(`${API_URL}/api/user/notifications/preferences`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    telefone: userPhone,
+                    whatsapp_notifications_enabled: whatsappOptIn
+                })
+            });
+            if (res.ok) {
+                const updated = await res.json();
+                updateUser({ ...user, telefone: updated.telefone, whatsapp_notifications_enabled: updated.whatsapp_notifications_enabled });
+                setPhoneMessage({ text: 'WhatsApp e preferências salvas com sucesso!', type: 'success' });
+            } else {
+                setPhoneMessage({ text: 'Falha ao salvar preferências.', type: 'error' });
+            }
+        } catch (err: any) {
+            setPhoneMessage({ text: `Erro: ${err.message}`, type: 'error' });
+        } finally {
+            setPhoneSaving(false);
+        }
+    };
 
     const handleLogout = () => {
         logout();
@@ -465,6 +507,14 @@ const Perfil: React.FC = () => {
                         )}
 
                         <button
+                            onClick={() => setIsTourOpen(true)}
+                            className="w-full flex items-center justify-center gap-2 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/40 p-3 rounded-2xl border border-teal-200 dark:border-teal-800 transition-all font-semibold text-xs cursor-pointer"
+                        >
+                            <Compass size={16} />
+                            Rever Guia do Curso (Tour)
+                        </button>
+
+                        <button
                             onClick={() => setIsPasswordModalOpen(true)}
                             className="w-full flex items-center justify-center gap-2 text-warm-700 hover:text-primary hover:bg-primary/5 p-3 rounded-2xl border border-warm-200 transition-all font-semibold text-xs cursor-pointer"
                         >
@@ -479,6 +529,54 @@ const Perfil: React.FC = () => {
                             <LogOut size={16} />
                             Sair da Conta
                         </button>
+                    </div>
+
+                    {/* Preferências de Notificação WhatsApp */}
+                    <div className="mt-6 pt-6 border-t border-warm-100 dark:border-slate-800">
+                        <h3 className="text-xs font-bold text-warm-900 dark:text-white mb-1.5 flex items-center gap-1.5">
+                            <MessageSquare size={14} className="text-emerald-600 dark:text-emerald-400" /> WhatsApp & Notificações
+                        </h3>
+                        <p className="text-[11px] text-warm-500 dark:text-slate-400 mb-3 leading-relaxed">
+                            Receba mensagens de parabéns e lembretes pedagógicos no WhatsApp.
+                        </p>
+
+                        <form onSubmit={handleSavePhonePreferences} className="space-y-3">
+                            <div>
+                                <input
+                                    type="text"
+                                    value={userPhone}
+                                    onChange={(e) => setUserPhone(e.target.value)}
+                                    placeholder="(83) 99999-8888"
+                                    className="w-full px-3 py-2 bg-warm-50 dark:bg-slate-800 border border-warm-200 dark:border-slate-700 rounded-xl text-xs text-warm-900 dark:text-white outline-none focus:border-emerald-500 font-medium"
+                                />
+                            </div>
+
+                            <label className="flex items-center gap-2 cursor-pointer text-[11px] text-warm-700 dark:text-slate-300">
+                                <input
+                                    type="checkbox"
+                                    checked={whatsappOptIn}
+                                    onChange={(e) => setWhatsappOptIn(e.target.checked)}
+                                    className="rounded border-warm-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                                />
+                                <span>Ativar lembretes por WhatsApp</span>
+                            </label>
+
+                            {phoneMessage && (
+                                <div className={`p-2 rounded-lg text-[10px] font-bold ${
+                                    phoneMessage.type === 'success' ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' : 'bg-red-50 text-red-900 border border-red-200'
+                                }`}>
+                                    {phoneMessage.text}
+                                </div>
+                            )}
+
+                            <button
+                                type="submit"
+                                disabled={phoneSaving}
+                                className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-2xs transition-all cursor-pointer disabled:opacity-50"
+                            >
+                                {phoneSaving ? 'Salvando...' : 'Salvar WhatsApp'}
+                            </button>
+                        </form>
                     </div>
                 </div>
 
@@ -558,6 +656,15 @@ const Perfil: React.FC = () => {
                                 currentUserEmail={user.email}
                                 currentUserRole={user.cargo}
                             />
+
+                            {/* 🏆 Conquistas, Medalhas & Ranking Geral */}
+                            <GamificationBadges />
+
+                            {/* 📢 Controle de Aviso Global no Topo do Site */}
+                            <AdminAnnouncementControl />
+
+                            {/* Central de Notificações & WhatsApp Twilio */}
+                            <NotificationCenter />
 
                             {/* Central de Segurança e Backup em 1 Clique */}
                             <div className="glassmorphism p-6 rounded-3xl border border-warm-200 shadow-sm bg-white">
@@ -665,6 +772,9 @@ const Perfil: React.FC = () => {
                                     )}
                                 </div>
                             </div>
+
+                            {/* ═══ CONQUISTAS, MEDALHAS & RANKING ═══ */}
+                            <GamificationBadges />
 
                             {/* Botão de Continuar Estudos */}
                             <div className="pt-2">
@@ -956,6 +1066,9 @@ const Perfil: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Modal de Tour Guiado e Boas-Vindas */}
+            <OnboardingTourModal forceOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
         </BotanicalBackground>
     );
 };

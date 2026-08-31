@@ -1,13 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
     Users, Award, Download, Search, 
     Maximize2, Minimize2, CheckCheck, 
-    ArrowUpDown, ChevronDown, ChevronUp, PieChart as PieIcon,
+    ArrowUpDown, ChevronDown, ChevronUp,
     BarChart3, Medal, Clock, FileSpreadsheet, Shield,
     UserCog, Crown, Code2, GraduationCap, ShieldCheck, Headphones,
     Lock, Loader2, Trash2
 } from 'lucide-react';
 import UserAvatar from './UserAvatar';
+import AnalyticsCharts, { type DetailedEngagementMetrics } from './AnalyticsCharts';
+
+const API_URL = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://127.0.0.1:8000'
+    : 'https://palieduca.onrender.com';
 
 export interface StudentMetricItem {
     id: number;
@@ -115,6 +120,23 @@ export const StudentAnalyticsDashboard: React.FC<Props> = ({
     const [sortField, setSortField] = useState<'nome' | 'points' | 'progress_percentage'>('points');
     const [sortAsc, setSortAsc] = useState(false);
     
+    // Métricas Avançadas de Engajamento, Heatmap e Linha do Tempo
+    const [engagementMetrics, setEngagementMetrics] = useState<DetailedEngagementMetrics | null>(null);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        if (token) {
+            fetch(`${API_URL}/api/admin/analytics/engagement`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            .then(res => res.ok ? res.json() : null)
+            .then(d => {
+                if (d) setEngagementMetrics(d);
+            })
+            .catch(err => console.warn('Erro ao carregar métricas detalhadas de engajamento:', err));
+        }
+    }, []);
+
     // Estado de carregamento na troca de cargo e exclusão
     const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
     const [deletingUserId, setDeletingUserId] = useState<number | null>(null);
@@ -231,11 +253,6 @@ export const StudentAnalyticsDashboard: React.FC<Props> = ({
 
     if (!data) return null;
 
-    const total = data.total_students || 1;
-    const completedPct = Math.round(((data.status_distribution?.completed || 0) / total) * 100);
-    const inProgressPct = Math.round(((data.status_distribution?.in_progress || 0) / total) * 100);
-    const notStartedPct = Math.round(((data.status_distribution?.not_started || 0) / total) * 100);
-
     const canManageRoles = currentUserRole === 'dona' || currentUserRole === 'desenvolvedor';
 
     return (
@@ -332,139 +349,17 @@ export const StudentAnalyticsDashboard: React.FC<Props> = ({
             {/* MODO 1: GRÁFICOS INTERATIVOS E RANKING DE PONTUAÇÃO                       */}
             {/* ========================================================================= */}
             {viewMode === 'charts' && (
-                <div className="space-y-6 animate-fade-in">
+                <div className="space-y-8 animate-fade-in">
                     
-                    {/* Linha 1 de Gráficos: Donut de Status + Crescimento por Módulo */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
-                        {/* Gráfico 1: Distribuição de Desempenho (Pizza / Donut) */}
-                        <div className="bg-white p-6 rounded-3xl border border-warm-200 shadow-xs flex flex-col justify-between">
-                            <div className="flex items-center justify-between mb-4">
-                                <div>
-                                    <h4 className="font-bold text-warm-900 text-sm flex items-center gap-2">
-                                        <PieIcon size={16} className="text-primary" /> Distribuição da Turma (Status)
-                                    </h4>
-                                    <p className="text-[11px] text-warm-500">Taxa de conclusão e engajamento global</p>
-                                </div>
-                                <span className="px-2.5 py-1 bg-warm-100 rounded-full text-[11px] font-bold text-warm-700">
-                                    {data.total_students} Alunos
-                                </span>
-                            </div>
+                    {/* Gráficos Visuais Avançados: Donut, Barras, Timeline 14 Dias e Heatmap */}
+                    <AnalyticsCharts 
+                        statusDistribution={data.status_distribution}
+                        moduleStats={data.module_stats}
+                        engagementMetrics={engagementMetrics}
+                    />
 
-                            {/* Donut SVG Personalizado */}
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 py-4">
-                                <div className="relative w-36 h-36 flex items-center justify-center shrink-0">
-                                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                                        {/* Fundo */}
-                                        <circle cx="18" cy="18" r="14" fill="none" className="stroke-warm-100" strokeWidth="4" />
-                                        
-                                        {/* Segmento 1: Concluídos (Verde) */}
-                                        <circle 
-                                            cx="18" cy="18" r="14" fill="none" 
-                                            className="stroke-emerald-500" strokeWidth="4" 
-                                            strokeDasharray={`${completedPct} 100`} 
-                                            strokeDashoffset="0"
-                                        />
-
-                                        {/* Segmento 2: Em Andamento (Âmbar) */}
-                                        <circle 
-                                            cx="18" cy="18" r="14" fill="none" 
-                                            className="stroke-amber-500" strokeWidth="4" 
-                                            strokeDasharray={`${inProgressPct} 100`} 
-                                            strokeDashoffset={`-${completedPct}`}
-                                        />
-
-                                        {/* Segmento 3: Não Iniciados (Cinza) */}
-                                        <circle 
-                                            cx="18" cy="18" r="14" fill="none" 
-                                            className="stroke-warm-300" strokeWidth="4" 
-                                            strokeDasharray={`${notStartedPct} 100`} 
-                                            strokeDashoffset={`-${completedPct + inProgressPct}`}
-                                        />
-                                    </svg>
-                                    <div className="absolute flex flex-col items-center justify-center text-center">
-                                        <span className="text-xl font-black text-warm-900 leading-none">
-                                            {data.average_progress_percentage}%
-                                        </span>
-                                        <span className="text-[9px] font-bold text-warm-500 uppercase tracking-tighter mt-0.5">
-                                            Média Turma
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Legendas */}
-                                <div className="space-y-2.5 text-xs w-full sm:w-auto">
-                                    <div className="flex items-center justify-between gap-4 p-2 rounded-xl bg-emerald-50/60 border border-emerald-100">
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-3 h-3 rounded-full bg-emerald-500 shrink-0"></span>
-                                            <span className="font-semibold text-emerald-950 text-[11px]">100% Concluído (Aptos)</span>
-                                        </div>
-                                        <span className="font-black text-emerald-800 text-[11px]">
-                                            {data.status_distribution?.completed || 0} ({completedPct}%)
-                                        </span>
-                                    </div>
-
-                                    <div className="flex items-center justify-between gap-4 p-2 rounded-xl bg-amber-50/60 border border-amber-100">
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-3 h-3 rounded-full bg-amber-500 shrink-0"></span>
-                                            <span className="font-semibold text-amber-950 text-[11px]">Em Andamento (1% - 99%)</span>
-                                        </div>
-                                        <span className="font-black text-amber-800 text-[11px]">
-                                            {data.status_distribution?.in_progress || 0} ({inProgressPct}%)
-                                        </span>
-                                    </div>
-
-                                    <div className="flex items-center justify-between gap-4 p-2 rounded-xl bg-warm-100/70 border border-warm-200">
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-3 h-3 rounded-full bg-warm-400 shrink-0"></span>
-                                            <span className="font-semibold text-warm-800 text-[11px]">Não Iniciaram (0%)</span>
-                                        </div>
-                                        <span className="font-black text-warm-700 text-[11px]">
-                                            {data.status_distribution?.not_started || 0} ({notStartedPct}%)
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Gráfico 2: Crescimento e Conclusão por Módulo */}
-                        <div className="bg-white p-6 rounded-3xl border border-warm-200 shadow-xs flex flex-col justify-between">
-                            <div className="flex items-center justify-between mb-4">
-                                <div>
-                                    <h4 className="font-bold text-warm-900 text-sm flex items-center gap-2">
-                                        <BarChart3 size={16} className="text-primary" /> Conclusão por Módulo
-                                    </h4>
-                                    <p className="text-[11px] text-warm-500">Taxa de alunos que finalizaram cada módulo</p>
-                                </div>
-                                <span className="text-xs text-primary font-bold">
-                                    {data.total_modules} Módulos
-                                </span>
-                            </div>
-
-                            {/* Barras de Progresso por Módulo */}
-                            <div className="space-y-3 py-1">
-                                {data.module_stats?.map((m, idx) => (
-                                    <div key={m.slug || idx} className="space-y-1">
-                                        <div className="flex justify-between items-center text-[11px]">
-                                            <span className="font-bold text-warm-800 truncate max-w-[220px]" title={m.title}>
-                                                {m.title}
-                                            </span>
-                                            <span className="font-extrabold text-primary">{m.completion_rate}%</span>
-                                        </div>
-                                        <div className="w-full bg-warm-100 rounded-full h-2 overflow-hidden border border-warm-200/60">
-                                            <div 
-                                                className="bg-gradient-to-r from-primary to-secondary h-full rounded-full transition-all duration-500" 
-                                                style={{ width: `${m.completion_rate}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Linha 2: Ranking de Alunos com Mais Pontos e Destaques */}
-                    <div className="bg-white p-6 rounded-3xl border border-warm-200 shadow-xs">
+                    {/* Ranking de Alunos com Mais Pontos e Destaques */}
+                    <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-warm-200 dark:border-slate-800 shadow-xs">
                         <div className="flex items-center justify-between mb-5">
                             <div>
                                 <h4 className="font-bold text-warm-900 text-base flex items-center gap-2">

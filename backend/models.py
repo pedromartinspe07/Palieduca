@@ -16,6 +16,9 @@ class User(Base):
     last_password_change = Column(String, nullable=True) # ISO string da data da última troca
     foto_url = Column(String, nullable=True) # URL da foto de perfil ou avatar customizado
     completion_email_sent = Column(Boolean, default=False) # Flag para evitar reenvio duplicado do e-mail de certificado
+    telefone = Column(String, nullable=True) # WhatsApp com DDI e DDD (ex: +5583999999999)
+    whatsapp_notifications_enabled = Column(Boolean, default=True) # Preferência do aluno
+    last_active_at = Column(String, nullable=True) # Data/hora do último acesso à plataforma
 
 class Module(Base):
     __tablename__ = "modules"
@@ -130,5 +133,104 @@ class ModuleComment(Base):
     is_pinned = Column(Boolean, default=False)
     likes_count = Column(Integer, default=0)
     parent_id = Column(Integer, index=True, nullable=True)
+
+class UserSessionLog(Base):
+    __tablename__ = "user_session_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True, nullable=True)
+    guest_id = Column(String, index=True, nullable=True)
+    module_slug = Column(String, index=True, nullable=True)
+    duration_seconds = Column(Integer, default=0)
+    started_at = Column(String)
+    last_ping_at = Column(String)
+
+class NotificationLog(Base):
+    __tablename__ = "notification_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True, nullable=True)
+    type = Column(String, default="whatsapp") # "whatsapp", "email"
+    recipient = Column(String, index=True)
+    title = Column(String, nullable=True)
+    content = Column(Text)
+    status = Column(String, default="sent") # "sent", "failed", "simulated"
+    sent_at = Column(String)
+
+class UserBadge(Base):
+    __tablename__ = "user_badges"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True, nullable=False)
+    badge_key = Column(String, index=True, nullable=False) # "first_step", "module_1", "master_symptoms", etc.
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=False)
+    icon = Column(String, default="Award") # Icon name
+    category = Column(String, default="milestone") # "milestone", "knowledge", "engagement"
+    xp_points = Column(Integer, default=50)
+    unlocked_at = Column(String)
+
+class ForumPost(Base):
+    __tablename__ = "forum_posts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True, nullable=False)
+    author_name = Column(String, nullable=False)
+    author_role = Column(String, default="aluno")
+    author_avatar = Column(String, nullable=True)
+    category = Column(String, default="casos_clinicos", index=True) # "casos_clinicos", "duvidas", "experiencias", "avisos"
+    module_slug = Column(String, index=True, nullable=True)
+    title = Column(String, nullable=False)
+    content = Column(Text, nullable=False)
+    likes_count = Column(Integer, default=0)
+    replies_count = Column(Integer, default=0)
+    is_pinned = Column(Boolean, default=False)
+    is_solved = Column(Boolean, default=False)
+    created_at = Column(String, nullable=False)
+    updated_at = Column(String, nullable=True)
+
+class ForumReply(Base):
+    __tablename__ = "forum_replies"
+
+    id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, index=True, nullable=False)
+    user_id = Column(Integer, index=True, nullable=False)
+    author_name = Column(String, nullable=False)
+    author_role = Column(String, default="aluno")
+    author_avatar = Column(String, nullable=True)
+    content = Column(Text, nullable=False)
+    likes_count = Column(Integer, default=0)
+    is_instructor_answer = Column(Boolean, default=False)
+    created_at = Column(String, nullable=False)
+
+class ForumPostLike(Base):
+    __tablename__ = "forum_post_likes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, index=True, nullable=False)
+    user_id = Column(Integer, index=True, nullable=False)
+
+class ForumReplyLike(Base):
+    __tablename__ = "forum_reply_likes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    reply_id = Column(Integer, index=True, nullable=False)
+    user_id = Column(Integer, index=True, nullable=False)
+
+class SystemAnnouncement(Base):
+    __tablename__ = "system_announcements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    message = Column(Text, nullable=False)
+    link_url = Column(String, nullable=True)
+    link_text = Column(String, nullable=True)
+    type = Column(String, default="info") # "info", "warning", "success"
+    is_active = Column(Boolean, default=False)
+    updated_at = Column(String, nullable=True)
+
+
+
+
+
 
 

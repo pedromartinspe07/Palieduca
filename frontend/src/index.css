@@ -540,3 +540,102 @@
     z-index: 99999 !important;
 }
 
+/* ═══ MOBILE TOUCH & RESPONSIVENESS OPTIMIZATIONS ═══ */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.touch-scroll {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Previne zoom involuntário no iOS Safari ao focar em inputs */
+@media (max-width: 640px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* Safe Area Insets para aparelhos com notch / barra de navegação inferior */
+.safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+}
+
+.safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top, 1rem));
+}
+
+/* Touch Targets Acessíveis (mínimo 44px de área de clique recomendada por WCAG) */
+.touch-target-44 {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* ═══ MODO ALTO CONTRASTE (WCAG AAA) ═══ */
+html.high-contrast,
+html.high-contrast body {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+html.high-contrast * {
+    border-color: #facc15 !important;
+    box-shadow: none !important;
+}
+html.high-contrast a,
+html.high-contrast button {
+    color: #facc15 !important;
+}
+html.high-contrast input,
+html.high-contrast textarea,
+html.high-contrast select {
+    background-color: #111111 !important;
+    color: #ffffff !important;
+    border: 2px solid #facc15 !important;
+}
+
+/* ═══ FONTE PARA DISLEXIA ═══ */
+html.dyslexia-font,
+html.dyslexia-font * {
+    font-family: 'Comic Sans MS', 'Trebuchet MS', sans-serif !important;
+    letter-spacing: 0.04em !important;
+}
+
+/* ═══ ESPAÇAMENTO EXPANDIDO ═══ */
+html.expanded-spacing,
+html.expanded-spacing body {
+    line-height: 2 !important;
+    word-spacing: 0.16em !important;
+}
+html.expanded-spacing p,
+html.expanded-spacing li {
+    margin-bottom: 1.5em !important;
+}
+
+/* ═══ FOCO VISÍVEL ACESSÍVEL (KEYBOARD NAVIGATION) ═══ */
+:focus-visible {
+    outline: 3px solid #0d9488 !important;
+    outline-offset: 3px !important;
+    border-radius: 6px !important;
+}
+
+/* Skip link acessível */
+.skip-link {
+    position: absolute;
+    top: -50px;
+    left: 10px;
+    background: #0f766e;
+    color: #ffffff;
+    padding: 8px 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    z-index: 100000;
+    transition: top 0.2s ease-in-out;
+}
+.skip-link:focus {
+    top: 10px;
+}
+
+
+

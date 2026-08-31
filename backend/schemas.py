@@ -280,3 +280,165 @@ class CommentResponse(BaseModel):
     class Config:
         from_attributes = True
 
+# Schemas de Analytics Avançado
+class SessionPingRequest(BaseModel):
+    module_slug: Optional[str] = None
+    duration_seconds: int = 30
+    guest_id: Optional[str] = None
+
+class QuizHeatmapItem(BaseModel):
+    block_id: str
+    module_slug: Optional[str] = None
+    question_index: int
+    total_attempts: int
+    correct_count: int
+    error_count: int
+    error_rate_percentage: int
+
+class DailyTimelineItem(BaseModel):
+    date: str
+    active_users: int
+    activities_completed: int
+
+class DetailedEngagementMetrics(BaseModel):
+    average_study_minutes_per_module: dict[str, int]
+    abandonment_rates: dict[str, int]
+    quiz_error_heatmap: list[QuizHeatmapItem]
+    activity_timeline: list[DailyTimelineItem]
+    total_study_hours: float
+    most_difficult_module: Optional[str] = None
+
+# Schemas de Notificações & WhatsApp
+class NotificationPreferencesRequest(BaseModel):
+    telefone: Optional[str] = None
+    whatsapp_notifications_enabled: bool = True
+
+class TestWhatsAppRequest(BaseModel):
+    telefone: str
+    mensagem: Optional[str] = None
+
+class BroadcastNotificationRequest(BaseModel):
+    channel: str = "whatsapp" # "whatsapp", "email", "both"
+    target_group: str = "all" # "all", "inactive_5_days", "in_progress", "completed"
+    title: str = "Comunicado PaliEduca"
+    message: str
+
+class NotificationLogResponse(BaseModel):
+    id: int
+    user_id: Optional[int] = None
+    type: str
+    recipient: str
+    title: Optional[str] = None
+    content: str
+    status: str
+    sent_at: str
+
+    class Config:
+        from_attributes = True
+
+# ─── Gamificação & Conquistas ───
+class BadgeItemResponse(BaseModel):
+    key: str
+    title: str
+    description: str
+    icon: str
+    category: str
+    xp_points: int
+    unlocked: bool
+    unlocked_at: Optional[str] = None
+
+class UserGamificationProfileResponse(BaseModel):
+    total_xp: int
+    current_level: int
+    level_title: str
+    next_level_xp: int
+    badges_unlocked_count: int
+    total_badges_count: int
+    completion_percentage: int
+    badges: list[BadgeItemResponse]
+
+class LeaderboardItemResponse(BaseModel):
+    rank: int
+    user_id: int
+    nome: str
+    foto_url: Optional[str] = None
+    total_xp: int
+    level_title: str
+    badges_count: int
+    is_current_user: bool = False
+
+# ─── Comunidade & Fórum de Casos Clínicos ───
+class ForumPostCreateRequest(BaseModel):
+    title: str
+    content: str
+    category: str = "casos_clinicos" # "casos_clinicos", "duvidas", "experiencias", "avisos"
+    module_slug: Optional[str] = None
+
+class ForumReplyCreateRequest(BaseModel):
+    content: str
+
+class ForumReplyResponse(BaseModel):
+    id: int
+    post_id: int
+    user_id: int
+    author_name: str
+    author_role: str
+    author_avatar: Optional[str] = None
+    content: str
+    likes_count: int
+    is_instructor_answer: bool
+    created_at: str
+    has_liked: bool = False
+
+    class Config:
+        from_attributes = True
+
+class ForumPostListItemResponse(BaseModel):
+    id: int
+    user_id: int
+    author_name: str
+    author_role: str
+    author_avatar: Optional[str] = None
+    category: str
+    module_slug: Optional[str] = None
+    title: str
+    content: str
+    likes_count: int
+    replies_count: int
+    is_pinned: bool
+    is_solved: bool
+    created_at: str
+    has_liked: bool = False
+
+    class Config:
+        from_attributes = True
+
+class ForumPostDetailResponse(BaseModel):
+    post: ForumPostListItemResponse
+    replies: list[ForumReplyResponse]
+
+# ─── Avisos & Banner Global do Sistema ───
+class SystemAnnouncementPayload(BaseModel):
+    message: str
+    link_url: Optional[str] = None
+    link_text: Optional[str] = None
+    type: str = "info" # "info", "warning", "success"
+    is_active: bool = True
+
+class SystemAnnouncementResponse(BaseModel):
+    id: int
+    message: str
+    link_url: Optional[str] = None
+    link_text: Optional[str] = None
+    type: str
+    is_active: bool
+    updated_at: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+
+
+
+

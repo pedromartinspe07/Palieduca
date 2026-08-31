@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, BookOpen, LayoutDashboard, Type, MessageSquare, Info, Menu, X, Smartphone, Download } from 'lucide-react';
+import { User, BookOpen, LayoutDashboard, Type, MessageSquare, Info, Menu, X, Smartphone, Download, Users } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import SearchBar from './SearchBar';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
     { to: "/", icon: <LayoutDashboard size={18} />, label: "Início" },
     { to: "/apresentacao", icon: <Info size={18} />, label: "Apresentação" },
     { to: "/modulos", icon: <BookOpen size={18} />, label: "Módulos" },
+    { to: "/comunidade", icon: <Users size={18} />, label: "Comunidade" },
     { to: "/biblioteca", icon: <MessageSquare size={18} />, label: "Biblioteca" },
     { to: "/glossario", icon: <Type size={18} />, label: "Glossário" },
 ];
@@ -143,18 +144,23 @@ const Header: React.FC = () => {
             </div>
 
             <div
-                className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${menuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${menuOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
                     }`}
             >
-                <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-warm-100 dark:border-slate-800 px-4 py-3 space-y-1 shadow-lg">
+                <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-warm-100 dark:border-slate-800 px-4 py-4 space-y-2 shadow-lg safe-area-bottom">
+                    {/* Barra de Busca Mobile */}
+                    <div className="pb-2 border-b border-warm-100 dark:border-slate-800">
+                        <SearchBar />
+                    </div>
+
                     {NAV_ITEMS.map((item) => {
                         const isActive = location.pathname === item.to;
                         return (
                             <Link
                                 key={item.label}
                                 to={item.to}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${isActive
-                                    ? 'text-primary dark:text-teal-400 bg-warm-50 dark:bg-slate-800 border border-warm-100 dark:border-slate-700'
+                                className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-colors touch-target-44 ${isActive
+                                    ? 'text-primary dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800'
                                     : 'text-warm-700 dark:text-slate-200 hover:text-primary hover:bg-warm-50 dark:hover:bg-slate-800'
                                     }`}
                             >

@@ -661,7 +661,7 @@ const selectedBlockIndex = blocks.findIndex(b => b.id === selectedBlockId);
 
 // ─── Render ───
 return (
-<div className="bg-[#f0f2f5] h-full flex flex-col overflow-hidden font-sans rounded-xl border border-warm-200 relative">
+<div className="bg-[#f0f2f5] dark:bg-[#070c18] h-full flex flex-col overflow-hidden font-sans rounded-xl border border-warm-200 dark:border-slate-800 relative">
 {/* ═══ HEADER ═══ */}
 <div className="h-14 bg-white dark:bg-slate-900 border-b border-warm-200 dark:border-slate-800 flex items-center justify-between px-2 sm:px-6 shrink-0 z-50 gap-1.5 sm:gap-2">
 {/* Left: Page Select & Dirty status */}
@@ -835,12 +835,12 @@ className="bg-warm-50 dark:bg-slate-800 border border-warm-200 dark:border-slate
 )}
 
 {/* ═══ TRIPLE LAYOUT ═══ */}
-<div className="flex-1 flex overflow-hidden min-h-0">
+<div className="flex-1 flex overflow-hidden min-h-0 bg-white dark:bg-slate-900">
 
 {/* ─── LEFT SIDEBAR (CANVA STYLE) ─── */}
 <div className="hidden md:flex shrink-0 h-full">
     {/* Primary Narrow Icon Bar */}
-    <div className="w-[72px] bg-warm-900 flex flex-col items-center py-4 gap-4 z-50 shadow-md">
+    <div className="w-[72px] bg-warm-900 dark:bg-[#0b1329] flex flex-col items-center py-4 gap-4 z-50 shadow-md border-r border-warm-800 dark:border-slate-800">
         <button
             onClick={() => setLeftSidebarTab(leftSidebarTab === 'blocos' ? null : 'blocos')}
             className={`flex flex-col items-center gap-1.5 w-14 py-2.5 rounded-xl transition-all ${
@@ -890,14 +890,14 @@ className="bg-warm-50 dark:bg-slate-800 border border-warm-200 dark:border-slate
         leftSidebarTab === 'midia' || leftSidebarTab === 'historico' ? 'w-[360px] sm:w-[380px] opacity-100' : leftSidebarTab !== null ? 'w-[340px] opacity-100' : 'w-0 opacity-0 border-r-0'
     }`}>
         {leftSidebarTab === 'blocos' && (
-            <>
+            <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-900">
                 <div className="p-4 border-b border-warm-100 dark:border-slate-800 flex items-center justify-between gap-2 bg-white dark:bg-slate-900 shrink-0">
                     <h3 className="text-sm font-bold text-warm-800 dark:text-slate-100">Modelos e Seções</h3>
                     <button onClick={() => setLeftSidebarTab(null)} className="p-1 hover:bg-warm-100 dark:hover:bg-slate-800 rounded-md text-warm-400 dark:text-slate-400 hover:text-warm-700 dark:hover:text-slate-200 cursor-pointer">
                         <X size={16} />
                     </button>
                 </div>
-                <div className="p-4 flex flex-col gap-3 overflow-y-auto flex-1 custom-scrollbar">
+                <div className="p-4 flex flex-col gap-3 overflow-y-auto flex-1 custom-scrollbar bg-white dark:bg-slate-900">
                     <p className="text-xs text-warm-500 dark:text-slate-400 mb-1 leading-relaxed">Clique nos blocos abaixo para adicioná-los ao fim da sua página.</p>
                     {BLOCK_TEMPLATES.map(tmpl => (
                         <button
@@ -916,7 +916,7 @@ className="bg-warm-50 dark:bg-slate-800 border border-warm-200 dark:border-slate
                         </button>
                     ))}
                 </div>
-            </>
+            </div>
         )}
 
         {leftSidebarTab === 'midia' && (

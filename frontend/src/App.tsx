@@ -2,7 +2,7 @@ import React, { useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import ChatBox from './components/ChatBox';
-import FontSizeControl from './components/FontSizeControl';
+import AccessibilitySuite from './components/AccessibilitySuite';
 import VLibras from './components/VLibras';
 import Home from './pages/Home';
 import Apresentacao from './pages/Apresentacao';
@@ -20,12 +20,16 @@ import TermosDeUso from './pages/TermosDeUso';
 import Privacidade from './pages/Privacidade';
 import Contato from './pages/Contato';
 import SimuladoProficiencia from './pages/SimuladoProficiencia';
+import Comunidade from './pages/Comunidade';
 import Footer from './components/Footer';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import ProtectedRoute from './components/ProtectedRoute';
 import SiteIntroPreloader from './components/preloader/SiteIntroPreloader';
 import useAnchorScroll from './hooks/useAnchorScroll';
 import { useAuth } from './context/AuthContext';
+import SEOHead from './components/SEOHead';
+import OnboardingTourModal from './components/OnboardingTourModal';
+import GlobalAnnouncementBanner from './components/GlobalAnnouncementBanner';
 import { inject } from '@vercel/analytics';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -39,6 +43,9 @@ const AnimatedRoutes: React.FC = () => {
 
   return (
     <div key={location.pathname} className="animate-fade-in">
+      <GlobalAnnouncementBanner />
+      <SEOHead />
+      <OnboardingTourModal />
       <Routes location={location}>
         <Route path="/" element={<Home />} />
         <Route path="/apresentacao" element={<Apresentacao />} />
@@ -49,6 +56,8 @@ const AnimatedRoutes: React.FC = () => {
         <Route path="/modulo/:slug_id" element={<ModuleViewer />} />
         <Route path="/biblioteca" element={<Biblioteca />} />
         <Route path="/glossario" element={<Glossario />} />
+        <Route path="/comunidade" element={<Comunidade />} />
+        <Route path="/forum" element={<Navigate to="/comunidade" />} />
         <Route path="/validar" element={<ValidarCertificado />} />
         <Route path="/validar/:code" element={<ValidarCertificado />} />
         <Route path="/termos" element={<TermosDeUso />} />
@@ -70,11 +79,11 @@ const AppContent: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-background dark:bg-[#0b1329] text-warm-900 dark:text-slate-100 relative selection:bg-primary/30 transition-colors duration-300">
       <SiteIntroPreloader />
       {!isEditor && <Header />}
-      <main className="flex-grow">
+      <main id="main-content" className="flex-grow">
         <AnimatedRoutes />
       </main>
       {!isEditor && <Footer />}
-      {!isEditor && <FontSizeControl />}
+      {!isEditor && <AccessibilitySuite />}
       {!isEditor && <VLibras />}
       {!isEditor && <ChatBox />}
       {!isEditor && <PWAInstallPrompt />}
