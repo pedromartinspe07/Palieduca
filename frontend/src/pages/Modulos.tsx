@@ -126,7 +126,7 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
 
     if (blocks && blocks.length > 0) {
         return (
-            <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true} className="pt-28 pb-12 px-4 sm:px-6 lg:px-8">
+            <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true} className="pt-20 sm:pt-24 pb-12 px-4 sm:px-6 lg:px-8">
                 <main className="max-w-7xl mx-auto">
                     {blocks.map(block => (
                         <BlockRenderer key={block.id} block={block} isEditing={false} onUpdate={() => {}} onSelect={() => {}} isSelected={false} />
@@ -137,7 +137,7 @@ const Modulos: React.FC<ModulosProps> = ({ isEditing, initialContent, onContentC
     }
 
     return (
-        <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true} className="pt-28 pb-12 px-4 sm:px-6 lg:px-8">
+        <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true} className="pt-20 sm:pt-24 pb-12 px-4 sm:px-6 lg:px-8">
             <main className="max-w-6xl mx-auto">
                 {/* Hero Banner do Módulo (Glassmorphism Botânico) */}
                 <div className="p-8 sm:p-12 md:p-14 rounded-[2.5rem] border border-white/90 dark:border-slate-800 shadow-[0_20px_50px_rgba(15,23,42,0.06)] bg-white/85 dark:bg-slate-900/85 backdrop-blur-2xl text-center relative overflow-hidden">

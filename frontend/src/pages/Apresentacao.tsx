@@ -93,7 +93,7 @@ const modulesList: ModuleItem[] = [
 
 const Apresentacao: React.FC = () => {
     return (
-        <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true} className="pt-28 pb-12 px-4 sm:px-6 lg:px-8">
+        <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true} className="pt-20 sm:pt-24 pb-12 px-4 sm:px-6 lg:px-8">
             <main className="max-w-6xl mx-auto space-y-12">
                 
                 {/* ═══ 1. HERO BANNER DE BOAS-VINDAS ═══ */}

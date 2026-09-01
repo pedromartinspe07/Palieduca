@@ -395,19 +395,19 @@ const SearchBar: React.FC = () => {
                     onChange={handleSearchChange}
                     onFocus={handleFocus}
                     onKeyDown={handleKeyDown}
-                    placeholder="Pesquisar conceitos, módulos, termos..."
-                    className="w-56 md:w-64 lg:w-80 pl-10 pr-20 py-2.5 bg-white/70 backdrop-blur-md border border-warm-200/80 rounded-full text-xs md:text-sm text-warm-900 placeholder:text-warm-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400 focus:bg-white shadow-2xs transition-all"
+                    placeholder="Pesquisar..."
+                    className="w-32 sm:w-40 md:w-48 lg:w-40 xl:w-56 pl-8 pr-10 py-1.5 bg-white/70 backdrop-blur-md border border-warm-200/80 rounded-full text-xs text-warm-900 placeholder:text-warm-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40 focus:border-sky-400 focus:bg-white shadow-2xs transition-all"
                     aria-label="Busca global de conteúdos"
                 />
 
                 {/* Left Search Icon */}
                 <Search 
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warm-400 group-focus-within:text-sky-600 transition-colors pointer-events-none" 
-                    size={16} 
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-warm-400 group-focus-within:text-sky-600 transition-colors pointer-events-none" 
+                    size={14} 
                 />
 
                 {/* Right Actions: Flapping Butterfly Button instead of X */}
-                <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                     {query ? (
                         <button
                             onClick={clearSearch}

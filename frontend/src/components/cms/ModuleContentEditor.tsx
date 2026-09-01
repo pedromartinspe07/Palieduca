@@ -789,9 +789,9 @@ const ModuleContentEditor: React.FC = () => {
                     </div>
 
                     <div className={`bg-white dark:bg-slate-900 border-r border-warm-200 dark:border-slate-800 flex flex-col z-40 overflow-hidden shadow-lg transition-all duration-300 ${leftSidebarTab === 'midia' || leftSidebarTab === 'historico'
-                            ? 'w-[360px] sm:w-[380px] opacity-100'
+                            ? 'w-[280px] sm:w-[320px] xl:w-[360px] opacity-100'
                             : leftSidebarTab !== null
-                                ? 'w-[280px] opacity-100'
+                                ? 'w-[230px] sm:w-[260px] xl:w-[290px] opacity-100'
                                 : 'w-0 opacity-0 border-r-0'
                         }`}>
                         {leftSidebarTab === 'blocos' && (
@@ -1003,43 +1003,54 @@ const ModuleContentEditor: React.FC = () => {
                 </div>
 
                 {/* ─── RIGHT SIDEBAR (3 TABS) (DESKTOP) ─── */}
-                <div className="hidden md:flex w-84 sm:w-96 bg-white dark:bg-slate-900 border-l border-warm-200 dark:border-slate-800 flex-col z-40 shrink-0 shadow-lg">
+                <div className={`hidden md:flex flex-col z-40 shrink-0 shadow-lg bg-white dark:bg-slate-900 border-l border-warm-200 dark:border-slate-800 transition-all duration-300 ${
+                    rightSidebarTab ? 'w-72 lg:w-80 xl:w-96 opacity-100' : 'w-0 opacity-0 overflow-hidden border-l-0 pointer-events-none'
+                }`}>
                     {/* Tab Bar Header */}
                     <div className="flex items-center border-b border-warm-200 dark:border-slate-800 bg-warm-50/70 dark:bg-slate-800/80 p-1.5 gap-1 shrink-0">
                         <button
                             type="button"
                             onClick={() => setRightSidebarTab('properties')}
-                            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${rightSidebarTab === 'properties'
+                            className={`flex-1 py-1.5 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1 transition-all ${rightSidebarTab === 'properties'
                                     ? 'bg-white dark:bg-slate-900 text-warm-900 dark:text-slate-100 shadow-xs border border-warm-200/60 dark:border-slate-700'
                                     : 'text-warm-500 dark:text-slate-400 hover:text-warm-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800'
                                 }`}
                         >
-                            <Settings size={14} className={rightSidebarTab === 'properties' ? 'text-primary' : ''} />
-                            <span>Propriedades</span>
+                            <Settings size={13} className={rightSidebarTab === 'properties' ? 'text-primary' : ''} />
+                            <span className="truncate">Propriedades</span>
                         </button>
 
                         <button
                             type="button"
                             onClick={() => setRightSidebarTab('ai')}
-                            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${rightSidebarTab === 'ai'
+                            className={`flex-1 py-1.5 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1 transition-all ${rightSidebarTab === 'ai'
                                     ? 'bg-purple-600 text-white shadow-xs'
                                     : 'text-purple-700 dark:text-purple-300 bg-purple-50/50 dark:bg-purple-950/40 hover:bg-purple-100/70 dark:hover:bg-purple-900/50 border border-purple-200/50 dark:border-purple-800/50'
                                 }`}
                         >
-                            <Wand2 size={14} className={rightSidebarTab === 'ai' ? 'animate-spin' : 'text-purple-600 dark:text-purple-400'} />
-                            <span>Agente IA</span>
+                            <Wand2 size={13} className={rightSidebarTab === 'ai' ? 'animate-spin' : 'text-purple-600 dark:text-purple-400'} />
+                            <span className="truncate">Agente IA</span>
                         </button>
 
                         <button
                             type="button"
                             onClick={() => setRightSidebarTab('images')}
-                            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${rightSidebarTab === 'images'
+                            className={`flex-1 py-1.5 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1 transition-all ${rightSidebarTab === 'images'
                                     ? 'bg-emerald-600 text-white shadow-xs'
                                     : 'text-emerald-700 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/40 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/50 border border-emerald-200/50 dark:border-emerald-800/50'
                                 }`}
                         >
-                            <ImageIcon size={14} className={rightSidebarTab === 'images' ? '' : 'text-emerald-600 dark:text-emerald-400'} />
-                            <span>Imagens</span>
+                            <ImageIcon size={13} className={rightSidebarTab === 'images' ? '' : 'text-emerald-600 dark:text-emerald-400'} />
+                            <span className="truncate">Imagens</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setRightSidebarTab(null as any)}
+                            className="p-1 hover:bg-warm-200 dark:hover:bg-slate-700 rounded-md text-warm-400 dark:text-slate-400 hover:text-warm-700 dark:hover:text-slate-200 transition-colors cursor-pointer shrink-0"
+                            title="Recolher painel lateral"
+                        >
+                            <X size={15} />
                         </button>
                     </div>
 

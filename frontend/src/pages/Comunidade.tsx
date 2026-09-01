@@ -279,7 +279,7 @@ export const Comunidade: React.FC = () => {
     };
 
     return (
-        <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true} className="min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8">
+        <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true} className="min-h-screen pt-20 sm:pt-24 pb-16 px-4 sm:px-6 lg:px-8">
             <div className="max-w-6xl mx-auto space-y-8">
                 
                 {/* ═══ HERO BANNER DA COMUNIDADE ═══ */}

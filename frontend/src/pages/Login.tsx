@@ -298,7 +298,7 @@ const Login: React.FC = () => {
     };
 
     return (
-        <main className="min-h-screen pt-28 pb-12 flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-warm-50 relative overflow-hidden">
+        <main className="min-h-screen pt-20 sm:pt-24 pb-12 flex flex-col justify-center py-8 sm:px-6 lg:px-8 bg-warm-50 relative overflow-hidden">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="flex justify-center group cursor-pointer">
                     <div className="bg-gradient-to-br from-teal-600 to-sky-700 text-white p-3 rounded-2xl shadow-xl transform -rotate-3 hover:rotate-0 transition-transform duration-300">

@@ -438,11 +438,11 @@ const Perfil: React.FC = () => {
     const isCertUnlocked = overallStudentProgress >= 100;
 
     return (
-        <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true} className="pt-28 pb-16 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-8">
+        <BotanicalBackground showButterflies={true} showWaves={true} showFoliage={true} className="pt-20 sm:pt-24 pb-12 px-3 sm:px-6 lg:px-8">
+            <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-5 lg:gap-8">
                 
                 {/* Sidebar do Perfil */}
-                <div className="w-full md:w-1/3 bg-white/90 backdrop-blur-xl p-6 sm:p-7 rounded-[28px] h-fit border border-white/90 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.05)]">
+                <div className="w-full md:w-1/3 bg-white/90 backdrop-blur-xl p-5 sm:p-6 lg:p-7 rounded-3xl h-fit border border-white/90 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.05)]">
                     <div className="flex flex-col items-center text-center pb-6 border-b border-warm-100">
                         
                         {/* Avatar com Botão de Câmera */}

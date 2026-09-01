@@ -54,23 +54,24 @@ const Header: React.FC = () => {
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between">
-                    <Link to="/" className="flex items-center gap-2.5 group">
-                        <div className="bg-gradient-to-br from-teal-50 to-sky-50 dark:from-teal-950/70 dark:to-sky-950/70 p-2 rounded-2xl text-teal-600 dark:text-teal-300 border border-teal-200/80 dark:border-teal-800/60 shadow-2xs group-hover:shadow-md group-hover:scale-105 transition-all duration-300">
-                            <ButterflyIcon size={26} className="text-teal-700 dark:text-teal-300" />
+                    <Link to="/" className="flex items-center gap-2 group shrink-0">
+                        <div className="bg-gradient-to-br from-teal-50 to-sky-50 dark:from-teal-950/70 dark:to-sky-950/70 p-1.5 sm:p-2 rounded-2xl text-teal-600 dark:text-teal-300 border border-teal-200/80 dark:border-teal-800/60 shadow-2xs group-hover:shadow-md group-hover:scale-105 transition-all duration-300">
+                            <ButterflyIcon size={22} className="text-teal-700 dark:text-teal-300" />
                         </div>
-                        <span className="text-2xl font-black tracking-tight text-teal-950 dark:text-teal-50 drop-shadow-xs font-display group-hover:text-teal-700 dark:group-hover:text-teal-300 transition-colors">
+                        <span className="text-xl sm:text-2xl font-black tracking-tight text-teal-950 dark:text-teal-50 drop-shadow-xs font-display group-hover:text-teal-700 dark:group-hover:text-teal-300 transition-colors">
                             Palieduca
                         </span>
                     </Link>
 
-                    <nav className="hidden md:flex items-center gap-1 bg-white/80 dark:bg-slate-900/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-warm-200/60 dark:border-slate-800 shadow-xs">
+                    {/* Navigation Pills - Compact on laptops, expanded on wide screens */}
+                    <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 bg-white/80 dark:bg-slate-900/90 backdrop-blur-md px-2 xl:px-3 py-1 rounded-full border border-warm-200/60 dark:border-slate-800 shadow-xs">
                         {NAV_ITEMS.map((item) => {
                             const isActive = location.pathname === item.to;
                             return (
                                 <Link
                                     key={item.label}
                                     to={item.to}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${isActive
+                                    className={`flex items-center gap-1.5 px-2.5 xl:px-3.5 py-1.5 rounded-full text-[11px] xl:text-xs font-bold transition-all whitespace-nowrap ${isActive
                                         ? 'bg-gradient-to-r from-teal-700 to-sky-700 text-white shadow-xs'
                                         : 'text-slate-700 dark:text-slate-200 hover:text-teal-800 dark:hover:text-teal-300 hover:bg-slate-100/70 dark:hover:bg-slate-800'
                                         }`}
@@ -82,62 +83,72 @@ const Header: React.FC = () => {
                         })}
                     </nav>
 
-                    <div className="hidden md:flex items-center gap-3">
+                    {/* Desktop Right Actions (Search, Theme, PWA, Account) */}
+                    <div className="hidden lg:flex items-center gap-1.5 xl:gap-2.5 shrink-0">
                         <SearchBar />
                         <ThemeToggle />
                         <button
                             onClick={triggerGlobalPWAInstall}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800/60 rounded-full font-bold text-xs shadow-2xs hover:shadow-xs transition-all cursor-pointer shrink-0"
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800/60 rounded-full font-bold text-xs shadow-2xs hover:shadow-xs transition-all cursor-pointer shrink-0"
                             title="Baixar aplicativo Palieduca (PWA)"
                         >
                             <Smartphone size={13} />
-                            <span className="hidden lg:inline">App</span>
+                            <span className="hidden 2xl:inline">App</span>
                             <Download size={13} />
                         </button>
                         {user ? (
                             <button 
                                 onClick={() => navigate('/perfil')} 
-                                className="flex items-center gap-2 pl-1 pr-3 py-1 bg-sky-50 dark:bg-slate-800 text-sky-900 dark:text-slate-100 hover:bg-sky-100 dark:hover:bg-slate-700 rounded-full font-bold shadow-xs hover:shadow-sm transition-all border border-sky-200 dark:border-slate-700 text-xs cursor-pointer shrink-0"
+                                className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 bg-sky-50 dark:bg-slate-800 text-sky-900 dark:text-slate-100 hover:bg-sky-100 dark:hover:bg-slate-700 rounded-full font-bold shadow-xs hover:shadow-sm transition-all border border-sky-200 dark:border-slate-700 text-xs cursor-pointer shrink-0 max-w-[170px]"
                                 title={`Ver perfil de ${user.nome}`}
                             >
                                 <UserAvatar 
                                     fotoUrl={user.foto_url} 
                                     nome={user.nome} 
                                     size="xs" 
-                                    borderClassName="border border-sky-300 shadow-2xs" 
+                                    borderClassName="border border-sky-300 shadow-2xs shrink-0" 
                                 />
-                                <span className="whitespace-nowrap">{getDisplayName(user.nome)}</span>
+                                <span className="truncate">{getDisplayName(user.nome)}</span>
                             </button>
                         ) : (
-                            <div className="flex items-center gap-2.5">
-                                <span className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1 bg-sky-50 dark:bg-slate-800 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-slate-700 rounded-full text-[11px] font-bold shadow-2xs" title="Você está navegando em modo de demonstração como Visitante">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
-                                    Visitante
-                                </span>
-                                <button onClick={() => navigate('/login')} className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-sky-600 via-teal-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 text-white rounded-full font-bold shadow-md hover:shadow-lg interactive-btn text-xs cursor-pointer">
-                                    <User size={15} />
+                            <div className="flex items-center gap-1.5">
+                                <button onClick={() => navigate('/login')} className="flex items-center gap-1.5 px-3.5 xl:px-4 py-1.5 bg-gradient-to-r from-sky-600 via-teal-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 text-white rounded-full font-bold shadow-xs hover:shadow-md interactive-btn text-xs cursor-pointer shrink-0">
+                                    <User size={13} />
                                     <span>Entrar</span>
                                 </button>
                             </div>
                         )}
                     </div>
 
-                    <div className="md:hidden flex items-center gap-2">
-                        <button
-                            onClick={triggerGlobalPWAInstall}
-                            className="flex items-center justify-center p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all cursor-pointer shadow-2xs"
-                            title="Baixar App Palieduca (PWA)"
-                            aria-label="Baixar aplicativo Palieduca"
-                        >
-                            <Download size={16} />
-                        </button>
+                    {/* Tablet & Mobile Right Actions - Conta SEMPRE Visível */}
+                    <div className="lg:hidden flex items-center gap-1.5 sm:gap-2">
+                        {user ? (
+                            <button 
+                                onClick={() => navigate('/perfil')} 
+                                className="flex items-center gap-1.5 pl-1 pr-2 py-1 bg-sky-50 dark:bg-slate-800 text-sky-900 dark:text-slate-100 hover:bg-sky-100 dark:hover:bg-slate-700 rounded-full font-bold shadow-xs border border-sky-200 dark:border-slate-700 text-xs cursor-pointer shrink-0 max-w-[130px]"
+                                title={`Ver perfil de ${user.nome}`}
+                            >
+                                <UserAvatar 
+                                    fotoUrl={user.foto_url} 
+                                    nome={user.nome} 
+                                    size="xs" 
+                                    borderClassName="border border-sky-300 shrink-0" 
+                                />
+                                <span className="truncate text-[11px] hidden sm:inline">{getDisplayName(user.nome)}</span>
+                            </button>
+                        ) : (
+                            <button onClick={() => navigate('/login')} className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-sky-600 to-teal-600 text-white rounded-full font-bold shadow-xs text-xs cursor-pointer shrink-0">
+                                <User size={13} />
+                                <span>Entrar</span>
+                            </button>
+                        )}
                         <ThemeToggle />
                         <button
-                            className="flex items-center justify-center w-10 h-10 rounded-xl text-warm-700 dark:text-slate-200 hover:bg-warm-50 dark:hover:bg-slate-800 transition-colors"
+                            className="flex items-center justify-center w-9 h-9 rounded-xl text-warm-700 dark:text-slate-200 hover:bg-warm-50 dark:hover:bg-slate-800 transition-colors"
                             onClick={() => setMenuOpen(prev => !prev)}
                             aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
                         >
-                            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+                            {menuOpen ? <X size={20} /> : <Menu size={20} />}
                         </button>
                     </div>
                 </div>
